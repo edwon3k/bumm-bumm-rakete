@@ -2924,7 +2924,7 @@ function drawField(p,t){
   for(let l=0;l<4;l++){
     const x=laneX(p,l), f=p.flash[l];
     if(f>0){ g.globalCompositeOperation='lighter'; const s=rr*(1.5+2.5*f); g.globalAlpha=fade*f; g.drawImage(SPRITES[LANE_COL[l]],x-s,hy-s,s*2,s*2); g.globalCompositeOperation='source-over'; }
-    laneBadge(x,hy,rr*0.9*(1+0.22*p.hitPulse[l]),l,fade*(0.35+0.65*f),f>0);
+    // keine Buchstaben/Pfeile auf der Zündlinie, nur das Aufleuchten beim Drücken
   }
   g.globalAlpha=fade;
   // Raketen mit Schubflamme und leuchtendem Abgasstrahl
