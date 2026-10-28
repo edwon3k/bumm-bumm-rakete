@@ -98,20 +98,21 @@ function cityInit(){
               float mort=1.0-box2(bf,vec2(0.06),vec2(0.94),fwidth(bk)*0.8+0.01); float bfar=clamp(length(fwidth(bk))*1.5-0.3,0.0,1.0);
               vec3 brick=mix(vec3(0.16,0.065,0.045),vec3(0.2,0.1,0.06),h21(floor(bk)))*(0.8+0.3*grime);
               wall=mix(mix(brick,vec3(0.11,0.1,0.09),mort*0.7),brick*0.9,bfar); }
+            wall*=0.5;                                                              // Türme fast schwarz, nur Fenster leuchten
             // Fenster
             vec2 lo = typ==0?vec2(0.04,0.08) : typ==1?vec2(0.2,0.22) : vec2(0.24,0.2);
             vec2 hi = typ==0?vec2(0.96,0.92) : typ==1?vec2(0.8,0.82) : vec2(0.76,0.78);
             float win=box2(f,lo,hi,fw);
             float frame=typ==0?0.0:box2(f,lo-0.04,hi+0.04,fw)*(1.0-win);         // Fensterlaibung
             float r=h21(id+seed*91.7), r2=h21(id*1.71+seed), r3=h21(id*0.37+7.0+seed);
-            float ratio=0.07+0.22*seed+0.06*sin(seed*20.0);
+            float ratio=0.12+0.3*seed+0.06*sin(seed*20.0);
             float lit=step(r,ratio);
             vec3 wc=mix(vec3(1.0,0.62,0.32),vec3(1.0,0.8,0.55),r2);
             if(r2>0.93) wc=vec3(0.62,0.8,1.0);
             if(seed>0.9) wc=mix(wc,neon(h21(vec2(seed,1.0))),0.45);
             // Innenraum: Deckenlicht oben heller, Vorhänge, ab und zu flackernder Fernseher
             vec2 q=(f-lo)/(hi-lo);
-            float inner=(0.55+0.6*q.y)*(0.75+0.5*h21(id+3.1));
+            float inner=(0.7+0.75*q.y)*(0.8+0.6*h21(id+3.1));
             float curt=r3<0.35? smoothstep(0.0,0.12,q.x)*smoothstep(1.0,0.88,q.x)*0.6+0.4 : r3<0.55? mix(1.0,0.45,step(0.5,q.x)) : 1.0;
             vec3 tv=vec3(0.35,0.5,1.0)*(0.6+0.4*sin(uTime*7.0+r*50.0)*sin(uTime*2.3+r*13.0));
             vec3 room=lit*(r3>0.92? tv*0.8 : wc*inner*curt);
@@ -152,9 +153,9 @@ function cityInit(){
             float gr=vnoise(vW.xz*2.3)*0.5+fbm(vW.xz*0.25+seed*9.0)*0.7;
             col=mix(vec3(0.045,0.045,0.055),vec3(0.07,0.065,0.07),gr)*(0.9+0.2*seed);
             col=mix(col,vec3(0.11,0.105,0.11),edge);
-            if(vS.y>120.0){ float d=length(lp); col+=vec3(1.0,0.05,0.05)*smoothstep(0.9,0.4,d)*step(0.5,fract(uTime*0.6+seed))*3.0; }
+            if(vS.y>120.0){ float d=length(lp); col+=vec3(1.0,0.05,0.05)*smoothstep(0.45,0.15,d)*step(0.5,fract(uTime*0.6+seed))*3.0; }
             // Hubschrauberlandeplatz auf den höchsten Türmen
-            if(vS.y>150.0 && seed>0.5){ float d=length(lp); col=mix(col,vec3(0.25,0.24,0.22),aaStep(5.5,d,0.15)*(1.0-aaStep(6.0,d,0.15)));
+            if(vS.y>215.0 && seed>0.5){ float d=length(lp); col=mix(col,vec3(0.25,0.24,0.22),aaStep(5.5,d,0.15)*(1.0-aaStep(6.0,d,0.15)));
               vec2 hq=abs(lp); float H=max(step(abs(hq.x-1.5),0.3)*step(hq.y,2.2), step(hq.x,1.5)*step(hq.y,0.3)); col=mix(col,vec3(0.3,0.29,0.26),clamp(H,0.0,1.0)); }
           }
           vec3 L=normalize(uFlashPos-vW);
@@ -162,7 +163,7 @@ function cityInit(){
           col+=uFlash*diff*(n.y>0.5?0.45:0.5)*(0.4+0.6*clamp(vW.y/120.0,0.0,1.0));
           gl_FragColor=vec4(grade(fogIt(col,vW)),1.0);
         }`});
-    const lots=[], trees=[], park=(gx,gz)=>{ if(gx===0&&gz===0) return false; const r=Math.abs(Math.sin(gx*12.9898+gz*78.233)*43758.5453)%1; return r<0.24 || (gz===SHORE && Math.abs(gx)<=2); };
+    const lots=[], trees=[], park=(gx,gz)=>{ if(gx===0&&gz===0) return false; const r=Math.abs(Math.sin(gx*12.9898+gz*78.233)*43758.5453)%1; return (r<0.24 && !(Math.abs(gx+0.5)<=1.5 && gz>=-15 && gz<=-1)) || (gz===SHORE && Math.abs(gx)<=2); };
     for(let gx=-NX;gx<=NX;gx++) for(let gz=NZ0;gz<=SHORE;gz++){
       const x0=gx*B+ST, z0=gz*B+ST, s=B-ST;
       if(gx===0&&gz===0) continue;
@@ -176,7 +177,10 @@ function cityInit(){
       for(const [px,pz,pw,pd] of parts){
         const w=s*pw-2.5, dd=s*pd-2.5; if(w<4||dd<4) continue;
         let h=(8+Math.pow(Math.random(),2.2)*55)*boost; if(Math.random()<0.03) h*=1.7;
-        lots.push([x0+s*px+w/2+1.25, z0+s*pz+dd/2+1.25, w*(0.8+Math.random()*0.2), dd*(0.8+Math.random()*0.2), Math.min(z0<-140?Math.min(h*0.75,78):h,230)]);
+        // Häuserschlucht unter der Kamera: entlang der Mittelstraße stehen hohe Türme
+        const canyon=Math.abs(gx+0.5)<=2.5 && gz>=-15 && gz<=-1 ? Math.exp(-Math.pow((Math.abs(gx+0.5)-0.5)/1.6,2)) : 0;
+        if(canyon>0) h=Math.max(h, 70+canyon*(30+Math.random()*80));
+        lots.push([x0+s*px+w/2+1.25, z0+s*pz+dd/2+1.25, w*(0.8+Math.random()*0.2), dd*(0.8+Math.random()*0.2), Math.min(h,230)]);
       }
     }
     const geo=new THREE.BoxGeometry(1,1,1); geo.translate(0,0.5,0);
@@ -276,7 +280,7 @@ function cityInit(){
             col=mix(col,vec3(0.2,0.19,0.16)+vec3(0.12,0.1,0.0)*czl,clamp(czl,0.0,1.0)*0.75*(1.0-farK*0.8));
           }
           float pr=fract(abs(sin(id.x*12.9898+id.y*78.233)*43758.5453));
-          bool isPark=(pr<0.24 || (id.y==${SHORE.toFixed(1)} && abs(id.x)<=2.0)) && !(id.x==0.0&&id.y==0.0);
+          bool isPark=((pr<0.24 && !(abs(id.x+0.5)<=1.5 && id.y>=-15.0 && id.y<=-1.0)) || (id.y==${SHORE.toFixed(1)} && abs(id.x)<=2.0)) && !(id.x==0.0&&id.y==0.0);
           vec2 q=f-vec2(S+(B-S)*0.5);
           if(isPark && street<0.5 && inner>1.8){
             // Rasen mit Mähstreifen und Blumenbeeten, Kieswege, in manchen Parks ein Teich
@@ -312,7 +316,7 @@ function cityInit(){
           float d=length(p-vec2(B*0.5+S*0.5));
           if(d<18.0 && street<0.5){ col=mix(col,vec3(0.06,0.058,0.065)*(0.8+0.3*vnoise(p*1.5)),smoothstep(18.0,17.0,d)); col+=vec3(0.03)*ln(fract(d/2.0),0.0,0.04); }
           col+=neon(0.3)*0.7*exp(-pow(d-12.0,2.0)*0.4);
-          col+=uFlash*(0.17+0.12*fres);
+          col*=0.6; col+=uFlash*(0.17+0.12*fres);
           gl_FragColor=vec4(grade(fogIt(col,vW)),1.0);
         }`});
     const land=new THREE.Mesh(new THREE.PlaneGeometry(9000,3000),gm); land.rotation.x=-Math.PI/2; land.position.set(0,0,shoreZ-1500); scene.add(land);
@@ -427,12 +431,14 @@ function cityRender(dt,bloom){
   CITY.ang+=dt*0.13*(bloom?1.6:1);
   const ik=CITY.introK||0, ie=ik*ik*(3-2*ik);
   // Kamerafahrt knapp über den Dächern: legt sich in die Kurven, wippt im Takt, zuckt bei Treffern nach vorn
+  // Blick steil von oben in die Häuserschlucht: Kamera schwebt über der Mittelstraße zwischen den Türmen,
+  // gleitet langsam die Straße entlang, schwenkt leicht und wippt im Takt
   const a=CITY.ang, sz=CITY.shoreZ, cam=CITY.cam, port=W<H;
-  const px=Math.sin(a)*260, pz=-290+Math.cos(a*0.7)*110, py=(port?130:112)+Math.sin(a*1.3)*16+BEAT.p*3;
-  const tx=px+Math.sin(a*0.8+0.6)*360, tz=sz+160, ty=(port?30:42)-ie*40;
-  const fx=tx-px, fz=tz-pz, fl=Math.hypot(fx,fz)||1, push=CAM.punch*22;
-  cam.position.set(px+fx/fl*push+CAM.sx*2, py+ie*380+CAM.sy*2, pz+fz/fl*push-ie*260);
-  const vx=Math.cos(a)*260, roll=Math.max(-0.12,Math.min(0.12,-vx*0.00045));
+  const px=4.5+Math.sin(a*0.9)*4, pz=-400+Math.sin(a*0.35)*130, py=(port?230:205)+Math.sin(a*1.3)*12+BEAT.p*3;
+  const tx=px+Math.sin(a*0.7+0.6)*22, tz=pz+(port?120:150), ty=0;
+  const push=CAM.punch*22;
+  cam.position.set(px+CAM.sx*2, py-push+ie*260+CAM.sy*2, pz-ie*120);
+  const roll=Math.max(-0.08,Math.min(0.08,Math.cos(a*0.9)*0.06));
   cam.up.set(Math.sin(roll),Math.cos(roll),0);
   cam.lookAt(tx, ty, tz);
   const sw=Math.sin(a);

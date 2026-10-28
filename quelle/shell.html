@@ -2,14 +2,14 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Cinzel:wght@500;600;700&family=Rubik:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,800;1,800&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,600&family=Josefin+Sans:wght@400;500;600;700&display=swap">
 <style>
 /* Layout: Vollbild-Canvas (Nachthimmel über dem Hafen), Menüs als Glas-Tafeln darüber */
 :root{
   --night:#05071a; --panel:rgba(12,14,40,0.82); --line:rgba(170,185,255,0.22);
   --ink:#eef1ff; --mute:#a9b2df; --gold:#ffd54a; --spark:#ff58dc; --cyan:#4cf2ff;
   --x:#4f8fff; --a:#3dff94; --y:#ffd54a; --b:#ff4646;
-  --display:"Bungee","Arial Black",Impact,sans-serif; --body:"Rubik",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --display:"Playfair Display","Arial Black",Impact,sans-serif; --body:"Josefin Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
   color-scheme:dark;
 }
 html,body{height:100%;margin:0;}
@@ -321,6 +321,7 @@ dt{text-transform:uppercase;letter-spacing:0.05em;font-size:13px;} dd{color:#fff
 @media (max-height:800px){ #s-title .tag{display:none;} #s-title .tstats span{padding:2px 8px;} #s-title .tstats{font-size:11px;} }
 @media (max-height:700px){ #s-title .logo span{display:inline;} #s-title .logo span+span{margin-left:.3em;} #s-title .logo{font-size:30px;} #s-title .tstats{display:none;} #s-title .menu .btn{min-height:30px;font-size:13px;} #s-title .menu .btn.wide.primary{min-height:40px;font-size:16px;} #s-title .menu .btn.daily{min-height:40px;} }
 @media (max-width:620px){ #s-title .logo{font-size:40px;white-space:normal;} #s-title .logo span{display:block;} #s-title .logo span+span{margin-left:0;} #s-title .tfoot{display:flex;} }
+body,button,input,select{font-variant-numeric:lining-nums;font-feature-settings:"lnum" 1;}
 </style>
 
 <canvas id="cv3" aria-hidden="true"></canvas>

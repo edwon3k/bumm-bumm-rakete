@@ -201,7 +201,7 @@ function drawTiming(c,p){
   const x=c.getContext('2d'), w=c.width, h=c.height, mid=h/2, T=Math.max(1,p.errAll[p.errAll.length-1][0]);
   x.fillStyle='rgba(255,224,102,0.12)'; x.fillRect(0,mid-mid*W_PERF/WIN,w,mid*2*W_PERF/WIN);
   x.fillStyle='rgba(255,255,255,0.35)'; x.fillRect(0,mid,w,1);
-  x.font='600 18px Rubik, sans-serif'; x.fillStyle='rgba(200,245,255,0.55)'; x.fillText('SPÄT',8,22); x.fillText('FRÜH',8,h-8);
+  x.font='600 18px "Josefin Sans", sans-serif'; x.fillStyle='rgba(200,245,255,0.55)'; x.fillText('SPÄT',8,22); x.fillText('FRÜH',8,h-8);
   for(const [tt,d] of p.errAll){ const ad=Math.abs(d); x.fillStyle=ad<=W_PERF?'#ffe066':ad<=W_GREAT?'#6ff3ff':'#8dff9e';
     x.fillRect(tt/T*(w-8)+2, mid-Math.max(-1,Math.min(1,d/WIN))*(mid-4)-3, 6,6); }
 }
