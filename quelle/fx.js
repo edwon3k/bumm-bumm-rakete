@@ -27,8 +27,8 @@ function flash(x,y,c,r,str=1){
   const rgb=RGB[c]; const L=FX.light;
   const w=L.v+k||1; L.r=(L.r*L.v+rgb[0]*k)/w; L.g=(L.g*L.v+rgb[1]*k)/w; L.b=(L.b*L.v+rgb[2]*k)/w; L.v=Math.min(1.3,L.v+k);
   // Pulverrauch, der noch lange am Himmel hängt
-  const n=PERF.low?2:4;
-  for(let i=0;i<n && FX.smoke.length<140;i++){ const a=Math.random()*Math.PI*2, d=Math.random()*r*0.35;
+  const gp=typeof GFX!=='undefined'&&GFX.ok; const n=PERF.low?2:(gp?5:4);
+  for(let i=0;i<n && FX.smoke.length<(gp?260:140);i++){ const a=Math.random()*Math.PI*2, d=Math.random()*r*0.35;
     FX.smoke.push({x:x+Math.cos(a)*d,y:y+Math.sin(a)*d,vx:(Math.random()-0.5)*8,vy:-4-Math.random()*6,r:r*0.18,gr:r*0.07,life:7+Math.random()*4,max:11,c,lit:1}); }
 }
 function later(dt,fn){ FX.timers.push({t:FX.time+dt,fn}); }

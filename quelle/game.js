@@ -15,7 +15,9 @@ function storeSave(){ try{ SAVE.settings=SETTINGS; localStorage.setItem('bumm-sa
 loadSave();
 
 // ---------- Canvas ----------
-const cv=document.getElementById('cv'); const g=cv.getContext('2d');
+const cv=document.getElementById('cv'); let g=cv.getContext('2d');
+// Hintergrund-Ebene unter dem Grafikkarten-Feuerwerk
+const cvb=document.getElementById('cvb'), gb=cvb.getContext('2d');
 // Feuerwerk-Ebene (für Glühen und Spiegelung im Wasser)
 const fxc=document.createElement('canvas'), fg=fxc.getContext('2d');
 const b1=document.createElement('canvas'), b1g=b1.getContext('2d');
@@ -29,11 +31,13 @@ function resize(){
   DPR=Math.min(window.devicePixelRatio||1, PERF.low?1:2);
   W=window.innerWidth; H=window.innerHeight; cv.width=Math.round(W*DPR); cv.height=Math.round(H*DPR);
   cv.style.width=W+'px'; cv.style.height=H+'px'; g.setTransform(DPR,0,0,DPR,0,0);
+  cvb.width=cv.width; cvb.height=cv.height; cvb.style.width=W+'px'; cvb.style.height=H+'px';
   fxc.width=cv.width; fxc.height=cv.height; b1.width=Math.ceil(W/4); b1.height=Math.ceil(H/4); b2.width=Math.ceil(W/12); b2.height=Math.ceil(H/12);
   FX.scale=Math.max(0.5,Math.min(1.35,Math.min(W,H*1.3)/800));
   FX.maxParts = PERF.low?2200:4500;
   buildSkyline();
   if(typeof cityResize==='function') cityResize();
+  if(typeof gfxResize==='function') gfxResize();
 }
 window.addEventListener('resize',resize);
 
@@ -540,12 +544,22 @@ function frame(ts){
   }
   if(G) for(const p of G.players) if(p.bloomOn) bloomLvl=1;
   camCompute();
+  if(GFX.ok){
+    // Grafikkarte: Hintergrund auf eigene Ebene, Feuerwerk mit Leuchten darüber, Spielfeld ganz oben
+    if(CITY.ok) cityRender(paused?0:dt,bloomLvl>0);
+    const gm=g; g=gb; g.setTransform(1,0,0,1,0,0); g.clearRect(0,0,cvb.width,cvb.height); camApply(g);
+    if(CITY.ok){ if(bloomLvl>0) drawAurora(camT,bloomLvl); } else drawBackground(camT,bloomLvl);
+    skyLight(); g=gm;
+    gfxRender(!CITY.ok);
+    g.setTransform(1,0,0,1,0,0); g.clearRect(0,0,cv.width,cv.height); camApply(g);
+  } else {
   if(CITY.ok){ cityRender(paused?0:dt,bloomLvl>0); g.setTransform(1,0,0,1,0,0); g.clearRect(0,0,cv.width,cv.height); camApply(g); if(bloomLvl>0) drawAurora(camT,bloomLvl); }
   else { camApply(g); drawBackground(camT,bloomLvl); }
   skyLight(); smokeDraw(g);
   fg.setTransform(1,0,0,1,0,0); fg.clearRect(0,0,fxc.width,fxc.height); camApply(fg);
   fxDraw(fg); drawFree(fg);
   compositeFx(); camApply(g);
+  }
   if(G && !G.ended && G.players.length && A.ctx){ for(const p of G.players) drawField(p,t); g.setTransform(DPR,0,0,DPR,0,0); drawHud(t); drawCinema(t); }
   requestAnimationFrame(frame);
 }

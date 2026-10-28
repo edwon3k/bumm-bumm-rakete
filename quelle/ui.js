@@ -186,6 +186,7 @@ function toastBig(msg){ const t=$('#big'); t.textContent=msg; t.classList.remove
 $('#own-file').addEventListener('change',e=>{ const f=e.target.files[0]; if(f) ownAdd(f); e.target.value=''; });
 // ---------- Start ----------
 cityInit();
+gfxInit();
 ownRestore();
 resize();
 showScreen('title');
