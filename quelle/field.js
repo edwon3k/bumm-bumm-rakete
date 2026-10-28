@@ -79,14 +79,14 @@ function veilSpr(hex,v){ const key=hex+v; if(VEIL[key]) return VEIL[key];
   let r=(v+1)*9301; const rnd=()=>{ r=(r*16807)%2147483647; return r/2147483647; };
   const ph=[0,0,0,0,0,0].map(()=>rnd()*6.28), fr=[3+rnd()*3,7+rnd()*5,13+rnd()*9];
   for(let yy=0;yy<H2;yy++){ const u=yy/(H2-1);
-    const fade=Math.pow(1-u,1.5)*Math.min(1,u*25+0.25);
+    const fade=Math.pow(1-u,1.15)*Math.min(1,u*25+0.25);
     const wob=Math.sin(u*fr[0]+ph[0])*0.06*u+Math.sin(u*fr[1]+ph[1])*0.03*u;
-    const sig=0.16+0.26*Math.pow(u,0.7);
+    const sig=0.09+0.15*Math.pow(u,0.7);
     for(let xx=0;xx<W2;xx++){ const dx=(xx/(W2-1)-0.5)*2-wob;
-      const prof=Math.exp(-(dx*dx)/(2*sig*sig));
-      const tex=0.55+0.2*Math.sin(u*fr[2]*3+dx*4+ph[2])+0.15*Math.sin(u*fr[1]*5-dx*7+ph[3])+0.1*Math.sin(u*41+dx*11+ph[4]);
-      const core=Math.exp(-(dx*dx)/(2*0.06*0.06))*Math.pow(1-u,4)*0.55;
-      const a=Math.min(1,fade*prof*tex*0.95+core*0.7); const wm=Math.min(1,core*1.2+prof*Math.pow(1-u,6)*0.35);
+      const prof=0.72*Math.exp(-(dx*dx)/(2*sig*sig))+0.3*Math.exp(-(dx*dx)/(2*(sig*2.1)*(sig*2.1)));
+      const tex=0.86+0.09*Math.sin(u*fr[2]*2+dx*3+ph[2])+0.05*Math.sin(u*fr[1]*3-dx*5+ph[3]);
+      const core=Math.exp(-(dx*dx)/(2*0.13*0.13))*Math.pow(1-u,3)*0.35;
+      const a=Math.min(1,fade*prof*tex*1.15+core*0.6); const wm=Math.min(0.75,core*1.1+prof*Math.pow(1-u,6)*0.25);
       const i=(yy*W2+xx)*4; d[i]=R+(255-R)*wm; d[i+1]=G2+(255-G2)*wm; d[i+2]=B+(255-B)*wm; d[i+3]=a*255; } }
   x2.putImageData(im,0,0); return VEIL[key]=c; }
 // Kopf: nur der leuchtende Buchstabe (bzw. Pfeil), kein Raketenkörper
@@ -167,8 +167,7 @@ function drawField(p,t){
     const L=Math.min(H*0.62, sy-y+H*0.12), vw=rr*(5.2+0.5*Math.sin(t*2+seed*6));
     g.globalCompositeOperation='lighter';
     g.save(); g.translate(x,y+rr*0.2); g.transform(1,0,Math.sin(t*1.4+seed*9)*0.07,1,0,0);
-    const ga=g.globalAlpha; g.drawImage(veilSpr(hex,(seed*3)|0),-vw/2,0,vw,L);
-    g.globalAlpha=ga*0.45; g.drawImage(veilSpr(hex,(((seed*3)|0)+1)%3),-vw*0.8,L*0.08,vw*1.6,L*0.95); g.globalAlpha=ga;
+    g.drawImage(veilSpr(hex,(seed*3)|0),-vw,0,vw*2,L);
     g.restore();
     { const gs=rr*(2.6+Math.sin(t*11+seed*20)*0.25); g.drawImage(SPRITES[n.sp?C.magenta:(n.gold?C.gold:LANE_COL[n.lane])],x-gs,y-gs,gs*2,gs*2); }
     if(n.gold&&!n.sp){ const gs=rr*(3.2+Math.sin(t*9)*0.5); g.drawImage(SPRITES[C.gold],x-gs,y-gs,gs*2,gs*2); for(let q=0;q<5;q++){ const a=t*4+q*Math.PI*2/5, s2=rr*0.7; g.drawImage(SPRITES[q%2?C.white:C.gold],x+Math.cos(a)*rr*1.7-s2,y+Math.sin(a)*rr*1.7-s2,s2*2,s2*2); } }
