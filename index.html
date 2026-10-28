@@ -289,6 +289,7 @@ dt{text-transform:uppercase;letter-spacing:0.05em;font-size:13px;} dd{color:#fff
 .btn.daily::before{border-color:rgba(255,213,74,.6);background:linear-gradient(90deg,var(--gold) 0 3px,transparent 3px),linear-gradient(90deg,rgba(60,40,10,.95),rgba(14,14,44,.95));}
 .btn.daily:focus-visible::before{background:linear-gradient(90deg,var(--pink) 0 4px,transparent 4px),linear-gradient(90deg,rgba(255,213,74,.35),rgba(76,242,255,.15));}
 /* V23 */
+@media (max-width:520px){ .row.own{flex-direction:column;align-items:stretch;gap:6px;} .row.own>*{width:auto;max-width:none;flex:0 0 auto;} .row.own .fine{font-size:11.5px;line-height:1.35;margin:0;} #s-select #songs{min-height:240px;flex:1 1 auto;} }
 #s-results dd.gold{color:#ffd54a;text-shadow:0 0 10px rgba(255,213,74,0.7);}
 </style>
 
@@ -2452,7 +2453,7 @@ function updatePlayers(t,dt){
     }
     // Wunderkerzen-Rakete (Freischaltung)
     if((G.mode==='arcade') && !G.custom && !p.specialDone && p.hits>=G.specialAt){
-      for(let i=p.head;i<p.notes.length;i++){ const n=p.notes[i]; if(n.t>t+G.approach+0.2 && n.st===0){ n.sp=true; SFX.whistle(A.ctx.currentTime+0.2,1.2); break; } }
+      for(let i=p.head;i<p.notes.length;i++){ const n=p.notes[i]; if(n.t>t+G.approach+0.2 && n.st===0 && !n.gold){ n.sp=true; SFX.whistle(A.ctx.currentTime+0.2,1.2); break; } }
       p.specialDone=true;
     }
     if(p.bloomOn){ for(let k=0;k<4;k++) addP(p.fx+Math.random()*p.fw,hitY(),(Math.random()-0.5)*10,20+Math.random()*30,{c:Math.random()<0.7?C.gold:C.white,life:1.6,size:1.5,drag:1.2,grav:160*FX.scale,fl:F_TWINKLE}); }
@@ -2925,7 +2926,7 @@ function drawField(p,t){
   // Urteile
   g.textAlign='center'; g.textBaseline='middle';
   for(const j of p.judg){ const a=1-j.t/0.7, jy=hy+rr*2.6+j.t*24+(Math.round((j.x-p.fx)/lw-0.5)%2?24:0), pop=j.t<0.09?1.4-j.t/0.09*0.4:1; g.globalAlpha=a*fade;
-    neonTextCached(j.txt,j.x,jy,'400 '+Math.round(13+Math.min(lw*0.1,7))+'px "Bungee", "Arial Black", sans-serif',j.col,12,pop);
+    neonTextCached(j.txt,j.x,jy,'400 '+Math.round(Math.max(11,Math.min(13+Math.min(lw*0.1,7),lw*0.2)))+'px "Bungee", "Arial Black", sans-serif',j.col,12,pop);
     if(j.sub){ g.font='700 11px "Rubik", system-ui, sans-serif'; g.fillStyle=j.sub==='FRÜH'?'#8cc4ff':'#ffb07a'; g.fillText(j.sub,j.x,jy+17); } }
   // Tasten-Hinweise am Liedanfang
   const hintEnd=(G.cdT1||0)+2.5;

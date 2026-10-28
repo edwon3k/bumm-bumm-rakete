@@ -154,7 +154,7 @@ function drawField(p,t){
   // Urteile
   g.textAlign='center'; g.textBaseline='middle';
   for(const j of p.judg){ const a=1-j.t/0.7, jy=hy+rr*2.6+j.t*24+(Math.round((j.x-p.fx)/lw-0.5)%2?24:0), pop=j.t<0.09?1.4-j.t/0.09*0.4:1; g.globalAlpha=a*fade;
-    neonTextCached(j.txt,j.x,jy,'400 '+Math.round(13+Math.min(lw*0.1,7))+'px "Bungee", "Arial Black", sans-serif',j.col,12,pop);
+    neonTextCached(j.txt,j.x,jy,'400 '+Math.round(Math.max(11,Math.min(13+Math.min(lw*0.1,7),lw*0.2)))+'px "Bungee", "Arial Black", sans-serif',j.col,12,pop);
     if(j.sub){ g.font='700 11px "Rubik", system-ui, sans-serif'; g.fillStyle=j.sub==='FRÜH'?'#8cc4ff':'#ffb07a'; g.fillText(j.sub,j.x,jy+17); } }
   // Tasten-Hinweise am Liedanfang
   const hintEnd=(G.cdT1||0)+2.5;

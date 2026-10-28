@@ -359,7 +359,7 @@ function updatePlayers(t,dt){
     }
     // Wunderkerzen-Rakete (Freischaltung)
     if((G.mode==='arcade') && !G.custom && !p.specialDone && p.hits>=G.specialAt){
-      for(let i=p.head;i<p.notes.length;i++){ const n=p.notes[i]; if(n.t>t+G.approach+0.2 && n.st===0){ n.sp=true; SFX.whistle(A.ctx.currentTime+0.2,1.2); break; } }
+      for(let i=p.head;i<p.notes.length;i++){ const n=p.notes[i]; if(n.t>t+G.approach+0.2 && n.st===0 && !n.gold){ n.sp=true; SFX.whistle(A.ctx.currentTime+0.2,1.2); break; } }
       p.specialDone=true;
     }
     if(p.bloomOn){ for(let k=0;k<4;k++) addP(p.fx+Math.random()*p.fw,hitY(),(Math.random()-0.5)*10,20+Math.random()*30,{c:Math.random()<0.7?C.gold:C.white,life:1.6,size:1.5,drag:1.2,grav:160*FX.scale,fl:F_TWINKLE}); }
