@@ -13,6 +13,7 @@ function showScreen(name){
   $('#bloomBtn').hidden = !(isTouch && !name && G && G.players && G.players.length===1);
   if(name){ const f=document.querySelector('#s-'+name+' [data-nav]:not([disabled])'); if(f && !f.matches('input[type=range]')) setTimeout(()=>f.focus({preventScroll:true}),30); }
   if(name==='title') renderStats();
+  if(name==='ach') renderAch();
   if(name==='select'){ renderSelect(); PREV.idx=-1; previewQueue(UI.sel); }
   if(name==='gallery') renderGallery();
   if(name==='options') renderOptions();
@@ -21,9 +22,10 @@ function showScreen(name){
 }
 function renderStats(){
   const el=$('#t-stats'); if(!el) return; const b=Object.values(SAVE.best||{});
-  if(!b.length && !SAVE.unlocked.length){ el.hidden=true; return; }
+  progInit(); const L=levelOf(SAVE.xp);
+  if(!b.length && !SAVE.unlocked.length && !SAVE.xp){ el.hidden=true; return; }
   const s=b.filter(x=>x.grade==='S').length;
-  el.innerHTML='<span><b>'+b.length+'</b> Lieder geschafft</span><span><b>'+s+'</b> × Note S</span><span><b>'+SAVE.unlocked.length+'</b>/'+UNLOCKS.length+' Feuerwerke</span>';
+  el.innerHTML='<span class="rk"><b>'+L.level+'</b>'+rankOf(L.level)+'</span><span><b>'+b.length+'</b> Lieder geschafft</span><span><b>'+s+'</b> × Note S</span><span><b>'+SAVE.unlocked.length+'</b>/'+UNLOCKS.length+' Feuerwerke</span>';
   el.hidden=false;
 }
 function click(){ audioInit(); SFX.ui(A.ctx.currentTime); UI.lastClick=performance.now(); }
@@ -168,6 +170,8 @@ function showResults(){
       (p.fc?'<p class="fc">'+p.fc+'</p>':'')+timingHtml(p,multi)+extra;
     res.appendChild(col);
   }
+  const xpr=(G.mode!=='demo')?progAfterGame():null;
+  if(xpr){ const xd=document.createElement('div'); xd.className='rescol xpcol'; xd.innerHTML=xpHtml(xpr); res.appendChild(xd); }
   storeSave();
   showScreen('results');
   if(G.online && typeof onRenderResults==='function') onRenderResults();
@@ -209,9 +213,9 @@ $('#r-select').addEventListener('click',()=>{ stopGame(); showScreen(UI.last&&UI
 $('#r-menu').addEventListener('click',()=>{ stopGame(); showScreen('title'); });
 
 // ---------- Visualizer ----------
-$('#vis-file').addEventListener('change',e=>{ const f=e.target.files[0]; if(f){ visFile(f); } });
+$('#vis-file').addEventListener('change',e=>{ const f=e.target.files[0]; if(f){ visFile(f); award('vis'); } });
 (function(){ const s=$('#vis-song'); SONGS.forEach((x,i)=>{ const o=document.createElement('option'); o.value=i; o.textContent=x.title+' ('+x.composer+')'; s.appendChild(o); }); })();
-$('#vis-play').addEventListener('click',async()=>{ visStop(); stopGame(); audioInit(); const vs=SONGS[+$('#vis-song').value]; if(smpNeeded(vs).some(n=>!SMP.buf[n])){ $('#vis-status').textContent='Lade Instrumente …'; await smpEnsure(vs); } startGame({mode:'demo',songIdx:+$('#vis-song').value,diff:2,tempo:1}); $('#vis-status').textContent='Läuft: '+SONGS[+$('#vis-song').value].title; });
+$('#vis-play').addEventListener('click',async()=>{ visStop(); stopGame(); audioInit(); const vs=SONGS[+$('#vis-song').value]; if(smpNeeded(vs).some(n=>!SMP.buf[n])){ $('#vis-status').textContent='Lade Instrumente …'; await smpEnsure(vs); } award('vis'); startGame({mode:'demo',songIdx:+$('#vis-song').value,diff:2,tempo:1}); $('#vis-status').textContent='Läuft: '+SONGS[+$('#vis-song').value].title; });
 $('#vis-stop').addEventListener('click',()=>{ visStop(); stopGame(); $('#vis-status').textContent='Gestoppt'; });
 
 // ---------- Galerie ----------

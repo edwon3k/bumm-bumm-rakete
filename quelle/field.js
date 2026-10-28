@@ -70,6 +70,19 @@ function drawCountdown(t){
   neonTextCached(txt,W/2,H*0.15,'400 72px "Bungee", "Arial Black", sans-serif',txt==='LOS!'?'#ffe066':NEON_CYAN,22,sc);
   g.globalAlpha=1;
 }
+// Raketenkörper mit Streifen und Flossen (einmal gezeichnet, als Bild wiederverwendet)
+function rocketSpr(lane,rr){ const r=Math.round(rr); return glowSprite('rk|'+lane+'|'+r+'|'+DPR,r*2.6*DPR,r*3.4*DPR,(x2,w,h)=>{
+  x2.scale(DPR,DPR); const W2=r*2.6, cx=W2/2, bw=r*0.95, top=r*0.2, bot=r*2.75, col=LANE_HEX[lane];
+  // Flossen
+  x2.fillStyle=col; x2.globalAlpha=0.9;
+  x2.beginPath(); x2.moveTo(cx-bw/2,bot-r*0.9); x2.lineTo(cx-bw/2-r*0.55,bot+r*0.35); x2.lineTo(cx-bw/2,bot); x2.closePath(); x2.fill();
+  x2.beginPath(); x2.moveTo(cx+bw/2,bot-r*0.9); x2.lineTo(cx+bw/2+r*0.55,bot+r*0.35); x2.lineTo(cx+bw/2,bot); x2.closePath(); x2.fill();
+  x2.globalAlpha=1;
+  // Rumpf: dunkles Metall mit Glanzkante
+  const gr=x2.createLinearGradient(cx-bw/2,0,cx+bw/2,0); gr.addColorStop(0,'#1a1f3a'); gr.addColorStop(0.35,'#59607f'); gr.addColorStop(0.55,'#2a3050'); gr.addColorStop(1,'#0c0f22');
+  x2.fillStyle=gr; x2.fillRect(cx-bw/2,top,bw,bot-top);
+  x2.fillStyle=col; x2.fillRect(cx-bw/2,top+r*1.15,bw,r*0.22); x2.fillRect(cx-bw/2,top+r*1.6,bw,r*0.12);
+  x2.fillStyle='#0a0c18'; x2.fillRect(cx-bw*0.38,bot-r*0.05,bw*0.76,r*0.22); }); }
 function hitLineSpan(p){ return G.players.length>1 ? [p.fx-24,p.fx+p.fw+24] : [Math.max(8,W*0.06),Math.min(W-8,W*0.94)]; }
 function drawField(p,t){
   const hy=hitY(), sy=spawnY(), lw=p.fw/4, rr=Math.max(11,Math.min(lw*0.2,19));
@@ -81,11 +94,11 @@ function drawField(p,t){
   const [lx0,lx1]=hitLineSpan(p);
   const lc = p.bloomOn? 'hsl('+((t*240)%360)+',100%,62%)' : ready? (Math.sin(t*20)>0?'#ffffff':'#ffd54a') : NEON_PINK;
   g.globalAlpha=fade; g.beginPath(); g.moveTo(lx0,hy); g.lineTo(lx1,hy); neonStroke(lc, (ready||p.bloomOn?6:4)+BEAT.p*2.5, 22);
-  if(ready||p.bloomOn){ g.globalCompositeOperation='lighter'; for(let k=0;k<8;k++){ const x=lx0+Math.random()*(lx1-lx0); g.drawImage(SPRITES[ready?C.gold:pick([C.magenta,C.cyan,C.white])],x-9,hy-9,18,18);} g.globalCompositeOperation='source-over'; }
+  if(ready||p.bloomOn){ g.globalCompositeOperation='lighter'; for(let k=0;k<(p.bloomOn?16:8);k++){ const x=lx0+Math.random()*(lx1-lx0); g.drawImage(SPRITES[ready?C.gold:pick([C.magenta,C.cyan,C.white])],x-9,hy-9,18,18);} g.globalCompositeOperation='source-over'; }
   // Bahnen: leuchten auf, wenn die Taste gedrückt wird
   g.globalCompositeOperation='lighter';
-  for(let l=0;l<4;l++){ const x=laneX(p,l), f=p.flash[l], spr=laneSpr(l);
-    g.globalAlpha=fade*(0.07+0.4*f); g.drawImage(spr,x-lw*0.42,hy,lw*0.84,sy-hy);
+  for(let l=0;l<4;l++){ const x=laneX(p,l), f=p.flash[l], spr=laneSpr(p.bloomOn?(l+Math.floor(t*6))%4:l);
+    g.globalAlpha=fade*((p.bloomOn?0.2+0.12*BEAT.p:0.07)+0.4*f); g.drawImage(spr,x-lw*0.42,hy,lw*0.84,sy-hy);
     g.globalAlpha=fade*0.3; g.drawImage(spr,x-1.5,hy,3,sy-hy); }
   g.globalCompositeOperation='source-over';
   // Kombo groß in der Mitte, hinter den Raketen
@@ -122,12 +135,14 @@ function drawField(p,t){
     const L=Math.min(H*0.24, sy-y+60)*(0.92+Math.random()*0.16);
     g.globalCompositeOperation='lighter';
     const tg=g.createLinearGradient(0,y,0,y+L); tg.addColorStop(0,col); tg.addColorStop(0.35,col+'99'); tg.addColorStop(1,col+'00');
-    g.strokeStyle=tg; g.lineWidth=rr*0.75; g.lineCap='round'; g.beginPath(); g.moveTo(x,y+rr*0.6); g.lineTo(x,y+L); g.stroke();
+    const ty=y+rr*2.9;
+    g.strokeStyle=tg; g.lineWidth=rr*0.75; g.lineCap='round'; g.beginPath(); g.moveTo(x,ty); g.lineTo(x,y+L); g.stroke();
     const cg=g.createLinearGradient(0,y,0,y+L*0.5); cg.addColorStop(0,'rgba(255,255,255,0.95)'); cg.addColorStop(1,'rgba(255,255,255,0)');
-    g.strokeStyle=cg; g.lineWidth=rr*0.22; g.beginPath(); g.moveTo(x,y+rr*0.6); g.lineTo(x,y+L*0.5); g.stroke();
-    const fs=rr*(1.2+Math.random()*0.6); g.drawImage(SPRITES[C.white],x-fs,y+rr*0.8-fs,fs*2,fs*2);
+    g.strokeStyle=cg; g.lineWidth=rr*0.22; g.beginPath(); g.moveTo(x,ty); g.lineTo(x,y+L*0.5); g.stroke();
+    const fs=rr*(1.2+Math.random()*0.6); g.drawImage(SPRITES[C.white],x-fs,ty-fs*0.6,fs*2,fs*2);
     g.drawImage(SPRITES[n.sp?C.magenta:LANE_COL[n.lane]],x-rr*2.2,y-rr*2.2,rr*4.4,rr*4.4);
     g.globalCompositeOperation='source-over'; g.lineCap='butt';
+    { const sp=rocketSpr(n.lane,rr), sw=sp.width/DPR, sh2=sp.height/DPR; g.drawImage(sp,x-sw/2,y-rr*0.2,sw,sh2); }
     laneBadge(x,y,rr,n.lane,fade,true);
     if(n.sp){ g.strokeStyle='#fff'; g.lineWidth=2; g.beginPath(); g.arc(x,y,rr+4+Math.sin(t*20)*2,0,Math.PI*2); g.stroke(); }
   }

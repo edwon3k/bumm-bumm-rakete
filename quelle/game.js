@@ -292,6 +292,7 @@ function pressLane(pi,lane,perf){
   else { base=40; txt='GUT'; col='#8dff9e'; sc=0.75; p.good++; }
   p.hits++; p.combo++; p.maxCombo=Math.max(p.maxCombo,p.combo);
   if(p.combo===25||p.combo%50===0) salvo(p.combo);
+  if(!G.demo && G.mode!=='practice'){ if(p.combo===50) award('c50'); else if(p.combo===100) award('c100'); else if(p.combo===200) award('c200'); }
   p.score+=base*multOf(p);
   p.health=Math.min(1,p.health+(base===100?0.022:0.015));
   if(!p.bloomOn) p.bloom=Math.min(1,p.bloom+(base===100?0.045:0.032));
@@ -318,6 +319,7 @@ function pressBloom(pi){
   const p=G.players[pi]; if(!p||p.failed) return;
   if(p.bloom>=1 && !p.bloomOn){
     p.bloomOn=true; SFX.bloom(A.ctx.currentTime); setBloomAudio(true);
+    progInit(); SAVE.stats.blooms++; if(SAVE.stats.blooms>=10) award('bloom10');
     flash(W/2,H*0.3,C.white,Math.max(W,H),1.4);
     for(let k=0;k<3;k++) later(k*0.12,()=>launchBurst(p.fx+p.fw*(0.2+0.3*k),H*0.22,'chrysanthemum',pick([C.gold,C.magenta,C.cyan]),C.white,0.9));
     for(let k=0;k<7;k++) freeLaunch(W*(0.06+0.88*k/6),H*(0.1+0.04*Math.abs(3-k)),{type:'kamuro'},0.45+Math.abs(3-k)*0.06,{s:0.9});
@@ -362,7 +364,7 @@ function updatePlayers(t,dt){
     for(const e of p.errs) e.age+=dt; if(p.errs.length && p.errs[0].age>4) p.errs.shift();
     for(const r of p.rings) r.t+=dt; if(p.rings.length) p.rings=p.rings.filter(r=>r.t<0.4);
     if(p.lost){ p.lost.t+=dt; if(p.lost.t>0.8) p.lost=null; }
-    { const m=multOf(p); if(m>p.lastM && !p.failed){ p.mPulse=1; SFX.multUp(A.ctx.currentTime,m); } p.lastM=m; }
+    { const m=multOf(p); if(m>p.lastM && !p.failed){ p.mPulse=1; SFX.multUp(A.ctx.currentTime,m); if(m>=8 && G.mode!=='practice') award('x8'); } p.lastM=m; }
     // Funkenschweif der aufsteigenden Raketen
     const hy=hitY(), sy=spawnY();
     for(let i=p.head;i<p.notes.length;i++){

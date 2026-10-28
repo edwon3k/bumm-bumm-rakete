@@ -261,6 +261,25 @@ dt{text-transform:uppercase;letter-spacing:0.05em;font-size:13px;} dd{color:#fff
 .song.playing .tt::after{content:"  ♪";color:var(--cyan);text-shadow:0 0 8px var(--cyan);animation:note 1s ease-in-out infinite;}
 @keyframes note{50%{opacity:.4;}}
 @media (prefers-reduced-motion:reduce){ .fc,.song.playing .tt::after{animation:none;} }
+/* ===== V21: Rang, Erfolge ===== */
+#achpop{position:fixed;top:calc(env(safe-area-inset-top,0px) + 70px);right:calc(16px + env(safe-area-inset-right,0px));z-index:7;display:flex;flex-direction:column;gap:2px;min-width:220px;max-width:min(320px,calc(100% - 32px));padding:10px 18px 10px 22px;pointer-events:none;
+  background:linear-gradient(90deg,var(--gold) 0 4px,rgba(6,8,30,.95) 4px);box-shadow:0 0 18px rgba(255,213,74,.45),inset 0 -2px 0 var(--cyan);clip-path:polygon(10px 0,100% 0,100% 100%,0 100%,0 10px);
+  opacity:0;transform:translateX(30px);transition:opacity .3s,transform .3s;}
+#achpop.on{opacity:1;transform:none;}
+#achpop b{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);} #achpop span{font-family:var(--display);font-size:18px;color:#fff;text-shadow:0 0 8px rgba(76,242,255,.7);} #achpop small{font-size:12px;color:var(--mute);}
+#achlist{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:6px;overflow:auto;max-height:52vh;padding:2px;}
+.achcell{display:flex;flex-direction:column;gap:2px;padding:8px 12px;background:linear-gradient(90deg,rgba(120,130,180,.35) 0 2px,rgba(255,255,255,.04) 2px);opacity:.6;}
+.achcell b{font-size:14px;} .achcell small{font-size:12px;color:var(--mute);}
+.achcell.got{opacity:1;background:linear-gradient(90deg,var(--gold) 0 3px,rgba(255,213,74,.12) 3px);} .achcell.got b{color:var(--gold);text-shadow:0 0 8px rgba(255,213,74,.5);}
+.xpcol{flex-basis:100%;}
+.xpbox{width:100%;max-width:420px;display:flex;flex-direction:column;gap:6px;}
+.xprow{display:flex;justify-content:space-between;font-size:13px;text-transform:uppercase;letter-spacing:.08em;} .xprank{color:#c9d2ff;} .xpgain{color:var(--gold);font-weight:700;}
+.xpbar{height:10px;background:rgba(255,255,255,.08);transform:skewX(var(--skew));overflow:hidden;}
+.xpbar i{display:block;height:100%;width:var(--b);background:linear-gradient(90deg,var(--cyan),var(--pink));box-shadow:0 0 10px var(--pink);animation:xpfill 1.4s cubic-bezier(.2,.8,.3,1) .5s backwards;}
+@keyframes xpfill{from{width:var(--a);}}
+.xpup{margin:0;text-align:center;color:var(--gold);font-weight:700;animation:stamp .5s cubic-bezier(.3,1.6,.5,1) 1.6s both;}
+.tstats .rk{color:#fff;} .tstats .rk b{color:var(--cyan);}
+@media (prefers-reduced-motion:reduce){ .xpbar i,.xpup{animation:none;} #achpop{transition:none;} }
 </style>
 
 <canvas id="cv3" aria-hidden="true"></canvas>
@@ -284,7 +303,8 @@ dt{text-transform:uppercase;letter-spacing:0.05em;font-size:13px;} dd{color:#fff
       <button class="btn" data-nav data-go="vis">Visualizer</button>
       <button class="btn" data-nav data-go="gallery">Feuerwerk-Galerie</button>
       <button class="btn" data-nav data-go="options">Optionen</button>
-      <button class="btn wide" data-nav data-go="help">Steuerung &amp; Regeln</button>
+      <button class="btn" data-nav data-go="ach">Erfolge &amp; Rang</button>
+      <button class="btn" data-nav data-go="help">Steuerung &amp; Regeln</button>
     </div>
     <p class="fine">Inoffizielles Fan-Projekt, inspiriert von „Boom Boom Rocket“ (Xbox 360, 2007). Eigene Arrangements gemeinfreier Klassik, gespielt mit echten Instrument-Aufnahmen. Grafik wird im Browser erzeugt.</p>
     <p class="fine credits">Klänge: Instrumente aus dem Fluid R3 GM SoundFont von Frank Wen (MIT-Lizenz). Feuerwerks-Aufnahmen über den ESC-50-Datensatz (K. J. Piczak) von freesound.org: soundmary (CC0); matucha, ramagochi und bmlake (CC BY 3.0).</p>
@@ -372,6 +392,13 @@ dt{text-transform:uppercase;letter-spacing:0.05em;font-size:13px;} dd{color:#fff
     <div class="row"><button class="btn" data-nav data-go="title">Zurück</button></div>
   </section>
 
+  <section class="screen panel" id="s-ach" data-back="title" hidden>
+    <div><p class="eyebrow" id="ach-count"></p><h2>Erfolge &amp; Rang</h2></div>
+    <p class="fine" id="ach-rank"></p>
+    <div id="achlist"></div>
+    <div class="row"><button class="btn primary" data-nav data-go="title">Zurück</button></div>
+  </section>
+
   <section class="screen panel" id="s-options" data-back="title" hidden>
     <h2>Optionen</h2>
     <div class="opt"><label for="o-music">Musik</label><input type="range" id="o-music" min="0" max="100" data-nav><output id="v-music"></output></div>
@@ -403,6 +430,7 @@ dt{text-transform:uppercase;letter-spacing:0.05em;font-size:13px;} dd{color:#fff
   </section>
 </div>
 <div id="toast" role="status" aria-live="polite"></div>
+<div id="achpop" role="status" aria-live="polite"></div>
 <div id="big" aria-hidden="true"></div>
 <button id="bloomBtn" hidden>BLOOM</button>
 <script src="three.min.js"></script><script src="peerjs.min.js"></script>
@@ -2326,6 +2354,7 @@ function pressLane(pi,lane,perf){
   else { base=40; txt='GUT'; col='#8dff9e'; sc=0.75; p.good++; }
   p.hits++; p.combo++; p.maxCombo=Math.max(p.maxCombo,p.combo);
   if(p.combo===25||p.combo%50===0) salvo(p.combo);
+  if(!G.demo && G.mode!=='practice'){ if(p.combo===50) award('c50'); else if(p.combo===100) award('c100'); else if(p.combo===200) award('c200'); }
   p.score+=base*multOf(p);
   p.health=Math.min(1,p.health+(base===100?0.022:0.015));
   if(!p.bloomOn) p.bloom=Math.min(1,p.bloom+(base===100?0.045:0.032));
@@ -2352,6 +2381,7 @@ function pressBloom(pi){
   const p=G.players[pi]; if(!p||p.failed) return;
   if(p.bloom>=1 && !p.bloomOn){
     p.bloomOn=true; SFX.bloom(A.ctx.currentTime); setBloomAudio(true);
+    progInit(); SAVE.stats.blooms++; if(SAVE.stats.blooms>=10) award('bloom10');
     flash(W/2,H*0.3,C.white,Math.max(W,H),1.4);
     for(let k=0;k<3;k++) later(k*0.12,()=>launchBurst(p.fx+p.fw*(0.2+0.3*k),H*0.22,'chrysanthemum',pick([C.gold,C.magenta,C.cyan]),C.white,0.9));
     for(let k=0;k<7;k++) freeLaunch(W*(0.06+0.88*k/6),H*(0.1+0.04*Math.abs(3-k)),{type:'kamuro'},0.45+Math.abs(3-k)*0.06,{s:0.9});
@@ -2396,7 +2426,7 @@ function updatePlayers(t,dt){
     for(const e of p.errs) e.age+=dt; if(p.errs.length && p.errs[0].age>4) p.errs.shift();
     for(const r of p.rings) r.t+=dt; if(p.rings.length) p.rings=p.rings.filter(r=>r.t<0.4);
     if(p.lost){ p.lost.t+=dt; if(p.lost.t>0.8) p.lost=null; }
-    { const m=multOf(p); if(m>p.lastM && !p.failed){ p.mPulse=1; SFX.multUp(A.ctx.currentTime,m); } p.lastM=m; }
+    { const m=multOf(p); if(m>p.lastM && !p.failed){ p.mPulse=1; SFX.multUp(A.ctx.currentTime,m); if(m>=8 && G.mode!=='practice') award('x8'); } p.lastM=m; }
     // Funkenschweif der aufsteigenden Raketen
     const hy=hitY(), sy=spawnY();
     for(let i=p.head;i<p.notes.length;i++){
@@ -2763,6 +2793,19 @@ function drawCountdown(t){
   neonTextCached(txt,W/2,H*0.15,'400 72px "Bungee", "Arial Black", sans-serif',txt==='LOS!'?'#ffe066':NEON_CYAN,22,sc);
   g.globalAlpha=1;
 }
+// Raketenkörper mit Streifen und Flossen (einmal gezeichnet, als Bild wiederverwendet)
+function rocketSpr(lane,rr){ const r=Math.round(rr); return glowSprite('rk|'+lane+'|'+r+'|'+DPR,r*2.6*DPR,r*3.4*DPR,(x2,w,h)=>{
+  x2.scale(DPR,DPR); const W2=r*2.6, cx=W2/2, bw=r*0.95, top=r*0.2, bot=r*2.75, col=LANE_HEX[lane];
+  // Flossen
+  x2.fillStyle=col; x2.globalAlpha=0.9;
+  x2.beginPath(); x2.moveTo(cx-bw/2,bot-r*0.9); x2.lineTo(cx-bw/2-r*0.55,bot+r*0.35); x2.lineTo(cx-bw/2,bot); x2.closePath(); x2.fill();
+  x2.beginPath(); x2.moveTo(cx+bw/2,bot-r*0.9); x2.lineTo(cx+bw/2+r*0.55,bot+r*0.35); x2.lineTo(cx+bw/2,bot); x2.closePath(); x2.fill();
+  x2.globalAlpha=1;
+  // Rumpf: dunkles Metall mit Glanzkante
+  const gr=x2.createLinearGradient(cx-bw/2,0,cx+bw/2,0); gr.addColorStop(0,'#1a1f3a'); gr.addColorStop(0.35,'#59607f'); gr.addColorStop(0.55,'#2a3050'); gr.addColorStop(1,'#0c0f22');
+  x2.fillStyle=gr; x2.fillRect(cx-bw/2,top,bw,bot-top);
+  x2.fillStyle=col; x2.fillRect(cx-bw/2,top+r*1.15,bw,r*0.22); x2.fillRect(cx-bw/2,top+r*1.6,bw,r*0.12);
+  x2.fillStyle='#0a0c18'; x2.fillRect(cx-bw*0.38,bot-r*0.05,bw*0.76,r*0.22); }); }
 function hitLineSpan(p){ return G.players.length>1 ? [p.fx-24,p.fx+p.fw+24] : [Math.max(8,W*0.06),Math.min(W-8,W*0.94)]; }
 function drawField(p,t){
   const hy=hitY(), sy=spawnY(), lw=p.fw/4, rr=Math.max(11,Math.min(lw*0.2,19));
@@ -2774,11 +2817,11 @@ function drawField(p,t){
   const [lx0,lx1]=hitLineSpan(p);
   const lc = p.bloomOn? 'hsl('+((t*240)%360)+',100%,62%)' : ready? (Math.sin(t*20)>0?'#ffffff':'#ffd54a') : NEON_PINK;
   g.globalAlpha=fade; g.beginPath(); g.moveTo(lx0,hy); g.lineTo(lx1,hy); neonStroke(lc, (ready||p.bloomOn?6:4)+BEAT.p*2.5, 22);
-  if(ready||p.bloomOn){ g.globalCompositeOperation='lighter'; for(let k=0;k<8;k++){ const x=lx0+Math.random()*(lx1-lx0); g.drawImage(SPRITES[ready?C.gold:pick([C.magenta,C.cyan,C.white])],x-9,hy-9,18,18);} g.globalCompositeOperation='source-over'; }
+  if(ready||p.bloomOn){ g.globalCompositeOperation='lighter'; for(let k=0;k<(p.bloomOn?16:8);k++){ const x=lx0+Math.random()*(lx1-lx0); g.drawImage(SPRITES[ready?C.gold:pick([C.magenta,C.cyan,C.white])],x-9,hy-9,18,18);} g.globalCompositeOperation='source-over'; }
   // Bahnen: leuchten auf, wenn die Taste gedrückt wird
   g.globalCompositeOperation='lighter';
-  for(let l=0;l<4;l++){ const x=laneX(p,l), f=p.flash[l], spr=laneSpr(l);
-    g.globalAlpha=fade*(0.07+0.4*f); g.drawImage(spr,x-lw*0.42,hy,lw*0.84,sy-hy);
+  for(let l=0;l<4;l++){ const x=laneX(p,l), f=p.flash[l], spr=laneSpr(p.bloomOn?(l+Math.floor(t*6))%4:l);
+    g.globalAlpha=fade*((p.bloomOn?0.2+0.12*BEAT.p:0.07)+0.4*f); g.drawImage(spr,x-lw*0.42,hy,lw*0.84,sy-hy);
     g.globalAlpha=fade*0.3; g.drawImage(spr,x-1.5,hy,3,sy-hy); }
   g.globalCompositeOperation='source-over';
   // Kombo groß in der Mitte, hinter den Raketen
@@ -2815,12 +2858,14 @@ function drawField(p,t){
     const L=Math.min(H*0.24, sy-y+60)*(0.92+Math.random()*0.16);
     g.globalCompositeOperation='lighter';
     const tg=g.createLinearGradient(0,y,0,y+L); tg.addColorStop(0,col); tg.addColorStop(0.35,col+'99'); tg.addColorStop(1,col+'00');
-    g.strokeStyle=tg; g.lineWidth=rr*0.75; g.lineCap='round'; g.beginPath(); g.moveTo(x,y+rr*0.6); g.lineTo(x,y+L); g.stroke();
+    const ty=y+rr*2.9;
+    g.strokeStyle=tg; g.lineWidth=rr*0.75; g.lineCap='round'; g.beginPath(); g.moveTo(x,ty); g.lineTo(x,y+L); g.stroke();
     const cg=g.createLinearGradient(0,y,0,y+L*0.5); cg.addColorStop(0,'rgba(255,255,255,0.95)'); cg.addColorStop(1,'rgba(255,255,255,0)');
-    g.strokeStyle=cg; g.lineWidth=rr*0.22; g.beginPath(); g.moveTo(x,y+rr*0.6); g.lineTo(x,y+L*0.5); g.stroke();
-    const fs=rr*(1.2+Math.random()*0.6); g.drawImage(SPRITES[C.white],x-fs,y+rr*0.8-fs,fs*2,fs*2);
+    g.strokeStyle=cg; g.lineWidth=rr*0.22; g.beginPath(); g.moveTo(x,ty); g.lineTo(x,y+L*0.5); g.stroke();
+    const fs=rr*(1.2+Math.random()*0.6); g.drawImage(SPRITES[C.white],x-fs,ty-fs*0.6,fs*2,fs*2);
     g.drawImage(SPRITES[n.sp?C.magenta:LANE_COL[n.lane]],x-rr*2.2,y-rr*2.2,rr*4.4,rr*4.4);
     g.globalCompositeOperation='source-over'; g.lineCap='butt';
+    { const sp=rocketSpr(n.lane,rr), sw=sp.width/DPR, sh2=sp.height/DPR; g.drawImage(sp,x-sw/2,y-rr*0.2,sw,sh2); }
     laneBadge(x,y,rr,n.lane,fade,true);
     if(n.sp){ g.strokeStyle='#fff'; g.lineWidth=2; g.beginPath(); g.arc(x,y,rr+4+Math.sin(t*20)*2,0,Math.PI*2); g.stroke(); }
   }
@@ -2919,6 +2964,7 @@ function showScreen(name){
   $('#bloomBtn').hidden = !(isTouch && !name && G && G.players && G.players.length===1);
   if(name){ const f=document.querySelector('#s-'+name+' [data-nav]:not([disabled])'); if(f && !f.matches('input[type=range]')) setTimeout(()=>f.focus({preventScroll:true}),30); }
   if(name==='title') renderStats();
+  if(name==='ach') renderAch();
   if(name==='select'){ renderSelect(); PREV.idx=-1; previewQueue(UI.sel); }
   if(name==='gallery') renderGallery();
   if(name==='options') renderOptions();
@@ -2927,9 +2973,10 @@ function showScreen(name){
 }
 function renderStats(){
   const el=$('#t-stats'); if(!el) return; const b=Object.values(SAVE.best||{});
-  if(!b.length && !SAVE.unlocked.length){ el.hidden=true; return; }
+  progInit(); const L=levelOf(SAVE.xp);
+  if(!b.length && !SAVE.unlocked.length && !SAVE.xp){ el.hidden=true; return; }
   const s=b.filter(x=>x.grade==='S').length;
-  el.innerHTML='<span><b>'+b.length+'</b> Lieder geschafft</span><span><b>'+s+'</b> × Note S</span><span><b>'+SAVE.unlocked.length+'</b>/'+UNLOCKS.length+' Feuerwerke</span>';
+  el.innerHTML='<span class="rk"><b>'+L.level+'</b>'+rankOf(L.level)+'</span><span><b>'+b.length+'</b> Lieder geschafft</span><span><b>'+s+'</b> × Note S</span><span><b>'+SAVE.unlocked.length+'</b>/'+UNLOCKS.length+' Feuerwerke</span>';
   el.hidden=false;
 }
 function click(){ audioInit(); SFX.ui(A.ctx.currentTime); UI.lastClick=performance.now(); }
@@ -3074,6 +3121,8 @@ function showResults(){
       (p.fc?'<p class="fc">'+p.fc+'</p>':'')+timingHtml(p,multi)+extra;
     res.appendChild(col);
   }
+  const xpr=(G.mode!=='demo')?progAfterGame():null;
+  if(xpr){ const xd=document.createElement('div'); xd.className='rescol xpcol'; xd.innerHTML=xpHtml(xpr); res.appendChild(xd); }
   storeSave();
   showScreen('results');
   if(G.online && typeof onRenderResults==='function') onRenderResults();
@@ -3115,9 +3164,9 @@ $('#r-select').addEventListener('click',()=>{ stopGame(); showScreen(UI.last&&UI
 $('#r-menu').addEventListener('click',()=>{ stopGame(); showScreen('title'); });
 
 // ---------- Visualizer ----------
-$('#vis-file').addEventListener('change',e=>{ const f=e.target.files[0]; if(f){ visFile(f); } });
+$('#vis-file').addEventListener('change',e=>{ const f=e.target.files[0]; if(f){ visFile(f); award('vis'); } });
 (function(){ const s=$('#vis-song'); SONGS.forEach((x,i)=>{ const o=document.createElement('option'); o.value=i; o.textContent=x.title+' ('+x.composer+')'; s.appendChild(o); }); })();
-$('#vis-play').addEventListener('click',async()=>{ visStop(); stopGame(); audioInit(); const vs=SONGS[+$('#vis-song').value]; if(smpNeeded(vs).some(n=>!SMP.buf[n])){ $('#vis-status').textContent='Lade Instrumente …'; await smpEnsure(vs); } startGame({mode:'demo',songIdx:+$('#vis-song').value,diff:2,tempo:1}); $('#vis-status').textContent='Läuft: '+SONGS[+$('#vis-song').value].title; });
+$('#vis-play').addEventListener('click',async()=>{ visStop(); stopGame(); audioInit(); const vs=SONGS[+$('#vis-song').value]; if(smpNeeded(vs).some(n=>!SMP.buf[n])){ $('#vis-status').textContent='Lade Instrumente …'; await smpEnsure(vs); } award('vis'); startGame({mode:'demo',songIdx:+$('#vis-song').value,diff:2,tempo:1}); $('#vis-status').textContent='Läuft: '+SONGS[+$('#vis-song').value].title; });
 $('#vis-stop').addEventListener('click',()=>{ visStop(); stopGame(); $('#vis-status').textContent='Gestoppt'; });
 
 // ---------- Galerie ----------
@@ -3171,6 +3220,92 @@ ownRestore();
 resize();
 showScreen('title');
 requestAnimationFrame(frame);
+// ===== Fortschritt: Rang mit Erfahrungspunkten und Erfolge =====
+const RANKS=['Funkenlehrling','Zündler','Böllerfan','Raketenbauer','Pyrotechniker','Lichtkünstler','Feuerwerksmeister','Himmelsmaler','Sternenschmied','Hafenlegende'];
+function xpNeed(l){ return 300+l*250; }                 // XP von Stufe l auf l+1
+function levelOf(xp){ let l=1, r=xp; while(r>=xpNeed(l)){ r-=xpNeed(l); l++; } return {level:l, into:r, need:xpNeed(l)}; }
+function rankOf(level){ return RANKS[Math.min(RANKS.length-1,Math.floor((level-1)/3))]; }
+const ACH=[
+  ['first','Erste Show','Ein Lied im Arcade-Modus schaffen'],
+  ['hard','Mutprobe','Ein Lied auf Schwer schaffen'],
+  ['gradeA','Saubere Arbeit','Note A oder besser'],
+  ['gradeS','Meisterzündung','Note S'],
+  ['hardS','Pyro-Profi','Note S auf Schwer'],
+  ['fc','Full Combo','Ein Lied ohne einen einzigen Fehler'],
+  ['ap','Alles perfekt','Ein Lied nur mit „Perfekt“-Treffern'],
+  ['c50','Kettenreaktion','50er Kombo'],
+  ['c100','Dauerfeuer','100er Kombo'],
+  ['c200','Unaufhaltsam','200er Kombo'],
+  ['x8','Achtfach','Im Bloom den ×8-Multiplikator erreichen'],
+  ['bloom10','Blütezeit','Bloom 10-mal zünden'],
+  ['all10','Ganzer Hafen','Alle 10 Hauptlieder schaffen'],
+  ['bonus','Zugabe','Alle 5 Bonuslieder schaffen'],
+  ['unl5','Sammler','5 Spezial-Feuerwerke freischalten'],
+  ['unl20','Feuerwerkskiste','20 Spezial-Feuerwerke freischalten'],
+  ['unl45','Komplette Sammlung','Alle 45 Spezial-Feuerwerke freischalten'],
+  ['endless5','Ausdauer','5 Runden im Endlos-Modus'],
+  ['own','Eigener Sound','Ein eigenes Lied schaffen'],
+  ['versus','Duell','Ein Spiel zu zweit'],
+  ['online','Gemeinsam','Ein Lied online mit Freunden spielen'],
+  ['vis','Lichtshow','Den Visualizer ausprobieren'],
+];
+function progInit(){ if(!SAVE.ach) SAVE.ach={}; if(!SAVE.xp) SAVE.xp=0; if(!SAVE.stats) SAVE.stats={blooms:0,games:0}; }
+// Erfolg vergeben (einmalig) und kurz oben rechts einblenden
+const ACHQ=[]; let achBusy=false;
+function award(id){
+  progInit(); if(SAVE.ach[id]) return false;
+  const a=ACH.find(x=>x[0]===id); if(!a) return false;
+  SAVE.ach[id]=Date.now(); storeSave(); ACHQ.push(a); achNext(); return true;
+}
+function achNext(){
+  if(achBusy||!ACHQ.length) return; achBusy=true; const a=ACHQ.shift();
+  const el=document.getElementById('achpop'); el.innerHTML='<b>Erfolg freigeschaltet</b><span>'+a[1]+'</span><small>'+a[2]+'</small>';
+  el.classList.remove('on'); void el.offsetWidth; el.classList.add('on');
+  if(A.ctx) SFX.multUp(A.ctx.currentTime,4);
+  setTimeout(()=>{ el.classList.remove('on'); setTimeout(()=>{ achBusy=false; achNext(); },400); },3200);
+}
+// Nach jedem Lied: Erfahrungspunkte und Erfolge
+function progAfterGame(){
+  progInit();
+  const p=G.players[0]; if(!p) return null; const gr=gradeOf(p); const failed=G.failed||p.failed;
+  let gain=Math.round(p.score/60)+p.hits*2;
+  if(!failed) gain+=120; if(p.fc) gain+=250; gain+=({S:300,A:150,B:80,C:30})[gr.g]||0;
+  if(G.mode==='practice') gain=Math.round(gain*0.4);
+  const before=levelOf(SAVE.xp); SAVE.xp+=gain; const after=levelOf(SAVE.xp); SAVE.stats.games++;
+  const arcadeOk=(G.mode==='arcade'||G.mode==='versus')&&!failed;
+  if(arcadeOk) award('first');
+  if(arcadeOk && G.diff===2) award('hard');
+  if(arcadeOk && (gr.g==='A'||gr.g==='S')) award('gradeA');
+  if(arcadeOk && gr.g==='S'){ award('gradeS'); if(G.diff===2) award('hardS'); }
+  if(!failed && G.mode!=='practice'){ if(p.fc) award('fc'); if(p.fc==='ALLES PERFEKT') award('ap'); }
+  if(G.mode==='versus') award('versus');
+  if(G.online) award('online');
+  if(G.custom && !failed) award('own');
+  if(G.mode==='endless' && G.lap-1>=5) award('endless5');
+  const done=id=>[0,1,2].some(d=>SAVE.best[id+'_'+d]);
+  if(SONGS.filter(s=>s.pack===1).every(s=>done(s.id))) award('all10');
+  if(SONGS.filter(s=>s.pack===2).every(s=>done(s.id))) award('bonus');
+  progUnlockAch();
+  storeSave();
+  return {gain, before, after, xp:SAVE.xp};
+}
+function progUnlockAch(){ const n=SAVE.unlocked.length; if(n>=5) award('unl5'); if(n>=20) award('unl20'); if(n>=45) award('unl45'); }
+function xpHtml(r){
+  if(!r) return '';
+  const up=r.after.level>r.before.level, pct0=up?0:r.before.into/r.before.need*100, pct1=r.after.into/r.after.need*100;
+  return '<div class="xpbox"><div class="xprow"><span class="xprank">'+rankOf(r.after.level)+' · Stufe '+r.after.level+'</span><span class="xpgain">+'+r.gain.toLocaleString('de-DE')+' XP</span></div>'+
+    '<div class="xpbar"><i style="--a:'+pct0.toFixed(1)+'%;--b:'+pct1.toFixed(1)+'%"></i></div>'+
+    (up?'<p class="xpup">Stufe '+r.after.level+' erreicht'+(rankOf(r.after.level)!==rankOf(r.before.level)?' · neuer Rang: '+rankOf(r.after.level):'')+'!</p>':'')+'</div>';
+}
+function renderAch(){
+  progInit(); const box=document.getElementById('achlist'); box.innerHTML='';
+  const L=levelOf(SAVE.xp); document.getElementById('ach-rank').textContent=rankOf(L.level)+' · Stufe '+L.level+' · '+L.into+'/'+L.need+' XP bis zur nächsten Stufe';
+  let n=0;
+  for(const [id,name,desc] of ACH){ const got=!!SAVE.ach[id]; if(got) n++;
+    const d=document.createElement('div'); d.className='achcell'+(got?' got':'');
+    d.innerHTML='<b>'+(got?'★ ':'☆ ')+name+'</b><small>'+desc+'</small>'; box.appendChild(d); }
+  document.getElementById('ach-count').textContent=n+' von '+ACH.length+' Erfolgen';
+}
 // ===== Online ohne Claude: Räume direkt von Browser zu Browser (PeerJS) =====
 // Der Gastgeber ist der Knoten in der Mitte: Gäste schicken ihm ihren Zustand, er verteilt die Liste an alle.
 // Gleiche Form wie claude.use('room'): join() liefert presence/peers/onPeers/leave, dazu fetchFile für eigene Lieder.
