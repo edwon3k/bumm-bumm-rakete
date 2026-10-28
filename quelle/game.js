@@ -174,7 +174,7 @@ function songTime(perf){ return audioNow(perf)-G.startAt-SETTINGS.offset/1000; }
 function approachTime(diff){ return [2.1,1.7,1.38][diff]/SETTINGS.speed; }
 
 function newPlayer(i, chart){
-  const goldOn=G.mode!=='demo'; return {i, notes:chart.map((n,k)=>({t:n.t,lane:n.lane,st:0,sp:false,gold:goldOn&&k%29===14})), goldTotal:goldOn?chart.filter((n,k)=>k%29===14).length:0, goldHit:0, head:0, score:0, combo:0, maxCombo:0, health:0.6, bloom:0, bloomOn:false,
+  const goldOn=G.mode!=='demo'; const notes=chart.map((n,k)=>({t:n.t,lane:n.lane,st:0,sp:false,gold:goldOn&&k%29===14})); placeNotes(notes,0); return {i, notes, goldTotal:goldOn?chart.filter((n,k)=>k%29===14).length:0, goldHit:0, head:0, score:0, combo:0, maxCombo:0, health:0.6, bloom:0, bloomOn:false,
     hits:0, perfect:0, great:0, good:0, miss:0, misfire:0, flash:[0,0,0,0], judg:[], failed:false, specialDone:false, unlock:null, scoreShown:0, shake:0,
     rings:[], hitPulse:[0,0,0,0], cPulse:0, mPulse:0, lastM:1, lost:null, errs:[], errAll:[]};
 }
@@ -254,7 +254,7 @@ function endlessExtend(t){
   const s1=makeSection(G.song,'lap',G.nextLapT,G.bpm); const s2=makeSection(G.song,'fill',s1.end,G.bpm);
   const evs=[...s1.ev,...s2.ev]; G.ev=G.ev.slice(G.evIdx).concat(evs); G.evIdx=0; G.ev.sort((a,b)=>a.t-b.t);
   const chart=makeChart([...s1.cands,...s2.cands], G.diff, 0);
-  for(const p of G.players) for(const n of chart){ const gold=p.notes.length%29===14; if(gold) p.goldTotal++; p.notes.push({t:n.t,lane:G.mods.mirror?3-n.lane:n.lane,st:0,sp:false,gold}); }
+  for(const p of G.players){ const from=p.notes.length; for(const n of chart){ const gold=p.notes.length%29===14; if(gold) p.goldTotal++; p.notes.push({t:n.t,lane:G.mods.mirror?3-n.lane:n.lane,st:0,sp:false,gold}); } placeNotes(p.notes,from); }
   G.total+=chart.length; G.nextLapT=s2.end;
   toast('Runde '+G.lap+' · '+Math.round(G.bpm)+' BPM');
 }
@@ -262,6 +262,15 @@ function endlessExtend(t){
 function setDanger(on){ if(!A.mf||A.mfOn===on) return; A.mfOn=on; const t=A.ctx.currentTime; A.mf.frequency.cancelScheduledValues(t); A.mf.frequency.setTargetAtTime(on?900:20000,t,on?0.25:0.12); }
 function multOf(p){ return (1+Math.min(3,Math.floor(p.combo/10)))*(p.bloomOn?2:1); }
 function laneX(p,l){ return p.fx+p.fw*(l+0.5)/4; }
+// Flugbahnen: jede Rakete zündet an einer eigenen Stelle der Linie und kommt oft schräg angeflogen (für alle Spieler gleich)
+function placeNotes(notes,from){
+  for(let k=from;k<notes.length;k++){ const n=notes[k]; let h=((Math.imul(k+1,2654435761)^Math.imul(Math.round(n.t*1000),40503))>>>0)|1;
+    const rnd=()=>{ h^=h<<13; h>>>=0; h^=h>>>17; h^=h<<5; h>>>=0; return h/4294967296; };
+    let tx=0.5; for(let tries=0;tries<8;tries++){ tx=0.04+rnd()*0.92; let ok=true; for(let j=k-1;j>=0&&j>=k-6;j--){ const m=notes[j]; if(n.t-m.t>0.6) break; if(Math.abs(m.tx-tx)<0.13){ ok=false; break; } } if(ok) break; }
+    const r=rnd(); let off; if(r<0.45) off=(rnd()-0.5)*0.12; else if(r<0.8) off=-(0.25+rnd()*0.45); else off=0.25+rnd()*0.35;
+    n.tx=tx; n.sx=Math.max(-0.2,Math.min(1.2,tx+off)); }
+}
+function noteX(p,n,u){ const sp=hitLineSpan(p); const f=n.tx+(n.sx-n.tx)*Math.pow(Math.max(0,u),1.7); return sp[0]+(sp[1]-sp[0])*f; }
 function hitY(){ return H*0.3; }
 function spawnY(){ return H*0.97; }
 function pickFirework(){
@@ -283,13 +292,13 @@ function pressLane(pi,lane,perf){
     if(n.st||n.lane!==lane) continue;
     const d=Math.abs(n.t-t); if(d<=WIN && d<bd){ bd=d; best=n; }
   }
-  const x=laneX(p,lane);
+  let x=laneX(p,lane);
   if(!best){
     p.misfire++; breakCombo(p); p.health=Math.max(0,p.health-0.02); SFX.misfire(A.ctx.currentTime);
     for(let i=0;i<10;i++) addP(x,hitY(),(Math.random()-0.5)*80,(Math.random()-0.8)*80,{c:C.silver,life:0.4,size:1.5,drag:3});
     checkFail(p); return;
   }
-  best.st=1;
+  best.st=1; x=noteX(p,best,Math.max(0,(best.t-t)/G.approach));
   let base, txt, col, sc;
   if(bd<=W_PERF){ base=100; txt='PERFEKT'; col='#ffe066'; sc=1.05; p.perfect++; }
   else if(bd<=W_GREAT){ base=70; txt='SUPER'; col='#6ff3ff'; sc=0.9; p.great++; }
@@ -302,7 +311,7 @@ function pressLane(pi,lane,perf){
   if(!p.bloomOn) p.bloom=Math.min(1,p.bloom+(base===100?0.045:0.032));
   judgeText(p,txt,col,x,base<100?(best.t>t?'FRÜH':'SPÄT'):null);
   { const d=t-best.t; p.errs.push({d,age:0,q:base}); if(p.errs.length>24) p.errs.shift(); p.errAll.push([best.t,d]); }
-  p.rings.push({l:lane,t:0,q:base}); p.hitPulse[lane]=1; p.cPulse=1;
+  p.rings.push({l:lane,t:0,q:base,x}); p.hitPulse[lane]=1; p.cPulse=1;
   // Feuerwerk!
   const y=hitY()-10-Math.random()*H*0.06;
   const fw=pickFirework(); const tier=Math.min(4,1+Math.floor(p.combo/10)); const s=sc*(0.82+0.11*tier)*(p.bloomOn?1.3:1)*(G.players.length>1?0.75:1);
@@ -352,8 +361,8 @@ function updatePlayers(t,dt){
       if(n.st===0 && !p.failed){
         n.st=2; p.miss++; breakCombo(p); VIG.miss=1; const pen=[0.05,0.07,0.085][G.diff];
         p.health=Math.max(0,p.health-pen); if(!p.bloomOn) p.bloom=Math.max(0,p.bloom-0.05);
-        judgeText(p,'DANEBEN','#ff6b6b',laneX(p,n.lane)); setLeadOk(false); SFX.dud(A.ctx.currentTime); p.shake=1;
-        const x=laneX(p,n.lane), y=hitY()-30; for(let k=0;k<14;k++) addP(x,y,(Math.random()-0.5)*60,(Math.random()-0.5)*60,{c:C.silver,life:0.6,size:1.4,drag:2,grav:120*FX.scale});
+        judgeText(p,'DANEBEN','#ff6b6b',noteX(p,n,0)); setLeadOk(false); SFX.dud(A.ctx.currentTime); p.shake=1;
+        const x=noteX(p,n,0), y=hitY()-30; for(let k=0;k<14;k++) addP(x,y,(Math.random()-0.5)*60,(Math.random()-0.5)*60,{c:C.silver,life:0.6,size:1.4,drag:2,grav:120*FX.scale});
         checkFail(p);
       } else if(n.st===0) n.st=2;
     }
@@ -379,7 +388,7 @@ function updatePlayers(t,dt){
     const hy=hitY(), sy=spawnY(), rr2=Math.max(11,Math.min(p.fw/4*0.2,19));
     for(let i=p.head;i<p.notes.length;i++){
       const n=p.notes[i]; if(n.t>t+G.approach) break; if(n.st) continue;
-      const y=hy+(n.t-t)/G.approach*(sy-hy); const x=laneX(p,n.lane)+(n.sp?Math.sin(t*12)*8:0);
+      const y=hy+(n.t-t)/G.approach*(sy-hy); const x=noteX(p,n,(n.t-t)/G.approach)+(n.sp?Math.sin(t*12)*8:0);
       if(!n.launched){ n.launched=true; if(n.t-t>G.approach*0.6) SFX.launch(A.ctx.currentTime,(x/W)*2-1); }
       { const u=(n.t-t)/G.approach; if((G.mods.hidden&&u<0.42)||(G.mods.sudden&&u>0.6)) continue; }
       if(Math.random()<(PERF.low?0.25:0.55) && FX.smoke.length<220) FX.smoke.push({x:x+(Math.random()-0.5)*10,y:y+30+Math.random()*40,vx:(Math.random()-0.5)*6,vy:12+Math.random()*10,r:5,gr:9+Math.random()*6,life:1.6+Math.random(),max:2.6,c:n.sp?C.magenta:(n.gold?C.gold:LANE_COL[n.lane]),lit:0,tint:0.5});

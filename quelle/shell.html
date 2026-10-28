@@ -285,6 +285,42 @@ dt{text-transform:uppercase;letter-spacing:0.05em;font-size:13px;} dd{color:#fff
 /* V23 */
 @media (max-width:520px){ .row.own{flex-direction:column;align-items:stretch;gap:6px;} .row.own>*{width:auto;max-width:none;flex:0 0 auto;} .row.own .fine{font-size:11.5px;line-height:1.35;margin:0;} #s-select #songs{min-height:240px;flex:1 1 auto;} }
 #s-results dd.gold{color:#ffd54a;text-shadow:0 0 10px rgba(255,213,74,0.7);}
+/* V25: Hauptmenü als Spalte links, wie bei einem Vollbild-Konsolenspiel */
+#s-title{position:absolute;left:0;top:0;bottom:0;width:min(440px,100%);max-height:none;align-items:flex-start;text-align:left;gap:10px;
+  padding:clamp(18px,4vh,40px) 28px clamp(14px,3vh,28px) clamp(20px,4vw,64px);box-sizing:border-box;
+  background:linear-gradient(90deg,rgba(4,5,18,.92) 0%,rgba(4,5,18,.78) 62%,rgba(4,5,18,0) 100%);}
+#s-title::after{content:"";position:absolute;top:0;bottom:0;left:100%;width:min(220px,20vw);pointer-events:none;background:linear-gradient(90deg,rgba(4,5,18,.35),rgba(4,5,18,0));}
+#s-title .logo{font-size:clamp(38px,5.4vw,66px);transform-origin:left center;}
+#s-title .tag{font-size:13px;max-width:34ch;margin:0;}
+#s-title .tstats{justify-content:flex-start;}
+#s-title .keys{justify-content:flex-start;}
+#s-title .menu{display:flex;flex-direction:column;gap:5px;width:100%;padding:0;background:none;border:0;box-shadow:none;clip-path:none;backdrop-filter:none;-webkit-backdrop-filter:none;}
+#s-title .menu::before,#s-title .menu::after{display:none;}
+#s-title .menu .btn,#s-title .menu .btn.wide.primary{justify-content:flex-start;text-align:left;min-height:40px;padding:8px 18px 8px 22px;font-size:15px;letter-spacing:.1em;width:100%;}
+#s-title .menu .btn.wide.primary{min-height:52px;font-size:18px;}
+#s-title .menu .btn.daily{align-items:flex-start;min-height:52px;}
+#s-title .menu .btn:focus-visible,#s-title .menu .btn:hover{transform:translateX(10px);}
+.mgroup{margin:10px 0 2px;font-size:11px;font-weight:700;letter-spacing:.24em;text-transform:uppercase;color:var(--pink);display:flex;align-items:center;gap:10px;}
+.mgroup::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,rgba(255,88,220,.6),transparent);}
+.mgroup:first-child{margin-top:4px;}
+#s-title .tfoot{margin-top:auto;padding-top:10px;display:flex;flex-direction:column;gap:4px;}
+#s-title .tfoot .fine{font-size:10.5px;line-height:1.4;opacity:.7;max-width:46ch;}
+@media (max-width:620px){ #s-title{width:100%;padding:18px 18px 14px;background:linear-gradient(90deg,rgba(4,5,18,.9),rgba(4,5,18,.6));} #s-title::after{display:none;} }
+@media (max-height:640px){ #s-title .tag,#s-title .keys{display:none;} #s-title .menu .btn{min-height:34px;padding-top:5px;padding-bottom:5px;} #s-title .mgroup{margin-top:4px;} }
+/* V25b: kompakter, damit alles ohne Scrollen passt */
+#s-title{overflow-y:auto;scrollbar-width:none;} #s-title::-webkit-scrollbar{display:none;}
+#s-title .keys{display:none;}
+#s-title .logo{font-size:clamp(34px,4.2vw,56px);white-space:nowrap;}
+#s-title .menu{gap:4px;}
+#s-title .menu .btn{min-height:34px;padding:6px 18px 6px 22px;font-size:14px;}
+#s-title .menu .btn.wide.primary{min-height:46px;font-size:17px;}
+#s-title .menu .btn.daily{min-height:44px;}
+#s-title .menu .btn.daily small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;}
+#s-title .mgroup{margin:6px 0 0;}
+@media (max-height:900px){ #s-title .tfoot{display:none;} }
+@media (max-height:800px){ #s-title .tag{display:none;} #s-title .tstats span{padding:2px 8px;} #s-title .tstats{font-size:11px;} }
+@media (max-height:700px){ #s-title .logo span{display:inline;} #s-title .logo span+span{margin-left:.3em;} #s-title .logo{font-size:30px;} #s-title .tstats{display:none;} #s-title .menu .btn{min-height:30px;font-size:13px;} #s-title .menu .btn.wide.primary{min-height:40px;font-size:16px;} #s-title .menu .btn.daily{min-height:40px;} }
+@media (max-width:620px){ #s-title .logo{font-size:40px;white-space:normal;} #s-title .logo span{display:block;} #s-title .logo span+span{margin-left:0;} #s-title .tfoot{display:flex;} }
 </style>
 
 <canvas id="cv3" aria-hidden="true"></canvas>
@@ -299,12 +335,14 @@ dt{text-transform:uppercase;letter-spacing:0.05em;font-size:13px;} dd{color:#fff
     <p class="tstats" id="t-stats" hidden></p>
     <div class="keys" aria-hidden="true"><span class="key" style="background:var(--x)">X</span><span class="key" style="background:var(--a)">A</span><span class="key" style="background:var(--y)">Y</span><span class="key" style="background:var(--b)">B</span></div>
     <div class="menu panel">
+      <p class="mgroup">Spielen</p>
       <button class="btn primary wide" data-nav data-mode="arcade">Arcade starten</button>
       <button class="btn wide daily" data-nav id="t-daily">Tages-Challenge</button>
       <button class="btn" data-nav data-mode="endless">Endlos</button>
       <button class="btn" data-nav data-mode="practice">Training</button>
       <button class="btn" data-nav data-mode="versus">2 Spieler</button>
       <button class="btn primary" data-nav data-go="online">Online mit Freunden</button>
+      <p class="mgroup">Extras</p>
       <button class="btn" data-nav data-go="board">Bestenliste</button>
       <button class="btn" data-nav data-go="vis">Visualizer</button>
       <button class="btn" data-nav data-go="gallery">Feuerwerk-Galerie</button>
@@ -312,8 +350,8 @@ dt{text-transform:uppercase;letter-spacing:0.05em;font-size:13px;} dd{color:#fff
       <button class="btn" data-nav data-go="ach">Erfolge &amp; Rang</button>
       <button class="btn" data-nav data-go="help">Steuerung &amp; Regeln</button>
     </div>
-    <p class="fine">Inoffizielles Fan-Projekt, inspiriert von „Boom Boom Rocket“ (Xbox 360, 2007). Eigene Arrangements gemeinfreier Klassik, gespielt mit echten Instrument-Aufnahmen. Grafik wird im Browser erzeugt.</p>
-    <p class="fine credits">Klänge: Instrumente aus dem Fluid R3 GM SoundFont von Frank Wen (MIT-Lizenz). Feuerwerks-Aufnahmen über den ESC-50-Datensatz (K. J. Piczak) von freesound.org: soundmary (CC0); matucha, ramagochi und bmlake (CC BY 3.0).</p>
+    <div class="tfoot"><p class="fine">Inoffizielles Fan-Projekt, inspiriert von „Boom Boom Rocket“ (Xbox 360, 2007). Eigene Arrangements gemeinfreier Klassik, gespielt mit echten Instrument-Aufnahmen. Grafik wird im Browser erzeugt.</p>
+    <p class="fine credits">Klänge: Instrumente aus dem Fluid R3 GM SoundFont von Frank Wen (MIT-Lizenz). Feuerwerks-Aufnahmen über den ESC-50-Datensatz (K. J. Piczak) von freesound.org: soundmary (CC0); matucha, ramagochi und bmlake (CC BY 3.0).</p></div>
   </section>
 
   <section class="screen panel" id="s-select" data-back="title" hidden>
@@ -433,6 +471,8 @@ dt{text-transform:uppercase;letter-spacing:0.05em;font-size:13px;} dd{color:#fff
       <div><h3>Eigene Lieder</h3><p>In der Liedauswahl auf „+ Eigenes Lied hinzufügen“ tippen und eine Audiodatei wählen. Das Spiel erkennt Tempo und Schläge und baut Raketen daraus. Die Lieder bleiben in diesem Browser gespeichert.</p></div>
       <div><h3>Pause</h3><p><kbd>Esc</kbd>, <kbd>P</kbd> oder Start am Controller.</p></div>
     </div>
+    <p class="fine">Inoffizielles Fan-Projekt, inspiriert von „Boom Boom Rocket“ (Xbox 360, 2007).</p>
+    <p class="fine credits">Klänge: Instrumente aus dem Fluid R3 GM SoundFont von Frank Wen (MIT-Lizenz). Feuerwerks-Aufnahmen über den ESC-50-Datensatz (K. J. Piczak) von freesound.org: soundmary (CC0); matucha, ramagochi und bmlake (CC BY 3.0).</p>
     <div class="row"><button class="btn primary" data-nav data-go="title">Alles klar</button></div>
   </section>
 </div>
