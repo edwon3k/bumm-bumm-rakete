@@ -1890,7 +1890,7 @@ function cityInit(){
       for(const [px,pz,pw,pd] of parts){
         const w=s*pw-2.5, dd=s*pd-2.5; if(w<4||dd<4) continue;
         let h=(8+Math.pow(Math.random(),2.2)*55)*boost; if(Math.random()<0.03) h*=1.7;
-        lots.push([x0+s*px+w/2+1.25, z0+s*pz+dd/2+1.25, w*(0.8+Math.random()*0.2), dd*(0.8+Math.random()*0.2), Math.min(h,z0<-150?150:230)]);
+        lots.push([x0+s*px+w/2+1.25, z0+s*pz+dd/2+1.25, w*(0.8+Math.random()*0.2), dd*(0.8+Math.random()*0.2), Math.min(z0<-140?Math.min(h*0.75,78):h,230)]);
       }
     }
     const geo=new THREE.BoxGeometry(1,1,1); geo.translate(0,0.5,0);
@@ -1997,13 +1997,17 @@ function cityResize(){
 function cityRender(dt,bloom){
   if(!CITY.ok) return;
   const u=CITY.uni; u.uTime.value+=dt;
-  CITY.ang+=dt*0.085*(bloom?1.7:1);
+  CITY.ang+=dt*0.13*(bloom?1.6:1);
   const ik=CITY.introK||0, ie=ik*ik*(3-2*ik);
-  // Kamerafahrt: tief über der Stadt, schwenkt mal die Küste entlang, mal Richtung Meer
+  // Kamerafahrt knapp über den Dächern: legt sich in die Kurven, wippt im Takt, zuckt bei Treffern nach vorn
   const a=CITY.ang, sz=CITY.shoreZ, cam=CITY.cam, port=W<H;
-  const px=Math.sin(a)*240, pz=-300+Math.cos(a*0.7)*90, py=(port?230:200)+Math.sin(a*1.3)*35;
-  cam.position.set(px+CAM.sx*2, py+ie*320+Math.sin(u.uTime.value*0.2)*4+CAM.sy*2, pz-ie*240);
-  cam.lookAt(px+Math.sin(a*0.8+0.6)*380, (port?10:22)-ie*40, sz+200);
+  const px=Math.sin(a)*260, pz=-290+Math.cos(a*0.7)*110, py=(port?130:112)+Math.sin(a*1.3)*16+BEAT.p*3;
+  const tx=px+Math.sin(a*0.8+0.6)*360, tz=sz+160, ty=(port?30:42)-ie*40;
+  const fx=tx-px, fz=tz-pz, fl=Math.hypot(fx,fz)||1, push=CAM.punch*22;
+  cam.position.set(px+fx/fl*push+CAM.sx*2, py+ie*380+CAM.sy*2, pz+fz/fl*push-ie*260);
+  const vx=Math.cos(a)*260, roll=Math.max(-0.12,Math.min(0.12,-vx*0.00045));
+  cam.up.set(Math.sin(roll),Math.cos(roll),0);
+  cam.lookAt(tx, ty, tz);
   const sw=Math.sin(a);
   u.uCam.value.copy(cam.position); CITY.sky.position.copy(cam.position);
   const L=FX.light; const k=Math.min(1.4,L.v)*0.42;
