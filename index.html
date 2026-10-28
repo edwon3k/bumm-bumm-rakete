@@ -280,6 +280,14 @@ dt{text-transform:uppercase;letter-spacing:0.05em;font-size:13px;} dd{color:#fff
 .xpup{margin:0;text-align:center;color:var(--gold);font-weight:700;animation:stamp .5s cubic-bezier(.3,1.6,.5,1) 1.6s both;}
 .tstats .rk{color:#fff;} .tstats .rk b{color:var(--cyan);}
 @media (prefers-reduced-motion:reduce){ .xpbar i,.xpup{animation:none;} #achpop{transition:none;} }
+/* ===== V22: Modifikatoren, Tages-Challenge ===== */
+.modrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;} .modrow .seg{flex:1;}
+.modxp{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);min-width:8em;}
+#mods button{font-size:11px;min-height:32px;}
+#mods button[aria-pressed="true"]{color:#1a0610;} #mods button[aria-pressed="true"]::before{background:linear-gradient(180deg,#ff9be6,var(--pink));border-color:#ffd1f3;box-shadow:0 0 14px rgba(255,88,220,.6);}
+.btn.daily{flex-direction:column;gap:2px;min-height:56px;} .btn.daily small{font-size:11px;letter-spacing:.04em;text-transform:none;font-weight:500;color:#9fe9ff;}
+.btn.daily::before{border-color:rgba(255,213,74,.6);background:linear-gradient(90deg,var(--gold) 0 3px,transparent 3px),linear-gradient(90deg,rgba(60,40,10,.95),rgba(14,14,44,.95));}
+.btn.daily:focus-visible::before{background:linear-gradient(90deg,var(--pink) 0 4px,transparent 4px),linear-gradient(90deg,rgba(255,213,74,.35),rgba(76,242,255,.15));}
 </style>
 
 <canvas id="cv3" aria-hidden="true"></canvas>
@@ -295,6 +303,7 @@ dt{text-transform:uppercase;letter-spacing:0.05em;font-size:13px;} dd{color:#fff
     <div class="keys" aria-hidden="true"><span class="key" style="background:var(--x)">X</span><span class="key" style="background:var(--a)">A</span><span class="key" style="background:var(--y)">Y</span><span class="key" style="background:var(--b)">B</span></div>
     <div class="menu panel">
       <button class="btn primary wide" data-nav data-mode="arcade">Arcade starten</button>
+      <button class="btn wide daily" data-nav id="t-daily">Tages-Challenge</button>
       <button class="btn" data-nav data-mode="endless">Endlos</button>
       <button class="btn" data-nav data-mode="practice">Training</button>
       <button class="btn" data-nav data-mode="versus">2 Spieler</button>
@@ -315,6 +324,7 @@ dt{text-transform:uppercase;letter-spacing:0.05em;font-size:13px;} dd{color:#fff
     <div class="seg" id="diffs" role="group" aria-label="Schwierigkeit">
       <button data-d="0">Leicht</button><button data-d="1">Normal</button><button data-d="2">Schwer</button>
     </div>
+    <div class="modrow"><span id="mods-xp" class="modxp">Modifikatoren</span><div class="seg" id="mods" role="group" aria-label="Modifikatoren"><button data-nav data-m="mirror" title="Spuren gespiegelt">Spiegel</button><button data-nav data-m="turbo" title="Raketen fliegen schneller">Turbo</button><button data-nav data-m="hidden" title="Raketen verschwinden kurz vor der Zündlinie">Versteckt</button><button data-nav data-m="sudden" title="Raketen tauchen erst spät auf">Plötzlich</button></div></div>
     <div class="seg" id="speeds" role="group" aria-label="Tempo" hidden>
       <button data-t="0.5">Tempo 50 %</button><button data-t="0.75">75 %</button><button data-t="1">100 %</button>
     </div>
@@ -1839,7 +1849,8 @@ function cityRender(dt,bloom){
   if(!CITY.ok) return;
   const u=CITY.uni; u.uTime.value+=dt;
   CITY.ang+=dt*0.035*(bloom?2.2:1);
-  const c=CITY.center, r=W<H?190:270, hgt=W<H?440:390;
+  const ik=CITY.introK||0, ie=ik*ik*(3-2*ik);
+  const c=CITY.center, r=(W<H?190:270)+ie*320, hgt=(W<H?440:390)+ie*560;
   const cam=CITY.cam;
   cam.position.set(c.x+Math.cos(CITY.ang)*r+CAM.sx*2, hgt+Math.sin(u.uTime.value*0.2)*8+CAM.sy*2, c.z+Math.sin(CITY.ang)*r);
   cam.lookAt(c.x-Math.cos(CITY.ang)*60, 30, c.z-Math.sin(CITY.ang)*60);
@@ -2245,7 +2256,7 @@ function startGame(opts){
   A.music.gain.value=({toccata:1.55,nachtmusik:1.3,freude:1.1,blumen:1.1})[song.id]||1;
   const mode=opts.mode;
   let ev, cands, dur, marks=[];
-  G={mode, song, songIdx:opts.songIdx, diff:opts.diff, tempo, approach:approachTime(opts.diff), evIdx:0, ended:false, lap:0, players:[], demo:mode==='demo', online:!!opts.online};
+  G={mode, song, songIdx:opts.songIdx, diff:opts.diff, tempo, approach:approachTime(opts.diff)*((opts.mods&&opts.mods.turbo)?0.72:1), mods:Object.assign({},opts.mods||{}), daily:!!opts.daily, evIdx:0, ended:false, lap:0, players:[], demo:mode==='demo', online:!!opts.online};
   let chart=null;
   if(song.custom){
     ev=[]; dur=song.buffer.duration/tempo+1.5;
@@ -2259,6 +2270,7 @@ function startGame(opts){
   }
   G.ev=ev; G.dur=dur; G.marks=marks;
   if(!chart) chart=makeChart(cands, opts.diff, G.approach+0.2);
+  if(G.mods.mirror) chart=chart.map(n=>Object.assign({},n,{lane:3-n.lane}));
   G.total=chart.length;
   const n = mode==='versus'?2:(mode==='demo'?0:1);
   for(let i=0;i<n;i++) G.players.push(newPlayer(i,chart));
@@ -2313,7 +2325,7 @@ function endlessExtend(t){
   const s1=makeSection(G.song,'lap',G.nextLapT,G.bpm); const s2=makeSection(G.song,'fill',s1.end,G.bpm);
   const evs=[...s1.ev,...s2.ev]; G.ev=G.ev.slice(G.evIdx).concat(evs); G.evIdx=0; G.ev.sort((a,b)=>a.t-b.t);
   const chart=makeChart([...s1.cands,...s2.cands], G.diff, 0);
-  for(const p of G.players) for(const n of chart) p.notes.push({t:n.t,lane:n.lane,st:0,sp:false});
+  for(const p of G.players) for(const n of chart) p.notes.push({t:n.t,lane:G.mods.mirror?3-n.lane:n.lane,st:0,sp:false});
   G.total+=chart.length; G.nextLapT=s2.end;
   toast('Runde '+G.lap+' · '+Math.round(G.bpm)+' BPM');
 }
@@ -2363,7 +2375,7 @@ function pressLane(pi,lane,perf){
   p.rings.push({l:lane,t:0,q:base}); p.hitPulse[lane]=1; p.cPulse=1;
   // Feuerwerk!
   const y=hitY()-10-Math.random()*H*0.06;
-  const fw=pickFirework(); const s=sc*(p.bloomOn?1.3:1)*(G.players.length>1?0.75:1);
+  const fw=pickFirework(); const tier=Math.min(4,1+Math.floor(p.combo/10)); const s=sc*(0.82+0.11*tier)*(p.bloomOn?1.3:1)*(G.players.length>1?0.75:1);
   const c=fw.c!==undefined?fw.c:LANE_COL[lane]; const c2=fw.c2!==undefined?fw.c2:(p.bloomOn?pick([C.white,C.magenta,C.cyan,C.gold]):(Math.random()<0.4?pick([C.white,C.gold,C.silver,C.pink]):-1));
   launchBurst(x,y,fw.type,c,c2,s);
   if(p.bloomOn) SHAPES.ring(x,y,pick([C.white,C.gold,C.cyan,C.magenta]),-1,s*0.7);
@@ -2433,6 +2445,7 @@ function updatePlayers(t,dt){
       const n=p.notes[i]; if(n.t>t+G.approach) break; if(n.st) continue;
       const y=hy+(n.t-t)/G.approach*(sy-hy); const x=laneX(p,n.lane)+(n.sp?Math.sin(t*12)*8:0);
       if(!n.launched){ n.launched=true; if(n.t-t>G.approach*0.6) SFX.launch(A.ctx.currentTime,(x/W)*2-1); }
+      { const u=(n.t-t)/G.approach; if((G.mods.hidden&&u<0.42)||(G.mods.sudden&&u>0.6)) continue; }
       if(Math.random()<(PERF.low?0.25:0.55) && FX.smoke.length<220) FX.smoke.push({x:x+(Math.random()-0.5)*6,y:y+16,vx:(Math.random()-0.5)*6,vy:12+Math.random()*10,r:5,gr:9+Math.random()*6,life:1.6+Math.random(),max:2.6,c:n.sp?C.magenta:LANE_COL[n.lane],lit:0,tint:0.5});
       if(Math.random()<0.8) addP(x+(Math.random()-0.5)*4,y+12,(Math.random()-0.5)*20,30+Math.random()*30,{c:n.sp?pick([C.magenta,C.cyan,C.gold,C.lime]):(Math.random()<0.5?C.gold:C.ember),life:0.35,size:1.3,drag:2,grav:40});
     }
@@ -2647,6 +2660,7 @@ function frame(ts){
   camCompute();
   if(GFX.ok){
     // Grafikkarte: Hintergrund auf eigene Ebene, Feuerwerk mit Leuchten darüber, Spielfeld ganz oben
+    CITY.introK = (G&&G.players.length&&!G.demo&&!G.ended&&A.ctx) ? Math.max(0,Math.min(1,(0.6-t)/3.8)) : 0;
     if(CITY.ok) cityRender(paused?0:dt,bloomLvl>0);
     const gm=g; g=gb; g.setTransform(1,0,0,1,0,0); g.clearRect(0,0,cvb.width,cvb.height); camApply(g);
     if(CITY.ok){ if(bloomLvl>0) drawAurora(camT,bloomLvl); } else drawBackground(camT,bloomLvl);
@@ -2854,6 +2868,9 @@ function drawField(p,t){
   for(let i=p.head;i<p.notes.length;i++){
     const n=p.notes[i]; if(n.t>t+G.approach) break; if(n.st) continue;
     const y=hy+(n.t-t)/G.approach*(sy-hy); const x=laneX(p,n.lane)+(n.sp?Math.sin(t*12)*8:0);
+    const uu=(n.t-t)/G.approach; let ra=1;
+    if(G.mods.hidden) ra=Math.max(0,Math.min(1,(uu-0.18)/0.24)); if(G.mods.sudden) ra=Math.min(ra,Math.max(0,Math.min(1,(0.62-uu)/0.1)));
+    if(ra<=0.01) continue; g.globalAlpha=fade*ra;
     const col=n.sp?COLORS[pick([C.magenta,C.cyan,C.gold,C.lime])]:LANE_HEX[n.lane];
     const L=Math.min(H*0.24, sy-y+60)*(0.92+Math.random()*0.16);
     g.globalCompositeOperation='lighter';
@@ -2866,7 +2883,7 @@ function drawField(p,t){
     g.drawImage(SPRITES[n.sp?C.magenta:LANE_COL[n.lane]],x-rr*2.2,y-rr*2.2,rr*4.4,rr*4.4);
     g.globalCompositeOperation='source-over'; g.lineCap='butt';
     { const sp=rocketSpr(n.lane,rr), sw=sp.width/DPR, sh2=sp.height/DPR; g.drawImage(sp,x-sw/2,y-rr*0.2,sw,sh2); }
-    laneBadge(x,y,rr,n.lane,fade,true);
+    laneBadge(x,y,rr,n.lane,fade*ra,true); g.globalAlpha=fade*ra;
     if(n.sp){ g.strokeStyle='#fff'; g.lineWidth=2; g.beginPath(); g.arc(x,y,rr+4+Math.sin(t*20)*2,0,Math.PI*2); g.stroke(); }
   }
   // Urteile
@@ -2946,6 +2963,7 @@ function drawHud(t){
   let info=s.composer+' · '+DIFF_NAMES[G.diff];
   if(G.mode==='endless') info+=' · Runde '+G.lap+' · '+Math.round(G.bpm)+' BPM';
   if(G.mode==='practice') info+=' · Training '+Math.round(G.tempo*100)+'%';
+  if(G.mods && modsLabel(G.mods)) info+=' · '+modsLabel(G.mods);
   const iy=(G.players.length>1?16:y0)+19; g.fillText(info,x,iy);
   if(G.dur<Infinity){ const u=Math.max(0,Math.min(1,t/(G.dur-1.5))); const py=iy+20; g.fillStyle='rgba(120,200,255,0.2)'; g.fillRect(x,py,150,3); g.fillStyle=NEON_CYAN; g.shadowColor=NEON_CYAN; g.shadowBlur=8; g.fillRect(x,py,150*u,3); g.shadowBlur=0; }
 }
@@ -2953,7 +2971,7 @@ function drawHud(t){
 const $=s=>document.querySelector(s);
 const MODE_NAMES={arcade:'Arcade',endless:'Endlos',practice:'Training',versus:'2 Spieler'};
 const STYLE_NAMES={own:'Eigene Datei',ska:'Ska',skapunk:'Ska-Punk',rock:'Rock',metal:'Metal',funk:'Funk',bigbeat:'Big Beat',triphop:'Trip-Hop',latin:'Latin',disco:'Disco',house:'House',surf:'Surf-Rock',techno:'Techno',trance:'Trance',hardtek:'Hard Techno',electro:'Electro',breaks:'Breakbeat',deep:'Deep House'};
-let UI={screen:'title', mode:'arcade', diff:1, tempo:0.75, sel:0, last:null};
+let UI={screen:'title', mode:'arcade', diff:1, tempo:0.75, sel:0, last:null, mods:{}};
 const isTouch = matchMedia('(pointer: coarse)').matches;
 
 function showScreen(name){
@@ -2963,7 +2981,7 @@ function showScreen(name){
   $('#ui').classList.toggle('open', !!name);
   $('#bloomBtn').hidden = !(isTouch && !name && G && G.players && G.players.length===1);
   if(name){ const f=document.querySelector('#s-'+name+' [data-nav]:not([disabled])'); if(f && !f.matches('input[type=range]')) setTimeout(()=>f.focus({preventScroll:true}),30); }
-  if(name==='title') renderStats();
+  if(name==='title'){ renderStats(); setTimeout(renderDaily,0); }
   if(name==='ach') renderAch();
   if(name==='select'){ renderSelect(); PREV.idx=-1; previewQueue(UI.sel); }
   if(name==='gallery') renderGallery();
@@ -3028,6 +3046,8 @@ function renderSelect(keepFocus){
   $('#sel-mode').textContent=MODE_NAMES[UI.mode];
   document.querySelectorAll('#diffs button').forEach(b=>b.setAttribute('aria-pressed', +b.dataset.d===UI.diff));
   $('#speeds').hidden = UI.mode!=='practice';
+  document.querySelectorAll('#mods button').forEach(b=>b.setAttribute('aria-pressed', !!UI.mods[b.dataset.m]));
+  { const m=modMult(UI.mods); $('#mods-xp').textContent=m>1?'XP ×'+m.toFixed(2).replace('.',','):'Modifikatoren'; }
   document.querySelectorAll('#speeds button').forEach(b=>b.setAttribute('aria-pressed', +b.dataset.t===UI.tempo));
   const list=$('#songs');
   const focusIdx = keepFocus ? [...list.children].indexOf(document.activeElement) : -1;
@@ -3059,9 +3079,11 @@ function renderSelect(keepFocus){
   if(focusIdx>=0 && list.children[focusIdx]) list.children[focusIdx].focus({preventScroll:true});
 }
 document.querySelectorAll('#diffs button').forEach(b=>b.addEventListener('click',()=>{ UI.diff=+b.dataset.d; renderSelect(); }));
+document.querySelectorAll('#mods button').forEach(b=>b.addEventListener('click',()=>{ const k=b.dataset.m; UI.mods[k]=!UI.mods[k];
+  if(k==='hidden'&&UI.mods.hidden) UI.mods.sudden=false; if(k==='sudden'&&UI.mods.sudden) UI.mods.hidden=false; renderSelect(true); }));
 document.querySelectorAll('#speeds button').forEach(b=>b.addEventListener('click',()=>{ UI.tempo=+b.dataset.t; renderSelect(); }));
 async function launch(opts){
-  opts = opts || {mode:UI.mode, songIdx:UI.sel, diff:UI.diff, tempo:UI.mode==='practice'?UI.tempo:1};
+  opts = opts || {mode:UI.mode, songIdx:UI.sel, diff:UI.diff, tempo:UI.mode==='practice'?UI.tempo:1, mods:Object.assign({},UI.mods)};
   const sg=SONGS[opts.songIdx];
   if(sg && sg.custom && (!sg.buffer || sg.analysis.v!==2)){ toast('Lade „'+sg.title+'“ …'); try{ await ownEnsureBuffer(sg); }catch(e){ toast('Das Lied konnte nicht geladen werden.'); return; } }
   audioInit(); if(sg && smpNeeded(sg).some(n=>!SMP.buf[n])){ toast('Lade Instrumente …'); await smpEnsure(sg); }
@@ -3161,6 +3183,7 @@ function countUp(root){
 }
 $('#r-again').addEventListener('click',()=>{ stopGame(); if(UI.last&&UI.last.online&&typeof ON!=='undefined'&&ON.r){ if(ON.host){ $('#on-song').value=UI.last.songIdx; $('#on-diff').value=UI.last.diff; onHostStart(); } else { showScreen('online'); toast('Der Gastgeber startet das nächste Lied.'); } return; } launch(UI.last); });
 $('#r-select').addEventListener('click',()=>{ stopGame(); showScreen(UI.last&&UI.last.online?'online':'select'); });
+$('#t-daily').addEventListener('click',()=>{ const d=dailyPick(); launch({mode:'arcade', songIdx:d.idx, diff:d.diff, tempo:1, mods:d.mods, daily:true}); });
 $('#r-menu').addEventListener('click',()=>{ stopGame(); showScreen('title'); });
 
 // ---------- Visualizer ----------
@@ -3248,7 +3271,24 @@ const ACH=[
   ['versus','Duell','Ein Spiel zu zweit'],
   ['online','Gemeinsam','Ein Lied online mit Freunden spielen'],
   ['vis','Lichtshow','Den Visualizer ausprobieren'],
+  ['daily','Tagwerk','Eine Tages-Challenge schaffen'],
+  ['hiddenOk','Blindflug','Ein Lied mit „Versteckt“ schaffen'],
+  ['turboA','Überschall','Note A oder besser mit Turbo'],
 ];
+// ---------- Modifikatoren ----------
+const MOD_INFO={mirror:['Spiegel',1.05],turbo:['Turbo',1.2],hidden:['Versteckt',1.25],sudden:['Plötzlich',1.2]};
+function modMult(m){ let x=1; for(const k in MOD_INFO) if(m&&m[k]) x*=MOD_INFO[k][1]; return Math.round(x*100)/100; }
+function modsLabel(m){ return Object.keys(MOD_INFO).filter(k=>m&&m[k]).map(k=>MOD_INFO[k][0]).join(' + '); }
+// ---------- Tages-Challenge: jeden Tag ein anderes Lied mit Modifikatoren ----------
+function dayKey(){ const d=new Date(); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); }
+function dailyPick(){
+  let h=2166136261; for(const c of 'bbr'+dayKey()){ h^=c.charCodeAt(0); h=Math.imul(h,16777619)>>>0; }
+  const pool=SONGS.map((s,i)=>i).filter(i=>!SONGS[i].custom); const idx=pool[h%pool.length];
+  const diff=1+((h>>>5)%2); const opts=[{turbo:true},{mirror:true},{hidden:true},{sudden:true},{mirror:true,turbo:true},{turbo:true,sudden:true}];
+  return {idx, diff, mods:opts[(h>>>9)%opts.length]};
+}
+function renderDaily(){ const b=document.getElementById('t-daily'); if(!b) return; progInit(); const d=dailyPick(), done=SAVE.dailyDone===dayKey();
+  b.innerHTML='<span>Tages-Challenge'+(done?' ✓':'')+'</span><small>'+SONGS[d.idx].title+' · '+DIFF_NAMES[d.diff]+' · '+modsLabel(d.mods)+(done?' · geschafft':' · Bonus-XP')+'</small>'; }
 function progInit(){ if(!SAVE.ach) SAVE.ach={}; if(!SAVE.xp) SAVE.xp=0; if(!SAVE.stats) SAVE.stats={blooms:0,games:0}; }
 // Erfolg vergeben (einmalig) und kurz oben rechts einblenden
 const ACHQ=[]; let achBusy=false;
@@ -3270,7 +3310,11 @@ function progAfterGame(){
   const p=G.players[0]; if(!p) return null; const gr=gradeOf(p); const failed=G.failed||p.failed;
   let gain=Math.round(p.score/60)+p.hits*2;
   if(!failed) gain+=120; if(p.fc) gain+=250; gain+=({S:300,A:150,B:80,C:30})[gr.g]||0;
+  gain=Math.round(gain*modMult(G.mods));
   if(G.mode==='practice') gain=Math.round(gain*0.4);
+  let daily=false;
+  if(G.daily && !failed && SAVE.dailyDone!==dayKey()){ gain=Math.round(gain*1.5)+300; SAVE.dailyDone=dayKey(); daily=true; award('daily'); }
+  if(!failed && G.mode!=='practice'){ if(G.mods.hidden) award('hiddenOk'); if(G.mods.turbo && (gr.g==='A'||gr.g==='S')) award('turboA'); }
   const before=levelOf(SAVE.xp); SAVE.xp+=gain; const after=levelOf(SAVE.xp); SAVE.stats.games++;
   const arcadeOk=(G.mode==='arcade'||G.mode==='versus')&&!failed;
   if(arcadeOk) award('first');
@@ -3287,7 +3331,7 @@ function progAfterGame(){
   if(SONGS.filter(s=>s.pack===2).every(s=>done(s.id))) award('bonus');
   progUnlockAch();
   storeSave();
-  return {gain, before, after, xp:SAVE.xp};
+  return {gain, before, after, xp:SAVE.xp, daily};
 }
 function progUnlockAch(){ const n=SAVE.unlocked.length; if(n>=5) award('unl5'); if(n>=20) award('unl20'); if(n>=45) award('unl45'); }
 function xpHtml(r){
@@ -3295,7 +3339,7 @@ function xpHtml(r){
   const up=r.after.level>r.before.level, pct0=up?0:r.before.into/r.before.need*100, pct1=r.after.into/r.after.need*100;
   return '<div class="xpbox"><div class="xprow"><span class="xprank">'+rankOf(r.after.level)+' · Stufe '+r.after.level+'</span><span class="xpgain">+'+r.gain.toLocaleString('de-DE')+' XP</span></div>'+
     '<div class="xpbar"><i style="--a:'+pct0.toFixed(1)+'%;--b:'+pct1.toFixed(1)+'%"></i></div>'+
-    (up?'<p class="xpup">Stufe '+r.after.level+' erreicht'+(rankOf(r.after.level)!==rankOf(r.before.level)?' · neuer Rang: '+rankOf(r.after.level):'')+'!</p>':'')+'</div>';
+    (r.daily?'<p class="xpup">Tages-Challenge geschafft · Bonus-XP!</p>':'')+(up?'<p class="xpup">Stufe '+r.after.level+' erreicht'+(rankOf(r.after.level)!==rankOf(r.before.level)?' · neuer Rang: '+rankOf(r.after.level):'')+'!</p>':'')+'</div>';
 }
 function renderAch(){
   progInit(); const box=document.getElementById('achlist'); box.innerHTML='';

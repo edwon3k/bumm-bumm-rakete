@@ -128,7 +128,8 @@ function cityRender(dt,bloom){
   if(!CITY.ok) return;
   const u=CITY.uni; u.uTime.value+=dt;
   CITY.ang+=dt*0.035*(bloom?2.2:1);
-  const c=CITY.center, r=W<H?190:270, hgt=W<H?440:390;
+  const ik=CITY.introK||0, ie=ik*ik*(3-2*ik);
+  const c=CITY.center, r=(W<H?190:270)+ie*320, hgt=(W<H?440:390)+ie*560;
   const cam=CITY.cam;
   cam.position.set(c.x+Math.cos(CITY.ang)*r+CAM.sx*2, hgt+Math.sin(u.uTime.value*0.2)*8+CAM.sy*2, c.z+Math.sin(CITY.ang)*r);
   cam.lookAt(c.x-Math.cos(CITY.ang)*60, 30, c.z-Math.sin(CITY.ang)*60);

@@ -183,7 +183,7 @@ function startGame(opts){
   A.music.gain.value=({toccata:1.55,nachtmusik:1.3,freude:1.1,blumen:1.1})[song.id]||1;
   const mode=opts.mode;
   let ev, cands, dur, marks=[];
-  G={mode, song, songIdx:opts.songIdx, diff:opts.diff, tempo, approach:approachTime(opts.diff), evIdx:0, ended:false, lap:0, players:[], demo:mode==='demo', online:!!opts.online};
+  G={mode, song, songIdx:opts.songIdx, diff:opts.diff, tempo, approach:approachTime(opts.diff)*((opts.mods&&opts.mods.turbo)?0.72:1), mods:Object.assign({},opts.mods||{}), daily:!!opts.daily, evIdx:0, ended:false, lap:0, players:[], demo:mode==='demo', online:!!opts.online};
   let chart=null;
   if(song.custom){
     ev=[]; dur=song.buffer.duration/tempo+1.5;
@@ -197,6 +197,7 @@ function startGame(opts){
   }
   G.ev=ev; G.dur=dur; G.marks=marks;
   if(!chart) chart=makeChart(cands, opts.diff, G.approach+0.2);
+  if(G.mods.mirror) chart=chart.map(n=>Object.assign({},n,{lane:3-n.lane}));
   G.total=chart.length;
   const n = mode==='versus'?2:(mode==='demo'?0:1);
   for(let i=0;i<n;i++) G.players.push(newPlayer(i,chart));
@@ -251,7 +252,7 @@ function endlessExtend(t){
   const s1=makeSection(G.song,'lap',G.nextLapT,G.bpm); const s2=makeSection(G.song,'fill',s1.end,G.bpm);
   const evs=[...s1.ev,...s2.ev]; G.ev=G.ev.slice(G.evIdx).concat(evs); G.evIdx=0; G.ev.sort((a,b)=>a.t-b.t);
   const chart=makeChart([...s1.cands,...s2.cands], G.diff, 0);
-  for(const p of G.players) for(const n of chart) p.notes.push({t:n.t,lane:n.lane,st:0,sp:false});
+  for(const p of G.players) for(const n of chart) p.notes.push({t:n.t,lane:G.mods.mirror?3-n.lane:n.lane,st:0,sp:false});
   G.total+=chart.length; G.nextLapT=s2.end;
   toast('Runde '+G.lap+' · '+Math.round(G.bpm)+' BPM');
 }
@@ -301,7 +302,7 @@ function pressLane(pi,lane,perf){
   p.rings.push({l:lane,t:0,q:base}); p.hitPulse[lane]=1; p.cPulse=1;
   // Feuerwerk!
   const y=hitY()-10-Math.random()*H*0.06;
-  const fw=pickFirework(); const s=sc*(p.bloomOn?1.3:1)*(G.players.length>1?0.75:1);
+  const fw=pickFirework(); const tier=Math.min(4,1+Math.floor(p.combo/10)); const s=sc*(0.82+0.11*tier)*(p.bloomOn?1.3:1)*(G.players.length>1?0.75:1);
   const c=fw.c!==undefined?fw.c:LANE_COL[lane]; const c2=fw.c2!==undefined?fw.c2:(p.bloomOn?pick([C.white,C.magenta,C.cyan,C.gold]):(Math.random()<0.4?pick([C.white,C.gold,C.silver,C.pink]):-1));
   launchBurst(x,y,fw.type,c,c2,s);
   if(p.bloomOn) SHAPES.ring(x,y,pick([C.white,C.gold,C.cyan,C.magenta]),-1,s*0.7);
@@ -371,6 +372,7 @@ function updatePlayers(t,dt){
       const n=p.notes[i]; if(n.t>t+G.approach) break; if(n.st) continue;
       const y=hy+(n.t-t)/G.approach*(sy-hy); const x=laneX(p,n.lane)+(n.sp?Math.sin(t*12)*8:0);
       if(!n.launched){ n.launched=true; if(n.t-t>G.approach*0.6) SFX.launch(A.ctx.currentTime,(x/W)*2-1); }
+      { const u=(n.t-t)/G.approach; if((G.mods.hidden&&u<0.42)||(G.mods.sudden&&u>0.6)) continue; }
       if(Math.random()<(PERF.low?0.25:0.55) && FX.smoke.length<220) FX.smoke.push({x:x+(Math.random()-0.5)*6,y:y+16,vx:(Math.random()-0.5)*6,vy:12+Math.random()*10,r:5,gr:9+Math.random()*6,life:1.6+Math.random(),max:2.6,c:n.sp?C.magenta:LANE_COL[n.lane],lit:0,tint:0.5});
       if(Math.random()<0.8) addP(x+(Math.random()-0.5)*4,y+12,(Math.random()-0.5)*20,30+Math.random()*30,{c:n.sp?pick([C.magenta,C.cyan,C.gold,C.lime]):(Math.random()<0.5?C.gold:C.ember),life:0.35,size:1.3,drag:2,grav:40});
     }
@@ -585,6 +587,7 @@ function frame(ts){
   camCompute();
   if(GFX.ok){
     // Grafikkarte: Hintergrund auf eigene Ebene, Feuerwerk mit Leuchten darüber, Spielfeld ganz oben
+    CITY.introK = (G&&G.players.length&&!G.demo&&!G.ended&&A.ctx) ? Math.max(0,Math.min(1,(0.6-t)/3.8)) : 0;
     if(CITY.ok) cityRender(paused?0:dt,bloomLvl>0);
     const gm=g; g=gb; g.setTransform(1,0,0,1,0,0); g.clearRect(0,0,cvb.width,cvb.height); camApply(g);
     if(CITY.ok){ if(bloomLvl>0) drawAurora(camT,bloomLvl); } else drawBackground(camT,bloomLvl);

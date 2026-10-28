@@ -274,6 +274,14 @@ dt{text-transform:uppercase;letter-spacing:0.05em;font-size:13px;} dd{color:#fff
 .xpup{margin:0;text-align:center;color:var(--gold);font-weight:700;animation:stamp .5s cubic-bezier(.3,1.6,.5,1) 1.6s both;}
 .tstats .rk{color:#fff;} .tstats .rk b{color:var(--cyan);}
 @media (prefers-reduced-motion:reduce){ .xpbar i,.xpup{animation:none;} #achpop{transition:none;} }
+/* ===== V22: Modifikatoren, Tages-Challenge ===== */
+.modrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;} .modrow .seg{flex:1;}
+.modxp{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);min-width:8em;}
+#mods button{font-size:11px;min-height:32px;}
+#mods button[aria-pressed="true"]{color:#1a0610;} #mods button[aria-pressed="true"]::before{background:linear-gradient(180deg,#ff9be6,var(--pink));border-color:#ffd1f3;box-shadow:0 0 14px rgba(255,88,220,.6);}
+.btn.daily{flex-direction:column;gap:2px;min-height:56px;} .btn.daily small{font-size:11px;letter-spacing:.04em;text-transform:none;font-weight:500;color:#9fe9ff;}
+.btn.daily::before{border-color:rgba(255,213,74,.6);background:linear-gradient(90deg,var(--gold) 0 3px,transparent 3px),linear-gradient(90deg,rgba(60,40,10,.95),rgba(14,14,44,.95));}
+.btn.daily:focus-visible::before{background:linear-gradient(90deg,var(--pink) 0 4px,transparent 4px),linear-gradient(90deg,rgba(255,213,74,.35),rgba(76,242,255,.15));}
 </style>
 
 <canvas id="cv3" aria-hidden="true"></canvas>
@@ -289,6 +297,7 @@ dt{text-transform:uppercase;letter-spacing:0.05em;font-size:13px;} dd{color:#fff
     <div class="keys" aria-hidden="true"><span class="key" style="background:var(--x)">X</span><span class="key" style="background:var(--a)">A</span><span class="key" style="background:var(--y)">Y</span><span class="key" style="background:var(--b)">B</span></div>
     <div class="menu panel">
       <button class="btn primary wide" data-nav data-mode="arcade">Arcade starten</button>
+      <button class="btn wide daily" data-nav id="t-daily">Tages-Challenge</button>
       <button class="btn" data-nav data-mode="endless">Endlos</button>
       <button class="btn" data-nav data-mode="practice">Training</button>
       <button class="btn" data-nav data-mode="versus">2 Spieler</button>
@@ -309,6 +318,7 @@ dt{text-transform:uppercase;letter-spacing:0.05em;font-size:13px;} dd{color:#fff
     <div class="seg" id="diffs" role="group" aria-label="Schwierigkeit">
       <button data-d="0">Leicht</button><button data-d="1">Normal</button><button data-d="2">Schwer</button>
     </div>
+    <div class="modrow"><span id="mods-xp" class="modxp">Modifikatoren</span><div class="seg" id="mods" role="group" aria-label="Modifikatoren"><button data-nav data-m="mirror" title="Spuren gespiegelt">Spiegel</button><button data-nav data-m="turbo" title="Raketen fliegen schneller">Turbo</button><button data-nav data-m="hidden" title="Raketen verschwinden kurz vor der Zündlinie">Versteckt</button><button data-nav data-m="sudden" title="Raketen tauchen erst spät auf">Plötzlich</button></div></div>
     <div class="seg" id="speeds" role="group" aria-label="Tempo" hidden>
       <button data-t="0.5">Tempo 50 %</button><button data-t="0.75">75 %</button><button data-t="1">100 %</button>
     </div>

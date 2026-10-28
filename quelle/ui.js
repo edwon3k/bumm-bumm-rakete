@@ -2,7 +2,7 @@
 const $=s=>document.querySelector(s);
 const MODE_NAMES={arcade:'Arcade',endless:'Endlos',practice:'Training',versus:'2 Spieler'};
 const STYLE_NAMES={own:'Eigene Datei',ska:'Ska',skapunk:'Ska-Punk',rock:'Rock',metal:'Metal',funk:'Funk',bigbeat:'Big Beat',triphop:'Trip-Hop',latin:'Latin',disco:'Disco',house:'House',surf:'Surf-Rock',techno:'Techno',trance:'Trance',hardtek:'Hard Techno',electro:'Electro',breaks:'Breakbeat',deep:'Deep House'};
-let UI={screen:'title', mode:'arcade', diff:1, tempo:0.75, sel:0, last:null};
+let UI={screen:'title', mode:'arcade', diff:1, tempo:0.75, sel:0, last:null, mods:{}};
 const isTouch = matchMedia('(pointer: coarse)').matches;
 
 function showScreen(name){
@@ -12,7 +12,7 @@ function showScreen(name){
   $('#ui').classList.toggle('open', !!name);
   $('#bloomBtn').hidden = !(isTouch && !name && G && G.players && G.players.length===1);
   if(name){ const f=document.querySelector('#s-'+name+' [data-nav]:not([disabled])'); if(f && !f.matches('input[type=range]')) setTimeout(()=>f.focus({preventScroll:true}),30); }
-  if(name==='title') renderStats();
+  if(name==='title'){ renderStats(); setTimeout(renderDaily,0); }
   if(name==='ach') renderAch();
   if(name==='select'){ renderSelect(); PREV.idx=-1; previewQueue(UI.sel); }
   if(name==='gallery') renderGallery();
@@ -77,6 +77,8 @@ function renderSelect(keepFocus){
   $('#sel-mode').textContent=MODE_NAMES[UI.mode];
   document.querySelectorAll('#diffs button').forEach(b=>b.setAttribute('aria-pressed', +b.dataset.d===UI.diff));
   $('#speeds').hidden = UI.mode!=='practice';
+  document.querySelectorAll('#mods button').forEach(b=>b.setAttribute('aria-pressed', !!UI.mods[b.dataset.m]));
+  { const m=modMult(UI.mods); $('#mods-xp').textContent=m>1?'XP ×'+m.toFixed(2).replace('.',','):'Modifikatoren'; }
   document.querySelectorAll('#speeds button').forEach(b=>b.setAttribute('aria-pressed', +b.dataset.t===UI.tempo));
   const list=$('#songs');
   const focusIdx = keepFocus ? [...list.children].indexOf(document.activeElement) : -1;
@@ -108,9 +110,11 @@ function renderSelect(keepFocus){
   if(focusIdx>=0 && list.children[focusIdx]) list.children[focusIdx].focus({preventScroll:true});
 }
 document.querySelectorAll('#diffs button').forEach(b=>b.addEventListener('click',()=>{ UI.diff=+b.dataset.d; renderSelect(); }));
+document.querySelectorAll('#mods button').forEach(b=>b.addEventListener('click',()=>{ const k=b.dataset.m; UI.mods[k]=!UI.mods[k];
+  if(k==='hidden'&&UI.mods.hidden) UI.mods.sudden=false; if(k==='sudden'&&UI.mods.sudden) UI.mods.hidden=false; renderSelect(true); }));
 document.querySelectorAll('#speeds button').forEach(b=>b.addEventListener('click',()=>{ UI.tempo=+b.dataset.t; renderSelect(); }));
 async function launch(opts){
-  opts = opts || {mode:UI.mode, songIdx:UI.sel, diff:UI.diff, tempo:UI.mode==='practice'?UI.tempo:1};
+  opts = opts || {mode:UI.mode, songIdx:UI.sel, diff:UI.diff, tempo:UI.mode==='practice'?UI.tempo:1, mods:Object.assign({},UI.mods)};
   const sg=SONGS[opts.songIdx];
   if(sg && sg.custom && (!sg.buffer || sg.analysis.v!==2)){ toast('Lade „'+sg.title+'“ …'); try{ await ownEnsureBuffer(sg); }catch(e){ toast('Das Lied konnte nicht geladen werden.'); return; } }
   audioInit(); if(sg && smpNeeded(sg).some(n=>!SMP.buf[n])){ toast('Lade Instrumente …'); await smpEnsure(sg); }
@@ -210,6 +214,7 @@ function countUp(root){
 }
 $('#r-again').addEventListener('click',()=>{ stopGame(); if(UI.last&&UI.last.online&&typeof ON!=='undefined'&&ON.r){ if(ON.host){ $('#on-song').value=UI.last.songIdx; $('#on-diff').value=UI.last.diff; onHostStart(); } else { showScreen('online'); toast('Der Gastgeber startet das nächste Lied.'); } return; } launch(UI.last); });
 $('#r-select').addEventListener('click',()=>{ stopGame(); showScreen(UI.last&&UI.last.online?'online':'select'); });
+$('#t-daily').addEventListener('click',()=>{ const d=dailyPick(); launch({mode:'arcade', songIdx:d.idx, diff:d.diff, tempo:1, mods:d.mods, daily:true}); });
 $('#r-menu').addEventListener('click',()=>{ stopGame(); showScreen('title'); });
 
 // ---------- Visualizer ----------

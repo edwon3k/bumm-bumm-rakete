@@ -131,6 +131,9 @@ function drawField(p,t){
   for(let i=p.head;i<p.notes.length;i++){
     const n=p.notes[i]; if(n.t>t+G.approach) break; if(n.st) continue;
     const y=hy+(n.t-t)/G.approach*(sy-hy); const x=laneX(p,n.lane)+(n.sp?Math.sin(t*12)*8:0);
+    const uu=(n.t-t)/G.approach; let ra=1;
+    if(G.mods.hidden) ra=Math.max(0,Math.min(1,(uu-0.18)/0.24)); if(G.mods.sudden) ra=Math.min(ra,Math.max(0,Math.min(1,(0.62-uu)/0.1)));
+    if(ra<=0.01) continue; g.globalAlpha=fade*ra;
     const col=n.sp?COLORS[pick([C.magenta,C.cyan,C.gold,C.lime])]:LANE_HEX[n.lane];
     const L=Math.min(H*0.24, sy-y+60)*(0.92+Math.random()*0.16);
     g.globalCompositeOperation='lighter';
@@ -143,7 +146,7 @@ function drawField(p,t){
     g.drawImage(SPRITES[n.sp?C.magenta:LANE_COL[n.lane]],x-rr*2.2,y-rr*2.2,rr*4.4,rr*4.4);
     g.globalCompositeOperation='source-over'; g.lineCap='butt';
     { const sp=rocketSpr(n.lane,rr), sw=sp.width/DPR, sh2=sp.height/DPR; g.drawImage(sp,x-sw/2,y-rr*0.2,sw,sh2); }
-    laneBadge(x,y,rr,n.lane,fade,true);
+    laneBadge(x,y,rr,n.lane,fade*ra,true); g.globalAlpha=fade*ra;
     if(n.sp){ g.strokeStyle='#fff'; g.lineWidth=2; g.beginPath(); g.arc(x,y,rr+4+Math.sin(t*20)*2,0,Math.PI*2); g.stroke(); }
   }
   // Urteile
@@ -223,6 +226,7 @@ function drawHud(t){
   let info=s.composer+' · '+DIFF_NAMES[G.diff];
   if(G.mode==='endless') info+=' · Runde '+G.lap+' · '+Math.round(G.bpm)+' BPM';
   if(G.mode==='practice') info+=' · Training '+Math.round(G.tempo*100)+'%';
+  if(G.mods && modsLabel(G.mods)) info+=' · '+modsLabel(G.mods);
   const iy=(G.players.length>1?16:y0)+19; g.fillText(info,x,iy);
   if(G.dur<Infinity){ const u=Math.max(0,Math.min(1,t/(G.dur-1.5))); const py=iy+20; g.fillStyle='rgba(120,200,255,0.2)'; g.fillRect(x,py,150,3); g.fillStyle=NEON_CYAN; g.shadowColor=NEON_CYAN; g.shadowBlur=8; g.fillRect(x,py,150*u,3); g.shadowBlur=0; }
 }
