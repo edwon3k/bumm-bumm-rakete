@@ -85,7 +85,9 @@ const SFX = {
       const p=A.ctx.createStereoPanner? A.ctx.createStereoPanner():null; const dest=p||A.sfx; if(p){ p.pan.value=Math.max(-1,Math.min(1,pan)); p.connect(A.sfx); }
       const pool= far? ['c01','c09','c06'] : size>1.25? ['c12','c00','c04'] : ['c00','c01','c04','c05','c06','c08','c09'];
       const nm=pool[(Math.random()*pool.length)|0];
-      fxplay(nm,t,(far?0.45:0.95)*Math.min(1.5,size),dest,(far?0.85:1)*(0.93+Math.random()*0.14));
+      // Nur der Knall: den Nachhall der Aufnahmen (Echo zwischen Häusern) kurz nach dem Schlag ausblenden
+      const v=(far?0.45:0.95)*Math.min(1.5,size), rt=(far?0.85:1)*(0.93+Math.random()*0.14);
+      const fr=fxplay(nm,t,v,dest,rt,0.75); if(fr){ const gg=fr.g.gain; gg.setValueAtTime(v,t); gg.setValueAtTime(v,t+0.22); gg.exponentialRampToValueAtTime(v*0.02,t+0.5); gg.linearRampToValueAtTime(0,t+0.6); }
       if(!far){ // Druck im Bauch: kurzer Subbass-Schlag unter der Aufnahme
         const g=A.ctx.createGain(); g.gain.setValueAtTime(0.0001,t); g.gain.linearRampToValueAtTime(0.5*size,t+0.004); g.gain.exponentialRampToValueAtTime(0.001,t+0.45); g.connect(dest);
         const o=osc('sine',110,t,t+0.5,g); o.frequency.exponentialRampToValueAtTime(34,t+0.35); }
