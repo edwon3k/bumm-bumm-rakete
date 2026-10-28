@@ -1,0 +1,17 @@
+Bumm Bumm Rakete – Klangquellen
+
+Instrumente und Schlagzeug (alle samples/*.mp3 außer fx.mp3, Rückwärts-Becken und Pauke in fx.mp3):
+  Fluid R3 GM SoundFont, Copyright (c) Frank Wen. MIT-Lizenz:
+  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+  documentation files (the "Software"), to deal in the Software without restriction, including without limitation
+  the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+  permit persons to whom the Software is furnished to do so, subject to the following conditions: The above copyright
+  notice and this permission notice shall be included in all copies or substantial portions of the Software.
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
+
+Feuerwerks-Aufnahmen (fx.mp3), Ausschnitte aus Clips des ESC-50-Datensatzes (K. J. Piczak, https://github.com/karolpiczak/ESC-50),
+gekürzt, ausgeblendet und normalisiert:
+  "Fireworks - explode and fizz" von soundmary (freesound.org/people/soundmary) – CC0
+  "fireworks_2009_close" von matucha (freesound.org/people/matucha) – CC BY 3.0
+  "fireworks.wav", "Fireworks 2 16", "Fireworks 3 16" von ramagochi (freesound.org/people/ramagochi) – CC BY 3.0
+  "Fireworks#1" von bmlake (freesound.org/people/bmlake) – CC BY 3.0

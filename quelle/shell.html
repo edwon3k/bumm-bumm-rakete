@@ -1,0 +1,260 @@
+<title>Bumm Bumm Rakete</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Cinzel:wght@500;600;700&family=Rubik:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: Vollbild-Canvas (Nachthimmel über dem Hafen), Menüs als Glas-Tafeln darüber */
+:root{
+  --night:#05071a; --panel:rgba(12,14,40,0.82); --line:rgba(170,185,255,0.22);
+  --ink:#eef1ff; --mute:#a9b2df; --gold:#ffd54a; --spark:#ff58dc; --cyan:#4cf2ff;
+  --x:#4f8fff; --a:#3dff94; --y:#ffd54a; --b:#ff4646;
+  --display:"Bungee","Arial Black",Impact,sans-serif; --body:"Rubik",system-ui,-apple-system,"Segoe UI",sans-serif;
+  color-scheme:dark;
+}
+html,body{height:100%;margin:0;}
+[hidden]{display:none!important;}
+body{background:var(--night);color:var(--ink);font-family:var(--body);overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none;}
+#cv3,#cv{position:fixed;inset:0;display:block;width:100%;height:100%;}
+#cv{background:transparent;}
+#ui{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-bottom,0px));}
+#ui.open{pointer-events:auto;}
+.screen{pointer-events:auto;width:min(720px,100%);max-height:100%;overflow:auto;display:flex;flex-direction:column;gap:14px;}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);}
+button,select,label.btn{font:inherit;color:inherit;}
+button{cursor:pointer;}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:10px 16px;border-radius:10px;border:1px solid var(--line);background:rgba(30,34,80,0.7);font-weight:600;letter-spacing:0.02em;transition:transform .08s,background .15s,border-color .15s;}
+.btn:hover{background:rgba(55,60,130,0.85);}
+.btn:focus-visible,.song:focus-visible,.fwcell:focus-visible,select:focus-visible,input:focus-visible,.seg button:focus-visible{outline:3px solid var(--gold);outline-offset:2px;}
+.btn.primary{background:linear-gradient(180deg,#ffdf6b,#ff9f2e);color:#1a0f00;border-color:transparent;}
+.btn:active{transform:scale(0.98);}
+h2{font-family:var(--display);font-weight:400;font-size:clamp(20px,4vw,28px);margin:0;text-wrap:balance;}
+.eyebrow{font-size:12px;letter-spacing:0.14em;text-transform:uppercase;color:var(--mute);margin:0;}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+.row>.btn{flex:1 1 140px;}
+/* Titel */
+#s-title{align-items:center;text-align:center;width:min(560px,100%);}
+.logo{font-family:var(--display);font-weight:400;line-height:0.92;margin:0;font-size:clamp(40px,10vw,78px);letter-spacing:0.01em;
+  background:linear-gradient(180deg,#fff6c9 0%,#ffd54a 35%,#ff7a2a 70%,#ff3a6e 100%);-webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 0 18px rgba(255,140,60,0.45)) drop-shadow(0 4px 0 #3a0f3f);}
+.logo span{display:block;}
+.tag{margin:6px 0 0;color:var(--mute);font-size:15px;}
+.menu{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;}
+.menu .btn{min-height:50px;}
+.menu .wide{grid-column:1/-1;}
+.fine{font-size:12px;color:var(--mute);margin:0;max-width:60ch;line-height:1.5;}
+.keys{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;}
+.key{display:inline-grid;place-items:center;width:30px;height:30px;border-radius:50%;font-family:var(--display);font-size:13px;color:#0a0d24;}
+/* Liedauswahl */
+.seg{display:flex;gap:4px;padding:4px;border-radius:10px;background:rgba(0,0,0,0.3);border:1px solid var(--line);flex-wrap:wrap;}
+.seg button{flex:1;min-height:38px;border:0;border-radius:7px;background:transparent;font-weight:600;padding:6px 12px;}
+.seg button[aria-pressed="true"]{background:var(--gold);color:#1a0f00;}
+#songs{display:flex;flex-direction:column;gap:6px;overflow:auto;max-height:52vh;padding:2px;} #songs>*{flex-shrink:0;}
+.song{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;text-align:left;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:rgba(20,24,60,0.6);min-height:56px;}
+.song:hover,.song:focus-visible{background:rgba(60,50,130,0.75);}
+.song .num{font-family:var(--display);color:var(--gold);font-size:15px;}
+.song .st{display:flex;flex-direction:column;min-width:0;}
+.song .tt{font-weight:700;font-size:16px;}
+.song .sub{font-size:12px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.song .meta{display:flex;flex-direction:column;align-items:flex-end;gap:4px;}
+.song .style{font-size:11px;color:var(--mute);white-space:nowrap;}
+.badges{display:flex;gap:4px;}
+.badge{font-size:11px;padding:2px 6px;border-radius:6px;background:rgba(255,255,255,0.08);font-variant-numeric:tabular-nums;white-space:nowrap;}
+.badge.cur{background:rgba(255,213,74,0.25);color:var(--gold);}
+.badge.fw{color:var(--spark);}
+.songrow{display:flex;gap:6px;align-items:stretch;} .songrow .song{flex:1;min-width:0;} .songrow .del{flex:0 0 auto;min-height:auto;font-size:13px;}
+.ofs{display:flex;align-items:center;gap:2px;flex:0 0 auto;} .ofs .ofsb{min-height:auto;padding:4px 8px;font-size:12px;} .ofsv{font-size:12px;min-width:52px;text-align:center;opacity:.85;font-variant-numeric:tabular-nums;}
+@media (max-width:520px){ .songrow{flex-wrap:wrap;} .songrow .song{flex:1 1 100%;} }
+.row.own{flex-wrap:nowrap;} .row.own .btn{flex:0 0 auto;} .row.own .fine{flex:1;min-width:0;}
+@media (max-width:520px){ .row.own{flex-wrap:wrap;} }
+@media (max-width:520px){ .song{grid-template-columns:1fr;} .song .num{display:none;} .song .meta{align-items:flex-start;} .menu{grid-template-columns:1fr;} }
+/* Ergebnis */
+#res-body{display:flex;gap:16px;flex-wrap:wrap;}
+.rescol{flex:1 1 240px;min-width:0;display:flex;flex-direction:column;align-items:center;gap:8px;}
+.rescol h3{margin:0;font-family:var(--display);font-weight:400;}
+.grade{font-family:var(--display);font-size:84px;line-height:1;color:var(--gold);text-shadow:0 0 30px rgba(255,200,80,0.6);}
+.grade.gS{color:#fff;text-shadow:0 0 18px #ff58dc,0 0 40px #4cf2ff;}
+dl{display:grid;grid-template-columns:1fr auto;gap:4px 18px;margin:0;width:100%;max-width:280px;font-variant-numeric:tabular-nums;}
+dt{color:var(--mute);} dd{margin:0;text-align:right;font-weight:600;}
+.rec{color:var(--gold);font-weight:700;margin:0;} .unl{color:var(--spark);font-weight:700;margin:0;text-align:center;} .hint{color:var(--mute);font-size:13px;margin:0;text-align:center;}
+/* Galerie */
+#gal{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:6px;overflow:auto;max-height:46vh;padding:2px;}
+.fwcell{display:flex;flex-direction:column;gap:2px;align-items:flex-start;text-align:left;padding:8px 10px;border-radius:9px;border:1px solid var(--line);background:linear-gradient(135deg,color-mix(in srgb,var(--sw,#ffd54a) 22%,transparent),color-mix(in srgb,var(--sw2,var(--sw,#ffd54a)) 10%,transparent)),rgba(20,24,60,0.6);min-height:52px;}
+.fwcell span{font-weight:700;font-size:13px;} .fwcell small{font-size:11px;color:var(--mute);}
+.fwcell.locked{background:rgba(20,24,60,0.5);opacity:0.7;}
+#s-gallery,#s-vis{align-self:flex-end;}
+/* Optionen */
+.opt{display:grid;grid-template-columns:150px 1fr 70px;gap:10px;align-items:center;}
+.opt output{text-align:right;font-variant-numeric:tabular-nums;color:var(--mute);}
+input[type=range]{width:100%;accent-color:var(--gold);}
+select{min-height:40px;border-radius:8px;border:1px solid var(--line);background:#141842;padding:0 10px;}
+@media (max-width:520px){ .opt{grid-template-columns:1fr 60px;} .opt label{grid-column:1/-1;} }
+/* Steuerung */
+.help{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.help h3{margin:0 0 6px;font-size:14px;color:var(--gold);}
+.help p,.help li{margin:0;font-size:14px;line-height:1.55;color:var(--ink);}
+.help ul{margin:0;padding-left:18px;}
+kbd{font-family:var(--body);font-size:12px;padding:1px 6px;border-radius:5px;border:1px solid var(--line);background:rgba(255,255,255,0.08);}
+@media (max-width:520px){ .help{grid-template-columns:1fr;} }
+/* Einblendungen */
+#toast{position:fixed;top:calc(env(safe-area-inset-top,0px) + 70px);left:50%;transform:translate(-50%,-10px);background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:8px 16px;font-weight:600;font-size:14px;opacity:0;transition:opacity .25s,transform .25s;pointer-events:none;max-width:calc(100% - 32px);text-align:center;z-index:5;}
+#toast.on{opacity:1;transform:translate(-50%,0);}
+#big{position:fixed;left:50%;top:44%;transform:translate(-50%,-50%);font-family:var(--display);font-size:clamp(48px,12vw,110px);pointer-events:none;opacity:0;
+  background:linear-gradient(90deg,#ff58dc,#ffd54a,#4cf2ff,#3dff94);-webkit-background-clip:text;background-clip:text;color:transparent;z-index:4;}
+#big.on{animation:big 1.1s ease-out forwards;}
+@keyframes big{0%{opacity:0;transform:translate(-50%,-50%) scale(0.6);}20%{opacity:1;transform:translate(-50%,-50%) scale(1.08);}70%{opacity:1;}100%{opacity:0;transform:translate(-50%,-60%) scale(1.15);}}
+#bloomBtn{position:fixed;right:calc(16px + env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));width:86px;height:86px;border-radius:50%;border:2px solid var(--spark);background:rgba(60,10,70,0.6);color:var(--ink);font-family:var(--display);font-size:14px;z-index:6;}
+@media (prefers-reduced-motion:reduce){ #big.on{animation-duration:0.01s;} .btn{transition:none;} }
+.field{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--mute);}
+#s-online input{min-height:44px;padding:8px 12px;border-radius:10px;border:1px solid var(--line);background:rgba(0,0,0,0.35);color:var(--ink);font:inherit;font-size:16px;}
+#on-code{width:7.5em;text-transform:uppercase;letter-spacing:0.2em;text-align:center;font-family:var(--display);}
+#on-join>.btn{flex:1 1 120px;}
+#on-hostctl select{flex:1 1 160px;}
+.roomcode{margin:0;font-size:14px;color:var(--mute);} .roomcode b{font-family:var(--display);font-size:30px;letter-spacing:0.18em;color:var(--gold);margin-left:8px;}
+#on-players{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px;} #on-players li{padding:6px 10px;border-radius:8px;background:rgba(255,255,255,0.06);}
+.onrank{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:4px;width:100%;}
+.onrank li,#olive>div{display:flex;justify-content:space-between;gap:12px;padding:5px 10px;border-radius:8px;background:rgba(255,255,255,0.06);font-variant-numeric:tabular-nums;}
+.onrank li.me,#olive>div.me{background:rgba(255,213,74,0.22);color:var(--gold);font-weight:700;}
+#olive{position:fixed;top:calc(env(safe-area-inset-top,0px) + 64px);right:calc(12px + env(safe-area-inset-right,0px));width:min(220px,46vw);display:flex;flex-direction:column;gap:3px;font-size:13px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:8px;pointer-events:none;z-index:4;}
+#olive[hidden]{display:none;}
+</style>
+
+<canvas id="cv3" aria-hidden="true"></canvas>
+<canvas id="cv"></canvas>
+<div id="olive" hidden></div>
+<div id="ui">
+  <section class="screen" id="s-title">
+    <h1 class="logo"><span>Bumm Bumm</span><span>Rakete</span></h1>
+    <p class="tag">Zünde die Raketen im Takt und mach den Himmel über dem Hafen bunt.</p>
+    <div class="keys" aria-hidden="true"><span class="key" style="background:var(--x)">X</span><span class="key" style="background:var(--a)">A</span><span class="key" style="background:var(--y)">Y</span><span class="key" style="background:var(--b)">B</span></div>
+    <div class="menu panel">
+      <button class="btn primary wide" data-nav data-mode="arcade">Arcade starten</button>
+      <button class="btn" data-nav data-mode="endless">Endlos</button>
+      <button class="btn" data-nav data-mode="practice">Training</button>
+      <button class="btn" data-nav data-mode="versus">2 Spieler</button>
+      <button class="btn primary" data-nav data-go="online">Online mit Freunden</button>
+      <button class="btn" data-nav data-go="board">Bestenliste</button>
+      <button class="btn" data-nav data-go="vis">Visualizer</button>
+      <button class="btn" data-nav data-go="gallery">Feuerwerk-Galerie</button>
+      <button class="btn" data-nav data-go="options">Optionen</button>
+      <button class="btn wide" data-nav data-go="help">Steuerung &amp; Regeln</button>
+    </div>
+    <p class="fine">Inoffizielles Fan-Projekt, inspiriert von „Boom Boom Rocket“ (Xbox 360, 2007). Eigene Arrangements gemeinfreier Klassik, gespielt mit echten Instrument-Aufnahmen. Grafik wird im Browser erzeugt.</p>
+    <p class="fine credits">Klänge: Instrumente aus dem Fluid R3 GM SoundFont von Frank Wen (MIT-Lizenz). Feuerwerks-Aufnahmen über den ESC-50-Datensatz (K. J. Piczak) von freesound.org: soundmary (CC0); matucha, ramagochi und bmlake (CC BY 3.0).</p>
+  </section>
+
+  <section class="screen panel" id="s-select" data-back="title" hidden>
+    <div><p class="eyebrow">Liedauswahl · <span id="sel-mode">Arcade</span></p><h2>Welches Feuerwerk heute?</h2></div>
+    <div class="seg" id="diffs" role="group" aria-label="Schwierigkeit">
+      <button data-d="0">Leicht</button><button data-d="1">Normal</button><button data-d="2">Schwer</button>
+    </div>
+    <div class="seg" id="speeds" role="group" aria-label="Tempo" hidden>
+      <button data-t="0.5">Tempo 50 %</button><button data-t="0.75">75 %</button><button data-t="1">100 %</button>
+    </div>
+    <div class="row own">
+      <label class="btn" data-nav tabindex="0" for="own-file">+ Eigenes Lied hinzufügen</label>
+      <input type="file" id="own-file" accept="audio/*" hidden>
+      <p class="fine" id="own-status">MP3, M4A, OGG oder WAV. Das Spiel erkennt die Schläge und baut daraus Raketen in allen drei Schwierigkeiten. Die Datei bleibt in deinem Browser.</p>
+    </div>
+    <div id="songs"></div>
+    <div class="row"><button class="btn" data-nav data-go="title">Zurück</button><p class="fine">Pfeile ↑↓ wählen · ←→ Schwierigkeit · Enter startet</p></div>
+  </section>
+
+  <section class="screen panel" id="s-pause" hidden>
+    <h2>Pause</h2>
+    <div class="row"><button class="btn primary" data-nav id="p-resume">Weiter</button><button class="btn" data-nav id="p-restart">Neu starten</button><button class="btn" data-nav id="p-quit">Liedauswahl</button></div>
+  </section>
+
+  <section class="screen panel" id="s-results" hidden>
+    <div><p class="eyebrow" id="res-song"></p><h2 id="res-title">Show beendet!</h2></div>
+    <div id="res-body"></div>
+    <div class="row"><button class="btn primary" data-nav id="r-again">Nochmal</button><button class="btn" data-nav id="r-select">Liedauswahl</button><button class="btn" data-nav id="r-menu">Hauptmenü</button></div>
+  </section>
+
+  <section class="screen panel" id="s-online" data-back="title" hidden>
+    <div><p class="eyebrow">Online</p><h2>Mit Freunden spielen</h2></div>
+    <p class="fine" id="on-status">Verbinde …</p>
+    <label class="field">Dein Name <input id="on-name" data-nav maxlength="16" autocomplete="nickname" placeholder="z. B. Edwin"></label>
+    <div class="row" id="on-join">
+      <button class="btn primary" data-nav id="on-create">Raum erstellen</button>
+      <input id="on-code" data-nav maxlength="4" placeholder="CODE" aria-label="Raum-Code" autocapitalize="characters" autocomplete="off">
+      <button class="btn" data-nav id="on-enter">Beitreten</button>
+    </div>
+    <div id="on-lobby" hidden>
+      <p class="roomcode">Raum-Code <b id="on-roomcode">----</b></p>
+      <ul id="on-players"></ul>
+      <div id="on-hostctl" class="row">
+        <select id="on-song" data-nav aria-label="Lied"></select>
+        <select id="on-diff" data-nav aria-label="Schwierigkeit"><option value="0">Leicht</option><option value="1" selected>Normal</option><option value="2">Schwer</option></select>
+        <button class="btn primary" data-nav id="on-start">Für alle starten</button>
+      </div>
+      <p class="fine" id="on-wait">Warte, bis der Gastgeber ein Lied startet. Es geht dann bei dir automatisch los.</p>
+      <div class="row"><button class="btn" data-nav id="on-leave">Raum verlassen</button></div>
+    </div>
+    <div class="row"><button class="btn" data-nav data-go="title">Zurück</button></div>
+  </section>
+
+  <section class="screen panel" id="s-board" data-back="title" hidden>
+    <div><p class="eyebrow">Gemeinsam</p><h2>Bestenliste</h2></div>
+    <div class="row"><select id="bd-song" data-nav aria-label="Lied"></select><select id="bd-diff" data-nav aria-label="Schwierigkeit"><option value="0">Leicht</option><option value="1" selected>Normal</option><option value="2">Schwer</option></select></div>
+    <p class="fine" id="bd-status"></p>
+    <ol id="bd-list" class="onrank"></ol>
+    <div class="row"><button class="btn" data-nav data-go="title">Zurück</button></div>
+  </section>
+
+  <section class="screen panel" id="s-vis" data-back="title" hidden>
+    <div><p class="eyebrow">Visualizer</p><h2>Feuerwerk zu deiner Musik</h2></div>
+    <p class="fine">Wähle eine Audiodatei von deinem Gerät. Das Spiel hört Bass, Mitten und Höhen ab und zündet passende Raketen. Der Ton läuft dafür knapp eine Sekunde verzögert, damit die Raketen genau auf dem Schlag platzen.</p>
+    <div class="row">
+      <label class="btn primary" data-nav tabindex="0" for="vis-file">Audiodatei wählen</label>
+      <input type="file" id="vis-file" accept="audio/*" hidden>
+    </div>
+    <div class="row">
+      <select id="vis-song" aria-label="Eingebautes Lied"></select>
+      <button class="btn" data-nav id="vis-play">Eingebautes Lied abspielen</button>
+      <button class="btn" data-nav id="vis-stop">Stopp</button>
+    </div>
+    <p class="fine" id="vis-status">Bereit</p>
+    <div class="row"><button class="btn" data-nav data-go="title">Zurück</button></div>
+  </section>
+
+  <section class="screen panel" id="s-gallery" data-back="title" hidden>
+    <div><p class="eyebrow" id="gal-count"></p><h2>Feuerwerk-Galerie</h2></div>
+    <p class="fine">Tippe ein Feuerwerk an, um es zu zünden. Spezial-Feuerwerke schaltest du im Arcade-Modus frei: Nach knapp der Hälfte eines Liedes taucht eine Wunderkerzen-Rakete mit Schlangenschweif auf. Triff sie und schaffe das Lied.</p>
+    <div id="gal"></div>
+    <div class="row"><button class="btn" data-nav data-go="title">Zurück</button></div>
+  </section>
+
+  <section class="screen panel" id="s-options" data-back="title" hidden>
+    <h2>Optionen</h2>
+    <div class="opt"><label for="o-music">Musik</label><input type="range" id="o-music" min="0" max="100" data-nav><output id="v-music"></output></div>
+    <div class="opt"><label for="o-sfx">Feuerwerk-Sound</label><input type="range" id="o-sfx" min="0" max="100" data-nav><output id="v-sfx"></output></div>
+    <div class="opt"><label for="o-speed">Raketen-Tempo</label><input type="range" id="o-speed" min="70" max="160" step="5" data-nav><output id="v-speed"></output></div>
+    <div class="opt"><label for="o-offset">Latenz-Ausgleich</label><input type="range" id="o-offset" min="-200" max="200" step="5" data-nav><output id="v-offset"></output></div>
+    <div class="opt"><label for="o-glyph">Symbole</label><select id="o-glyph" data-nav><option value="buttons">Xbox-Knöpfe (X A Y B)</option><option value="arrows">Pfeile</option></select><span></span></div>
+    <div class="opt"><label for="o-quality">Grafik</label><select id="o-quality" data-nav><option value="high">Hoch</option><option value="low">Sparsam (schwache Geräte)</option></select><span></span></div>
+    <p class="fine">Latenz-Ausgleich: Wenn du die Raketen immer zu spät triffst, schiebe den Regler ins Plus, bei zu frühen Treffern ins Minus.</p>
+    <div class="row"><button class="btn" data-nav id="o-reset">Fortschritt zurücksetzen</button><button class="btn primary" data-nav data-go="title">Fertig</button></div>
+  </section>
+
+  <section class="screen panel" id="s-help" data-back="title" hidden>
+    <h2>Steuerung &amp; Regeln</h2>
+    <div class="help">
+      <div><h3>Raketen zünden</h3><ul>
+        <li>Tastatur: <kbd>←</kbd> <kbd>↓</kbd> <kbd>↑</kbd> <kbd>→</kbd> oder <kbd>A</kbd> <kbd>S</kbd> <kbd>W</kbd> <kbd>D</kbd></li>
+        <li>Controller: <kbd>X</kbd> <kbd>A</kbd> <kbd>Y</kbd> <kbd>B</kbd> oder Steuerkreuz</li>
+        <li>Handy: auf die Spur tippen</li></ul></div>
+      <div><h3>Bloom</h3><p>Jeder Treffer füllt die Bloom-Leiste. Ist sie voll, glitzert die Zündlinie: <kbd>Leertaste</kbd>, Trigger oder der Bloom-Knopf verdoppelt deinen Multiplikator, bis die Leiste leer ist.</p></div>
+      <div><h3>Punkte</h3><p>Perfekt 100, Super 70, Gut 40, mal Multiplikator. Alle 10 Treffer in Folge steigt er bis ×4, im Bloom bis ×8.</p></div>
+      <div><h3>Lunte</h3><p>Treffer füllen die Lunte, verpasste Raketen und Fehlzündungen brennen sie ab. Ist sie leer, ist die Show vorbei. Im Training kannst du nicht verlieren.</p></div>
+      <div><h3>Modi</h3><p>Endlos: Das Lied läuft in Runden weiter, jede Runde 6 % schneller. 2 Spieler: <kbd>WASD</kbd> + <kbd>Leertaste</kbd> gegen Pfeile + <kbd>Enter</kbd>, oder zwei Controller.</p></div>
+      <div><h3>Eigene Lieder</h3><p>In der Liedauswahl auf „+ Eigenes Lied hinzufügen“ tippen und eine Audiodatei wählen. Das Spiel erkennt Tempo und Schläge und baut Raketen daraus. Die Lieder bleiben in diesem Browser gespeichert.</p></div>
+      <div><h3>Pause</h3><p><kbd>Esc</kbd>, <kbd>P</kbd> oder Start am Controller.</p></div>
+    </div>
+    <div class="row"><button class="btn primary" data-nav data-go="title">Alles klar</button></div>
+  </section>
+</div>
+<div id="toast" role="status" aria-live="polite"></div>
+<div id="big" aria-hidden="true"></div>
+<button id="bloomBtn" hidden>BLOOM</button>
