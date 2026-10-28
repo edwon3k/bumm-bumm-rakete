@@ -216,6 +216,32 @@ dt{text-transform:uppercase;letter-spacing:0.05em;font-size:13px;} dd{color:#fff
 #bloomBtn{box-shadow:0 0 18px rgba(255,88,220,0.6);}
 @media (prefers-reduced-motion:reduce){ .btn:focus-visible::after{animation:none;opacity:0;} .btn,.btn::before{transition:none;} }
 @media (max-width:520px){ .panel{padding:16px;} .btn{padding:10px 18px;} }
+/* ===== V18: Übergänge, Ergebnis-Seite ===== */
+.screen:not([hidden]){animation:scrIn .28s cubic-bezier(.2,.8,.3,1) backwards;}
+@keyframes scrIn{from{opacity:0;transform:translateY(12px) scale(.985);}to{opacity:1;transform:none;}}
+#s-title .logo{animation:logoIn .6s cubic-bezier(.2,.9,.3,1.2) backwards;}
+@keyframes logoIn{from{opacity:0;transform:scale(.85);}to{opacity:1;transform:none;}}
+.menu .btn{animation:btnIn .38s cubic-bezier(.2,.8,.3,1) backwards;}
+@keyframes btnIn{from{opacity:0;transform:translateX(-18px);}to{opacity:1;transform:none;}}
+.menu .btn:nth-child(2){animation-delay:.04s} .menu .btn:nth-child(3){animation-delay:.07s} .menu .btn:nth-child(4){animation-delay:.1s} .menu .btn:nth-child(5){animation-delay:.13s}
+.menu .btn:nth-child(6){animation-delay:.16s} .menu .btn:nth-child(7){animation-delay:.19s} .menu .btn:nth-child(8){animation-delay:.22s} .menu .btn:nth-child(9){animation-delay:.25s} .menu .btn:nth-child(10){animation-delay:.28s}
+.reshead{display:flex;align-items:center;justify-content:center;gap:22px;width:100%;flex-wrap:wrap;}
+.grade.stamp{animation:stamp .5s cubic-bezier(.3,1.6,.5,1) .25s both;min-width:1em;text-align:center;}
+@keyframes stamp{from{opacity:0;transform:scale(2.6) rotate(-8deg);}to{opacity:1;transform:none;}}
+.grade{font-size:96px;}
+.resnums{display:flex;flex-direction:column;gap:6px;align-items:flex-start;}
+.resnums b{font-family:var(--display);font-weight:400;font-variant-numeric:tabular-nums;}
+.resnums span{display:block;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);}
+.resnums .big b{font-size:clamp(30px,6vw,44px);color:#fff;text-shadow:0 0 10px rgba(255,122,217,.8),0 0 26px rgba(255,88,220,.4);}
+.resnums .mid{font-size:20px;color:var(--cyan);} .resnums .mid b{font-size:26px;text-shadow:0 0 10px rgba(76,242,255,.6);}
+.dist{display:flex;width:100%;max-width:340px;height:12px;gap:2px;transform:skewX(var(--skew));background:rgba(255,255,255,.06);animation:distIn .9s cubic-bezier(.2,.8,.3,1) .35s both;transform-origin:left;}
+.dist i{flex-basis:0;min-width:0;}
+@keyframes distIn{from{clip-path:inset(0 100% 0 0);}to{clip-path:inset(0 0 0 0);}}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;justify-content:center;font-size:12px;color:var(--mute);}
+.legend span{display:inline-flex;align-items:center;gap:5px;} .legend i{width:9px;height:9px;display:inline-block;transform:skewX(var(--skew));} .legend b{color:#fff;font-variant-numeric:tabular-nums;}
+.rec small{font-weight:600;color:#fff;opacity:.8;}
+.rescol>dl,.rescol>.legend,.rescol>p{animation:scrIn .4s .6s both;}
+@media (prefers-reduced-motion:reduce){ .screen:not([hidden]),.menu .btn,#s-title .logo,.grade.stamp,.dist,.rescol>*{animation:none!important;} }
 </style>
 
 <canvas id="cv3" aria-hidden="true"></canvas>
@@ -262,7 +288,7 @@ dt{text-transform:uppercase;letter-spacing:0.05em;font-size:13px;} dd{color:#fff
   </section>
 
   <section class="screen panel" id="s-pause" hidden>
-    <h2>Pause</h2>
+    <div><p class="eyebrow" id="p-info"></p><h2>Pause</h2></div>
     <div class="row"><button class="btn primary" data-nav id="p-resume">Weiter</button><button class="btn" data-nav id="p-restart">Neu starten</button><button class="btn" data-nav id="p-quit">Liedauswahl</button></div>
   </section>
 

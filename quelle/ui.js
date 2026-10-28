@@ -6,18 +6,41 @@ let UI={screen:'title', mode:'arcade', diff:1, tempo:0.75, sel:0, last:null};
 const isTouch = matchMedia('(pointer: coarse)').matches;
 
 function showScreen(name){
+  if(name!=='select' && G && G.preview) previewStop();
   UI.screen=name;
   document.querySelectorAll('.screen').forEach(s=>{ s.hidden = s.id!=='s-'+name; });
   $('#ui').classList.toggle('open', !!name);
   $('#bloomBtn').hidden = !(isTouch && !name && G && G.players && G.players.length===1);
   if(name){ const f=document.querySelector('#s-'+name+' [data-nav]:not([disabled])'); if(f && !f.matches('input[type=range]')) setTimeout(()=>f.focus({preventScroll:true}),30); }
-  if(name==='select') renderSelect();
+  if(name==='select'){ renderSelect(); PREV.idx=-1; previewQueue(UI.sel); }
   if(name==='gallery') renderGallery();
   if(name==='options') renderOptions();
   if(name==='board' && typeof boardRender==='function') boardRender();
   if(name==='online' && typeof onFillSongs==='function') onFillSongs();
 }
-function click(){ audioInit(); SFX.ui(A.ctx.currentTime); }
+function click(){ audioInit(); SFX.ui(A.ctx.currentTime); UI.lastClick=performance.now(); }
+// leiser Tick, wenn man mit Tastatur oder Controller durchs Menü geht (ändert nichts an der Steuerung)
+let lastPtr=0; document.addEventListener('pointerdown',()=>{ lastPtr=performance.now(); },true);
+document.addEventListener('focusin',e=>{
+  const now=performance.now(); if(now-lastPtr<400 || now-(UI.lastClick||0)<250) return;
+  if(!A.ctx||A.ctx.state!=='running'||!e.target.matches||!e.target.matches('[data-nav]')) return;
+  if(G&&!G.ended&&!G.demo&&G.players.length&&!paused) return;
+  SFX.nav(A.ctx.currentTime);
+});
+// ---------- Hörprobe in der Liedauswahl (Musik mit passendem Feuerwerk) ----------
+const PREV={timer:0,idx:-1,gen:0};
+function previewStop(){ clearTimeout(PREV.timer); PREV.idx=-1; PREV.gen++; if(G&&G.preview) stopGame(); }
+function previewQueue(i){ if(UI.screen!=='select'||PREV.idx===i) return; clearTimeout(PREV.timer); PREV.timer=setTimeout(()=>previewStart(i),450); }
+async function previewStart(i){
+  const s=SONGS[i]; if(!s||UI.screen!=='select'||!A.ctx||A.ctx.state!=='running') return;
+  if(G&&!G.preview) return;
+  if(s.custom && (!s.buffer||!s.analysis||s.analysis.v!==2)) return;
+  const gen=++PREV.gen; PREV.idx=i;
+  if(smpNeeded(s).some(n=>!SMP.buf[n])){ try{ await smpEnsure(s); }catch(e){ return; } }
+  if(gen!==PREV.gen||UI.screen!=='select'||(G&&!G.preview)) return;
+  if(G) stopGame();
+  try{ startGame({mode:'demo',songIdx:i,diff:1,tempo:1,preview:true}); }catch(e){ console.warn(e); G=null; }
+}
 document.addEventListener('click',e=>{ if(e.target.closest('button')) click(); });
 
 function menuKey(e){
@@ -56,7 +79,8 @@ function renderSelect(keepFocus){
     const un=s.custom?-1:[0,1,2].filter(d=>SAVE.unlocked.includes(i*3+d)).length;
     b.innerHTML='<span class="num">'+String(i+1).padStart(2,'0')+'</span><span class="st"><span class="tt">'+s.title+'</span><span class="sub">'+s.composer+' · '+s.piece+'</span></span><span class="meta"><span class="style">'+STYLE_NAMES[s.style]+' · '+s.bpm+' BPM'+(s.pack===2?' · Bonus':'')+'</span><span class="badges">'+badges+(un>=0?'<span class="badge fw" title="Freigeschaltete Feuerwerke">✦ '+un+'/3</span>':'')+'</span></span>';
     b.addEventListener('click',()=>{ UI.sel=i; launch(); });
-    b.addEventListener('focus',()=>{ UI.sel=i; });
+    b.addEventListener('focus',()=>{ UI.sel=i; previewQueue(i); });
+    b.addEventListener('pointerenter',()=>previewQueue(i));
     if(s.custom){
       const row=document.createElement('div'); row.className='songrow'; row.appendChild(b);
       const del=document.createElement('button'); del.className='btn del'; del.dataset.nav=''; del.textContent='Löschen'; del.setAttribute('aria-label','„'+s.title+'“ löschen');
@@ -89,7 +113,7 @@ async function launch(opts){
 // ---------- Pause ----------
 function togglePause(){
   if(!G||G.ended) return;
-  if(!paused){ paused=true; A.ctx.suspend(); showScreen('pause'); }
+  if(!paused){ paused=true; A.ctx.suspend(); const p0=G.players[0]; $('#p-info').textContent=G.song.title+' · '+DIFF_NAMES[G.diff]+(p0&&G.players.length===1?' · '+p0.score.toLocaleString('de-DE')+' Punkte':''); showScreen('pause'); }
   else { paused=false; showScreen(null); A.ctx.resume(); }
 }
 $('#p-resume').addEventListener('click',togglePause);
@@ -114,23 +138,39 @@ function showResults(){
     let extra='';
     if(G.mode==='arcade' && !failed){
       const k=bestKey(G.song,G.diff), old=SAVE.best[k];
-      if(!old||p.score>old.score){ SAVE.best[k]={score:p.score,grade:gr.g,pct:Math.round(gr.pct*100)}; extra+='<p class="rec">Neuer Rekord!</p>'; }
+      if(!old||p.score>old.score){ SAVE.best[k]={score:p.score,grade:gr.g,pct:Math.round(gr.pct*100)}; extra+='<p class="rec">Neuer Rekord!'+(old?' <small>+'+(p.score-old.score).toLocaleString('de-DE')+'</small>':'')+'</p>'; }
+      else extra+='<p class="hint">Dein Rekord: '+old.score.toLocaleString('de-DE')+' ('+old.grade+')</p>';
       if(!multi && typeof boardSubmit==='function') boardSubmit(G.song,G.diff,p.score,gr.g,Math.round(gr.pct*100));
       if(p.unlock!==null && !SAVE.unlocked.includes(p.unlock)){ SAVE.unlocked.push(p.unlock); extra+='<p class="unl">✦ Feuerwerk freigeschaltet: '+UNLOCKS[p.unlock].name+'</p>'; }
     }
     if(G.mode==='arcade' && failed && p.unlock!==null && !SAVE.unlocked.includes(p.unlock)) extra+='<p class="hint">Das Feuerwerk wird erst freigeschaltet, wenn du das Lied schaffst.</p>';
     if(G.mode==='endless'){ const e=SAVE.endless[G.song.id]; const laps=G.lap-1; if(!e||laps>e.laps||(laps===e.laps&&p.score>e.score)){ SAVE.endless[G.song.id]={laps,score:p.score}; extra+='<p class="rec">Neuer Endlos-Rekord!</p>'; } }
+    const parts=[['Perfekt',p.perfect,'#ffe066'],['Super',p.great,'#6ff3ff'],['Gut',p.good,'#8dff9e'],['Daneben',p.miss,'#ff6b6b']];
     col.innerHTML=(multi?'<h3>Spieler '+(p.i+1)+'</h3>':'')+
-      '<div class="grade g'+gr.g+'">'+(failed&&G.mode!=='endless'?'✕':gr.g)+'</div>'+
-      '<dl><dt>Punkte</dt><dd>'+p.score.toLocaleString('de-DE')+'</dd><dt>Trefferquote</dt><dd>'+Math.round(gr.pct*100)+' %</dd><dt>Beste Kombo</dt><dd>'+p.maxCombo+'</dd>'+
-      '<dt>Perfekt</dt><dd>'+p.perfect+'</dd><dt>Super</dt><dd>'+p.great+'</dd><dt>Gut</dt><dd>'+p.good+'</dd><dt>Daneben</dt><dd>'+p.miss+'</dd><dt>Fehlzündungen</dt><dd>'+p.misfire+'</dd></dl>'+extra;
+      '<div class="reshead"><div class="grade stamp g'+gr.g+'">'+(failed&&G.mode!=='endless'?'✕':gr.g)+'</div>'+
+      '<div class="resnums"><div class="big"><b class="cnt" data-to="'+p.score+'">0</b><span>Punkte</span></div>'+
+      '<div class="mid"><b class="cnt" data-to="'+Math.round(gr.pct*100)+'">0</b> %<span>Trefferquote</span></div></div></div>'+
+      '<div class="dist" role="img" aria-label="'+parts.map(x=>x[0]+' '+x[1]).join(', ')+'">'+parts.map(x=>'<i style="flex-grow:'+x[1]+';background:'+x[2]+'"></i>').join('')+'</div>'+
+      '<div class="legend">'+parts.map(x=>'<span><i style="background:'+x[2]+'"></i>'+x[0]+' <b>'+x[1]+'</b></span>').join('')+'</div>'+
+      '<dl><dt>Beste Kombo</dt><dd>'+p.maxCombo+'</dd><dt>Fehlzündungen</dt><dd>'+p.misfire+'</dd></dl>'+extra;
     res.appendChild(col);
   }
   storeSave();
   showScreen('results');
   if(G.online && typeof onRenderResults==='function') onRenderResults();
+  countUp(res);
+  // Stempel der Note mit Knall
+  const g0=gradeOf(ps[0]).g;
+  if(!G.failed){ later(0.42,()=>{ if(A.ctx){ SFX.boom(A.ctx.currentTime,0.7,0); if(g0==='S') SFX.unlock(A.ctx.currentTime+0.1); } }); }
   // Abschluss-Feuerwerk
   if(!G.failed) for(let i=0;i<8;i++) later(i*0.18,()=>freeLaunch(W*(0.15+Math.random()*0.7),H*(0.12+Math.random()*0.25),pickFirework(),0.8));
+}
+function countUp(root){
+  const els=[...root.querySelectorAll('.cnt')], t0=performance.now(), D=1100;
+  const step=now=>{ const u=Math.min(1,(now-t0)/D), e=1-Math.pow(1-u,3);
+    for(const el of els){ el.textContent=Math.round(+el.dataset.to*e).toLocaleString('de-DE'); }
+    if(u<1 && UI.screen==='results') requestAnimationFrame(step); else for(const el of els) el.textContent=(+el.dataset.to).toLocaleString('de-DE'); };
+  requestAnimationFrame(step);
 }
 $('#r-again').addEventListener('click',()=>{ stopGame(); if(UI.last&&UI.last.online&&typeof ON!=='undefined'&&ON.r){ if(ON.host){ $('#on-song').value=UI.last.songIdx; $('#on-diff').value=UI.last.diff; onHostStart(); } else { showScreen('online'); toast('Der Gastgeber startet das nächste Lied.'); } return; } launch(UI.last); });
 $('#r-select').addEventListener('click',()=>{ stopGame(); showScreen(UI.last&&UI.last.online?'online':'select'); });

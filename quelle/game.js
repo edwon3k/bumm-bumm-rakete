@@ -171,7 +171,8 @@ function approachTime(diff){ return [2.1,1.7,1.38][diff]/SETTINGS.speed; }
 
 function newPlayer(i, chart){
   return {i, notes:chart.map(n=>({t:n.t,lane:n.lane,st:0,sp:false})), head:0, score:0, combo:0, maxCombo:0, health:0.6, bloom:0, bloomOn:false,
-    hits:0, perfect:0, great:0, good:0, miss:0, misfire:0, flash:[0,0,0,0], judg:[], failed:false, specialDone:false, unlock:null, scoreShown:0, shake:0};
+    hits:0, perfect:0, great:0, good:0, miss:0, misfire:0, flash:[0,0,0,0], judg:[], failed:false, specialDone:false, unlock:null, scoreShown:0, shake:0,
+    rings:[], hitPulse:[0,0,0,0], cPulse:0, mPulse:0, lastM:1, lost:null};
 }
 function startGame(opts){
   // opts: {mode, songIdx, diff, tempo}
@@ -201,10 +202,27 @@ function startGame(opts){
   G.specialAt = Math.floor(chart.length*0.45);
   G.startAt=A.ctx.currentTime+(mode==='demo'?0.35:3.2);
   G.beatLen=60/(song.bpm*tempo); G.lastBeat=-1;
-  if(song.custom){ const src=A.ctx.createBufferSource(); src.buffer=song.buffer; src.playbackRate.value=tempo; src.connect(A.music); src.start(G.startAt); G.src=src; }
+  // Vorschau in der Liedauswahl: mitten im Lied einsteigen, leise einblenden, nach ~22 s ausblenden
+  let pOff=0;
+  if(opts.preview){
+    G.preview=true; const mA=marks.find(m=>m.kind==='A');
+    pOff = song.custom ? song.buffer.duration*0.3 : (mA?mA.t:0);
+    G.startAt=A.ctx.currentTime+0.12-pOff; G.dur=pOff+23;
+    for(const d of G.demoNotes) if(d.t<pOff+0.6) d.done=true;
+    const mg=A.music.gain, v=mg.value, now=A.ctx.currentTime; mg.setValueAtTime(0,now); mg.linearRampToValueAtTime(v,now+1.2);
+    G.ev.push({t:pOff+20.5,f:w=>{ mg.cancelScheduledValues(w); mg.setTargetAtTime(0,w,0.7); }}); G.ev.sort((a,b)=>a.t-b.t);
+  }
+  // Countdown auf den Schlag vor der ersten Rakete
+  if(n>0 && chart.length && mode!=='demo'){
+    const T1=chart[0].t, b=G.beatLen*(G.beatLen<0.42?2:1);
+    G.cd=[3,2,1].map(k=>T1-k*b).filter(x=>x>-2.6); G.cdT1=T1;
+    for(const ct of G.cd) G.ev.push({t:ct+SETTINGS.offset/1000,f:w=>SFX.tick(w,false)});
+    G.ev.push({t:T1+SETTINGS.offset/1000,f:w=>SFX.tick(w,true)}); G.ev.sort((a,b)=>a.t-b.t);
+  }
+  if(song.custom){ const src=A.ctx.createBufferSource(); src.buffer=song.buffer; src.playbackRate.value=tempo; src.connect(A.music); if(opts.preview) src.start(A.ctx.currentTime+0.12,pOff*tempo); else src.start(G.startAt); G.src=src; }
   const fin=marks.find(m=>m.kind==='outro'); if(fin && mode!=='demo'){ G.finaleT=fin.t; G.dur+=3.5; }
   paused=false;
-  showScreen(mode==='demo'?'vis':null);
+  if(!opts.preview) showScreen(mode==='demo'?'vis':null);
   layoutFields();
 }
 function layoutFields(){
@@ -245,7 +263,8 @@ function pickFirework(){
   if(un.length && Math.random()<0.33){ const u=UNLOCKS[pick(un)]; return {type:u.shape,c:u.c,c2:u.c2}; }
   return {type:pick(BASE_TYPES)};
 }
-function judgeText(p,txt,col,x){ p.judg.push({txt,col,x,t:0}); if(p.judg.length>4) p.judg.shift(); }
+function breakCombo(p){ if(p.combo>=10) p.lost={n:p.combo,t:0}; p.combo=0; }
+function judgeText(p,txt,col,x,sub){ p.judg=p.judg.filter(j=>Math.abs(j.x-x)>2); p.judg.push({txt,col,x,t:0,sub}); if(p.judg.length>4) p.judg.shift(); }
 function pressLane(pi,lane,perf){
   if(!G||paused||G.ended) return;
   const p=G.players[pi]; if(!p||p.failed) return;
@@ -260,7 +279,7 @@ function pressLane(pi,lane,perf){
   }
   const x=laneX(p,lane);
   if(!best){
-    p.misfire++; p.combo=0; p.health=Math.max(0,p.health-0.02); SFX.misfire(A.ctx.currentTime);
+    p.misfire++; breakCombo(p); p.health=Math.max(0,p.health-0.02); SFX.misfire(A.ctx.currentTime);
     for(let i=0;i<10;i++) addP(x,hitY(),(Math.random()-0.5)*80,(Math.random()-0.8)*80,{c:C.silver,life:0.4,size:1.5,drag:3});
     checkFail(p); return;
   }
@@ -274,7 +293,8 @@ function pressLane(pi,lane,perf){
   p.score+=base*multOf(p);
   p.health=Math.min(1,p.health+(base===100?0.022:0.015));
   if(!p.bloomOn) p.bloom=Math.min(1,p.bloom+(base===100?0.045:0.032));
-  judgeText(p,txt,col,x);
+  judgeText(p,txt,col,x,base<100?(best.t>t?'FRÜH':'SPÄT'):null);
+  p.rings.push({l:lane,t:0,q:base}); p.hitPulse[lane]=1; p.cPulse=1;
   // Feuerwerk!
   const y=hitY()-10-Math.random()*H*0.06;
   const fw=pickFirework(); const s=sc*(p.bloomOn?1.3:1)*(G.players.length>1?0.75:1);
@@ -315,7 +335,7 @@ function updatePlayers(t,dt){
     for(let i=p.head;i<p.notes.length;i++){
       const n=p.notes[i]; if(n.t>t-WIN) break;
       if(n.st===0 && !p.failed){
-        n.st=2; p.miss++; p.combo=0; const pen=[0.05,0.07,0.085][G.diff];
+        n.st=2; p.miss++; breakCombo(p); VIG.miss=1; const pen=[0.05,0.07,0.085][G.diff];
         p.health=Math.max(0,p.health-pen); if(!p.bloomOn) p.bloom=Math.max(0,p.bloom-0.05);
         judgeText(p,'DANEBEN','#ff6b6b',laneX(p,n.lane)); setLeadOk(false); SFX.dud(A.ctx.currentTime); p.shake=1;
         const x=laneX(p,n.lane), y=hitY()-30; for(let k=0;k<14;k++) addP(x,y,(Math.random()-0.5)*60,(Math.random()-0.5)*60,{c:C.silver,life:0.6,size:1.4,drag:2,grav:120*FX.scale});
@@ -334,6 +354,11 @@ function updatePlayers(t,dt){
     p.judg=p.judg.filter(j=>j.t<0.7);
     p.scoreShown+= (p.score-p.scoreShown)*Math.min(1,dt*12);
     p.shake=Math.max(0,p.shake-dt*4);
+    p.cPulse=Math.max(0,p.cPulse-dt*6); p.mPulse=Math.max(0,p.mPulse-dt*2.5);
+    for(let l=0;l<4;l++) p.hitPulse[l]=Math.max(0,p.hitPulse[l]-dt*7);
+    for(const r of p.rings) r.t+=dt; if(p.rings.length) p.rings=p.rings.filter(r=>r.t<0.4);
+    if(p.lost){ p.lost.t+=dt; if(p.lost.t>0.8) p.lost=null; }
+    { const m=multOf(p); if(m>p.lastM && !p.failed){ p.mPulse=1; SFX.multUp(A.ctx.currentTime,m); } p.lastM=m; }
     // Funkenschweif der aufsteigenden Raketen
     const hy=hitY(), sy=spawnY();
     for(let i=p.head;i<p.notes.length;i++){
@@ -346,7 +371,10 @@ function updatePlayers(t,dt){
   }
 }
 function finishGame(failed){
-  if(G.ended) return; G.ended=true; G.failed=!!failed;
+  if(G.ended) return;
+  if(G.demo){ G.ended=true; const wasPrev=G.preview, me=G; setTimeout(()=>{ if(G===me) stopGame(); },2500);
+    if(!wasPrev){ const st=document.getElementById('vis-status'); if(st) st.textContent='Fertig'; } return; }
+  G.ended=true; G.failed=!!failed;
   const t=A.ctx.currentTime;
   if(failed){ A.music.gain.setTargetAtTime(0,t,0.3); A.lead.gain.setTargetAtTime(0,t,0.2); SFX.dud(t); }
   setBloomAudio(false);
@@ -506,7 +534,7 @@ function demoUpdate(t){
   if(!G||!G.demo) return;
   for(const n of G.demoNotes){
     if(n.done) continue; if(n.t-t>0.9) break;
-    n.done=true; const x=W*(0.12+0.76*(n.lane/3))+(Math.random()-0.5)*W*0.15; const y=H*(0.12+Math.random()*0.3);
+    n.done=true; const x=G.preview&&W>900 ? (n.lane<2?W*(0.03+Math.random()*0.17):W*(0.8+Math.random()*0.17)) : W*(0.12+0.76*(n.lane/3))+(Math.random()-0.5)*W*0.15; const y=H*(0.12+Math.random()*0.3);
     freeLaunch(x,y,{type:pickFirework().type,c:LANE_COL[n.lane]},Math.max(0.05,n.t-t),{s:0.9});
   }
 }
@@ -540,7 +568,7 @@ function frame(ts){
       }
     } else if(!G) { attract(dt); }
     visUpdate(); updateFree(); fxUpdate(dt);
-    CAM.shake=Math.max(0,CAM.shake-dt*2.2); CAM.punch=Math.max(0,CAM.punch-dt*2.5);
+    VIG.miss=Math.max(0,VIG.miss-dt*2.6); CAM.shake=Math.max(0,CAM.shake-dt*2.2); CAM.punch=Math.max(0,CAM.punch-dt*2.5);
   }
   if(G) for(const p of G.players) if(p.bloomOn) bloomLvl=1;
   camCompute();
@@ -560,7 +588,7 @@ function frame(ts){
   fxDraw(fg); drawFree(fg);
   compositeFx(); camApply(g);
   }
-  if(G && !G.ended && G.players.length && A.ctx){ for(const p of G.players) drawField(p,t); g.setTransform(DPR,0,0,DPR,0,0); drawHud(t); drawCinema(t); }
+  if(G && !G.ended && G.players.length && A.ctx){ for(const p of G.players) drawField(p,t); g.setTransform(DPR,0,0,DPR,0,0); drawVignette(t); drawHud(t); drawCinema(t); drawCountdown(t); }
   requestAnimationFrame(frame);
 }
 

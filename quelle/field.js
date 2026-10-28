@@ -12,7 +12,7 @@ function glowSprite(key,w,h,draw){
   draw(c.getContext('2d'),c.width,c.height); GLOW.cache.set(key,c); return c;
 }
 // Text mit Leuchten, mittig an (x,y) (textAlign center, textBaseline middle)
-function neonTextCached(txt,x,y,font,col,glow){
+function neonTextCached(txt,x,y,font,col,glow,sc){
   const k='t|'+txt+'|'+font+'|'+col+'|'+glow+'|'+DPR;
   const c=glowSprite(k,1,1,()=>{});
   if(c.width===1){ // erstmals: messen und zeichnen
@@ -22,7 +22,7 @@ function neonTextCached(txt,x,y,font,col,glow){
     const x2=c.getContext('2d'); x2.scale(DPR,DPR); x2.font=font; x2.textAlign='center'; x2.textBaseline='middle';
     x2.shadowColor=col; x2.shadowBlur=glow*DPR; x2.fillStyle=col; x2.fillText(txt,c._w/2,c._h/2); x2.shadowBlur=0; x2.fillStyle='rgba(255,255,255,0.85)'; x2.fillText(txt,c._w/2,c._h/2);
   }
-  g.drawImage(c,x-c._w/2,y-c._h/2,c._w,c._h);
+  const k2=sc||1; g.drawImage(c,x-c._w*k2/2,y-c._h*k2/2,c._w*k2,c._h*k2);
 }
 // Schriften fertig geladen: Vorzeichnungen neu machen
 try{ document.fonts.addEventListener('loadingdone',()=>GLOW.cache.clear()); }catch(e){}
@@ -42,6 +42,32 @@ function laneBadge(x,y,r,lane,alpha,bright){
   else { g.fillStyle=col; g.font='700 '+Math.round(r*1.25)+'px "Rubik", system-ui, sans-serif'; g.textAlign='center'; g.textBaseline='middle'; g.fillText(LANE_BTN[lane],x,y+r*0.05); }
   g.globalAlpha=1;
 }
+// Leuchtende Bahn je Spur (einmal vorgezeichnet, dann nur gestreckt)
+function laneSpr(l){ return glowSprite('lane|'+l,32,256,(x2,w,h)=>{
+  const v=x2.createLinearGradient(0,0,0,h); v.addColorStop(0,LANE_HEX[l]); v.addColorStop(0.5,LANE_HEX[l]+'66'); v.addColorStop(1,LANE_HEX[l]+'00'); x2.fillStyle=v; x2.fillRect(0,0,w,h);
+  x2.globalCompositeOperation='destination-in'; const hg=x2.createLinearGradient(0,0,w,0); hg.addColorStop(0,'rgba(0,0,0,0)'); hg.addColorStop(0.5,'rgba(0,0,0,1)'); hg.addColorStop(1,'rgba(0,0,0,0)'); x2.fillStyle=hg; x2.fillRect(0,0,w,h); }); }
+// Rand-Leuchten (rot bei Fehlern, cyan im Bloom)
+const VIG={miss:0};
+function vigSpr(col){ return glowSprite('vig|'+col,256,160,(x2,w,h)=>{ x2.scale(1,h/w); const r=x2.createRadialGradient(w/2,w/2,w*0.28,w/2,w/2,w*0.72); r.addColorStop(0,col+'00'); r.addColorStop(0.6,col+'55'); r.addColorStop(1,col+'dd'); x2.fillStyle=r; x2.fillRect(0,0,w,w); }); }
+function drawVignette(t){
+  let a=VIG.miss*0.5;
+  if(G.mode!=='practice' && G.players.some(p=>!p.failed&&p.health<0.25)) a=Math.max(a,0.2+0.16*Math.sin(t*7));
+  if(a>0.01){ g.globalAlpha=Math.min(1,a); g.drawImage(vigSpr('#ff2030'),0,0,W,H); }
+  if(G.players.some(p=>p.bloomOn)){ g.globalCompositeOperation='lighter'; g.globalAlpha=0.22+0.08*Math.sin(t*5); g.drawImage(vigSpr('#3ff4ff'),0,0,W,H); g.globalCompositeOperation='source-over'; }
+  g.globalAlpha=1;
+}
+// Countdown vor der ersten Rakete
+function drawCountdown(t){
+  if(!G.cd||G.demo) return;
+  const cd=G.cd, T1=G.cdT1; let txt=null, u=0;
+  for(let i=0;i<cd.length;i++){ const a=cd[i], b=i+1<cd.length?cd[i+1]:T1; if(t>=a&&t<b){ txt=String(cd.length-i); u=(t-a)/(b-a); } }
+  if(!txt && t>=T1 && t<T1+0.55){ txt='LOS!'; u=(t-T1)/0.55; }
+  if(!txt) return;
+  const sc=1.35-0.35*Math.min(1,u*4); g.globalAlpha=Math.max(0,1-Math.max(0,u-0.55)/0.45);
+  g.textAlign='center'; g.textBaseline='middle';
+  neonTextCached(txt,W/2,H*0.15,'400 72px "Bungee", "Arial Black", sans-serif',txt==='LOS!'?'#ffe066':NEON_CYAN,22,sc);
+  g.globalAlpha=1;
+}
 function hitLineSpan(p){ return G.players.length>1 ? [p.fx-24,p.fx+p.fw+24] : [Math.max(8,W*0.06),Math.min(W-8,W*0.94)]; }
 function drawField(p,t){
   const hy=hitY(), sy=spawnY(), lw=p.fw/4, rr=Math.max(11,Math.min(lw*0.2,19));
@@ -54,11 +80,36 @@ function drawField(p,t){
   const lc = p.bloomOn? 'hsl('+((t*240)%360)+',100%,62%)' : ready? (Math.sin(t*20)>0?'#ffffff':'#ffd54a') : NEON_PINK;
   g.globalAlpha=fade; g.beginPath(); g.moveTo(lx0,hy); g.lineTo(lx1,hy); neonStroke(lc, ready||p.bloomOn?6:4, 22);
   if(ready||p.bloomOn){ g.globalCompositeOperation='lighter'; for(let k=0;k<8;k++){ const x=lx0+Math.random()*(lx1-lx0); g.drawImage(SPRITES[ready?C.gold:pick([C.magenta,C.cyan,C.white])],x-9,hy-9,18,18);} g.globalCompositeOperation='source-over'; }
+  // Bahnen: leuchten auf, wenn die Taste gedrückt wird
+  g.globalCompositeOperation='lighter';
+  for(let l=0;l<4;l++){ const x=laneX(p,l), f=p.flash[l], spr=laneSpr(l);
+    g.globalAlpha=fade*(0.07+0.4*f); g.drawImage(spr,x-lw*0.42,hy,lw*0.84,sy-hy);
+    g.globalAlpha=fade*0.3; g.drawImage(spr,x-1.5,hy,3,sy-hy); }
+  g.globalCompositeOperation='source-over';
+  // Kombo groß in der Mitte, hinter den Raketen
+  const cx=p.fx+p.fw/2, cy=hy+(sy-hy)*0.42;
+  g.textAlign='center'; g.textBaseline='middle';
+  if(p.combo>=10){ const pu=p.cPulse, fs=Math.round(Math.min(lw*0.62,74)*(1+0.16*pu));
+    g.font='400 '+fs+'px "Bungee", "Arial Black", sans-serif';
+    g.globalAlpha=fade*(0.22+0.3*pu); g.fillStyle=p.bloomOn?'#ffe066':'#ff7ad9'; g.fillText(p.combo,cx,cy);
+    g.globalAlpha=fade*(0.5+0.4*pu); g.lineWidth=1.5; g.strokeStyle=NEON_CYAN; g.strokeText(p.combo,cx,cy);
+    if('letterSpacing' in g) g.letterSpacing='0.3em';
+    g.globalAlpha=fade*0.6; g.font='600 12px "Rubik", system-ui, sans-serif'; g.fillStyle='#c8f5ff'; g.fillText('KOMBO',cx,cy+fs*0.62);
+    if('letterSpacing' in g) g.letterSpacing='0px'; }
+  if(p.lost && p.lost.t<0.8){ const u=p.lost.t/0.8, fs=Math.round(Math.min(lw*0.62,74));
+    g.font='400 '+fs+'px "Bungee", "Arial Black", sans-serif'; g.globalAlpha=fade*(1-u)*0.55; g.fillStyle='#ff3040'; g.fillText(p.lost.n,cx,cy+u*50); }
+  g.globalAlpha=fade;
+  // Trefferringe
+  for(const r of p.rings){ const u=r.t/0.4, x=laneX(p,r.l);
+    g.globalAlpha=fade*(1-u); g.lineWidth=3*(1-u)+1;
+    g.strokeStyle=r.q===100?'#ffffff':LANE_HEX[r.l]; g.beginPath(); g.arc(x,hy,rr*(1+u*1.6),0,Math.PI*2); g.stroke();
+    if(r.q===100){ g.strokeStyle=LANE_HEX[r.l]; g.beginPath(); g.arc(x,hy,rr*(1.2+u*2.8),0,Math.PI*2); g.stroke(); } }
+  g.globalAlpha=1;
   // Ziele auf der Linie
   for(let l=0;l<4;l++){
     const x=laneX(p,l), f=p.flash[l];
     if(f>0){ g.globalCompositeOperation='lighter'; const s=rr*(1.5+2.5*f); g.globalAlpha=fade*f; g.drawImage(SPRITES[LANE_COL[l]],x-s,hy-s,s*2,s*2); g.globalCompositeOperation='source-over'; }
-    laneBadge(x,hy,rr*0.9,l,fade*(0.35+0.65*f),f>0);
+    laneBadge(x,hy,rr*0.9*(1+0.22*p.hitPulse[l]),l,fade*(0.35+0.65*f),f>0);
   }
   g.globalAlpha=fade;
   // Raketen mit Schubflamme und leuchtendem Abgasstrahl
@@ -80,7 +131,9 @@ function drawField(p,t){
   }
   // Urteile
   g.textAlign='center'; g.textBaseline='middle';
-  for(const j of p.judg){ const a=1-j.t/0.7; g.globalAlpha=a*fade; neonTextCached(j.txt,j.x,hy+rr*2.6+j.t*24,'400 '+Math.round(15+Math.min(lw*0.14,9))+'px "Bungee", "Arial Black", sans-serif',j.col,12); }
+  for(const j of p.judg){ const a=1-j.t/0.7, jy=hy+rr*2.6+j.t*24+(Math.round((j.x-p.fx)/lw-0.5)%2?24:0), pop=j.t<0.09?1.4-j.t/0.09*0.4:1; g.globalAlpha=a*fade;
+    neonTextCached(j.txt,j.x,jy,'400 '+Math.round(13+Math.min(lw*0.1,7))+'px "Bungee", "Arial Black", sans-serif',j.col,12,pop);
+    if(j.sub){ g.font='700 11px "Rubik", system-ui, sans-serif'; g.fillStyle=j.sub==='FRÜH'?'#8cc4ff':'#ffb07a'; g.fillText(j.sub,j.x,jy+17); } }
   g.globalAlpha=1;
   // Lunte & Bloom als Neon-Röhren
   const mh=H*0.38, my=hy+28, mw=8;
@@ -117,7 +170,8 @@ function drawPanels(p,x0,wid,t,compact){
     if(fill>0){ const gr=g.createLinearGradient(sx,0,sx+sw,0); gr.addColorStop(0,'#c7f6ff'); gr.addColorStop(1,'#ff7ad9'); g.fillStyle=gr; g.shadowColor='#ff7ad9'; g.shadowBlur=10; g.fillRect(sx,by,sw*fill,bh); g.shadowBlur=0; }
   }
   g.textAlign='right'; g.textBaseline='middle';
-  neonText('x'+m, lx+lw-ph*0.45, top+ph/2+1, '700 '+Math.round(ph*0.62)+'px "Rubik", system-ui, sans-serif', p.bloomOn?'#ffe066':'#ff7ad9', 14);
+  { const mp=1+0.45*p.mPulse; g.save(); g.translate(lx+lw-ph*0.45, top+ph/2+1); g.scale(mp,mp);
+    neonText('x'+m, 0, 0, '700 '+Math.round(ph*0.62)+'px "Rubik", system-ui, sans-serif', p.mPulse>0.3?'#ffffff':(p.bloomOn?'#ffe066':'#ff7ad9'), 14); g.restore(); }
   // rechts
   panelPath(rx,top,rw,ph,ph*0.5); g.fillStyle='rgba(4,10,24,0.55)'; g.fill(); neonStroke(pc,2,14);
   neonText(Math.round(p.scoreShown).toLocaleString('de-DE'), rx+rw-ph*0.6, top+ph/2+1, '700 '+Math.round(ph*0.6)+'px "Rubik", system-ui, sans-serif', '#ff7ad9', 14);
@@ -136,6 +190,5 @@ function drawHud(t){
   if(G.mode==='endless') info+=' · Runde '+G.lap+' · '+Math.round(G.bpm)+' BPM';
   if(G.mode==='practice') info+=' · Training '+Math.round(G.tempo*100)+'%';
   const iy=(G.players.length>1?16:y0)+19; g.fillText(info,x,iy);
-  if(G.players.length===1 && G.players[0].combo>=5){ g.fillStyle='#ff7ad9'; g.fillText(G.players[0].combo+' Kombo',x,iy+17); }
-  if(G.dur<Infinity){ const u=Math.max(0,Math.min(1,t/(G.dur-1.5))); const py=iy+(G.players.length===1?38:20); g.fillStyle='rgba(120,200,255,0.2)'; g.fillRect(x,py,150,3); g.fillStyle=NEON_CYAN; g.shadowColor=NEON_CYAN; g.shadowBlur=8; g.fillRect(x,py,150*u,3); g.shadowBlur=0; }
+  if(G.dur<Infinity){ const u=Math.max(0,Math.min(1,t/(G.dur-1.5))); const py=iy+20; g.fillStyle='rgba(120,200,255,0.2)'; g.fillRect(x,py,150,3); g.fillStyle=NEON_CYAN; g.shadowColor=NEON_CYAN; g.shadowBlur=8; g.fillRect(x,py,150*u,3); g.shadowBlur=0; }
 }
