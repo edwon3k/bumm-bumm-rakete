@@ -10,7 +10,7 @@ function cityInit(){
     R.setClearColor(0x05061a,1);
     const scene=new THREE.Scene();
     const cam=new THREE.PerspectiveCamera(58,1,2,9000);
-    const B=40, ST=9, NX=15, NZ0=-20, SHORE=2;      // Blockgröße, Straßenbreite, Raster; Land bis Blockreihe SHORE
+    const B=40, ST=9, NX=24, NZ0=-22, SHORE=2;      // Blockgröße, Straßenbreite, Raster; Land bis Blockreihe SHORE
     const shoreZ=(SHORE+1)*B;                         // ab hier beginnt das Wasser
     const uni={uTime:{value:0},uFlash:{value:new THREE.Color(0,0,0)},uFlashPos:{value:new THREE.Vector3(0,400,600)},uCam:{value:new THREE.Vector3()},uBloom:{value:0},uBeat:{value:0}};
     const common=`
@@ -102,13 +102,13 @@ function cityInit(){
         for(let k=0;k<22;k++){ const tx=x0+2+Math.random()*(s-4), tz=z0+2+Math.random()*(s-4); if(Math.abs(tx-(x0+s/2))<1.6||Math.abs(tz-(z0+s/2))<1.6) continue; trees.push([tx,tz,1.8+Math.random()*1.8]); }
         continue; }
       // Hochhäuser an der Uferlinie und im Zentrum etwas höher, zum Rand hin flacher
-      const dc=Math.hypot(gx*0.8,(gz-SHORE+1)*1.1), boost=0.7+2.4*Math.exp(-Math.pow(dc/6,2));
+      const dc=Math.hypot(gx*0.8,(gz-SHORE+1)*1.1), boost=(0.7+2.4*Math.exp(-Math.pow(dc/6,2)))*(Math.abs(gx)>16?0.6:1);
       const k=Math.random();
       const parts = k<0.35?[[0,0,1,1]] : k<0.7?[[0,0,0.5,1],[0.5,0,0.5,1]] : [[0,0,0.5,0.5],[0.5,0,0.5,0.5],[0,0.5,0.5,0.5],[0.5,0.5,0.5,0.5]];
       for(const [px,pz,pw,pd] of parts){
         const w=s*pw-2.5, dd=s*pd-2.5; if(w<4||dd<4) continue;
         let h=(8+Math.pow(Math.random(),2.2)*55)*boost; if(Math.random()<0.03) h*=1.7;
-        lots.push([x0+s*px+w/2+1.25, z0+s*pz+dd/2+1.25, w*(0.8+Math.random()*0.2), dd*(0.8+Math.random()*0.2), Math.min(h,230)]);
+        lots.push([x0+s*px+w/2+1.25, z0+s*pz+dd/2+1.25, w*(0.8+Math.random()*0.2), dd*(0.8+Math.random()*0.2), Math.min(h,z0<-150?150:230)]);
       }
     }
     const geo=new THREE.BoxGeometry(1,1,1); geo.translate(0,0.5,0);
@@ -165,7 +165,7 @@ function cityInit(){
           col+=uFlash*0.2;
           gl_FragColor=vec4(fogIt(col,vW),1.0);
         }`});
-    const land=new THREE.Mesh(new THREE.PlaneGeometry(1600,1600),gm); land.rotation.x=-Math.PI/2; land.position.set(0,0,shoreZ-800); scene.add(land);
+    const land=new THREE.Mesh(new THREE.PlaneGeometry(9000,3000),gm); land.rotation.x=-Math.PI/2; land.position.set(0,0,shoreZ-1500); scene.add(land);
     // --- Meer: Wellen spiegeln Himmel, Mond und Feuerwerk; ankernde Boote ---
     const boats=[[-180,380],[140,520],[-40,760],[300,980],[-360,1150],[60,1500]].map(b=>'vec2('+b[0].toFixed(1)+','+(b[1]+shoreZ).toFixed(1)+')').join(',');
     const sm=new THREE.ShaderMaterial({uniforms:uni,
@@ -215,13 +215,14 @@ function cityResize(){
 function cityRender(dt,bloom){
   if(!CITY.ok) return;
   const u=CITY.uni; u.uTime.value+=dt;
-  CITY.ang+=dt*0.05*(bloom?1.8:1);
+  CITY.ang+=dt*0.085*(bloom?1.7:1);
   const ik=CITY.introK||0, ie=ik*ik*(3-2*ik);
-  // Kamera schwebt langsam hinter der Stadt hin und her und schaut aufs Meer
-  const sw=Math.sin(CITY.ang), sz=CITY.shoreZ;
-  const cam=CITY.cam, port=W<H;
-  cam.position.set(sw*140+CAM.sx*2, (port?300:250)+ie*380+Math.sin(u.uTime.value*0.2)*5+CAM.sy*2, sz-(port?620:560)-ie*260);
-  cam.lookAt(sw*70, (port?95:120)-ie*60, sz+900);
+  // Kamerafahrt: tief über der Stadt, schwenkt mal die Küste entlang, mal Richtung Meer
+  const a=CITY.ang, sz=CITY.shoreZ, cam=CITY.cam, port=W<H;
+  const px=Math.sin(a)*240, pz=-300+Math.cos(a*0.7)*90, py=(port?230:200)+Math.sin(a*1.3)*35;
+  cam.position.set(px+CAM.sx*2, py+ie*320+Math.sin(u.uTime.value*0.2)*4+CAM.sy*2, pz-ie*240);
+  cam.lookAt(px+Math.sin(a*0.8+0.6)*380, (port?10:22)-ie*40, sz+200);
+  const sw=Math.sin(a);
   u.uCam.value.copy(cam.position); CITY.sky.position.copy(cam.position);
   const L=FX.light; const k=Math.min(1.4,L.v)*0.42;
   u.uFlash.value.setRGB(L.r/255*k, L.g/255*k, L.b/255*k);
