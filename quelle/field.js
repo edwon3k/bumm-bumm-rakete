@@ -58,6 +58,8 @@ function drawVignette(t){
 }
 // Countdown vor der ersten Rakete
 function drawCountdown(t){
+  if(G.resumeAt){ const left=G.resumeAt-performance.now(); if(left>0){ const n=Math.ceil(left/400), u=1-(left%400)/400;
+      g.globalAlpha=1; g.textAlign='center'; g.textBaseline='middle'; neonTextCached(String(n),W/2,H*0.15,'400 72px "Bungee", "Arial Black", sans-serif',NEON_CYAN,22,1.35-0.35*Math.min(1,u*4)); } return; }
   if(!G.cd||G.demo) return;
   const cd=G.cd, T1=G.cdT1; let txt=null, u=0;
   for(let i=0;i<cd.length;i++){ const a=cd[i], b=i+1<cd.length?cd[i+1]:T1; if(t>=a&&t<b){ txt=String(cd.length-i); u=(t-a)/(b-a); } }
@@ -78,7 +80,7 @@ function drawField(p,t){
   const ready=p.bloom>=1&&!p.bloomOn;
   const [lx0,lx1]=hitLineSpan(p);
   const lc = p.bloomOn? 'hsl('+((t*240)%360)+',100%,62%)' : ready? (Math.sin(t*20)>0?'#ffffff':'#ffd54a') : NEON_PINK;
-  g.globalAlpha=fade; g.beginPath(); g.moveTo(lx0,hy); g.lineTo(lx1,hy); neonStroke(lc, ready||p.bloomOn?6:4, 22);
+  g.globalAlpha=fade; g.beginPath(); g.moveTo(lx0,hy); g.lineTo(lx1,hy); neonStroke(lc, (ready||p.bloomOn?6:4)+BEAT.p*2.5, 22);
   if(ready||p.bloomOn){ g.globalCompositeOperation='lighter'; for(let k=0;k<8;k++){ const x=lx0+Math.random()*(lx1-lx0); g.drawImage(SPRITES[ready?C.gold:pick([C.magenta,C.cyan,C.white])],x-9,hy-9,18,18);} g.globalCompositeOperation='source-over'; }
   // Bahnen: leuchten auf, wenn die Taste gedrückt wird
   g.globalCompositeOperation='lighter';
@@ -134,6 +136,23 @@ function drawField(p,t){
   for(const j of p.judg){ const a=1-j.t/0.7, jy=hy+rr*2.6+j.t*24+(Math.round((j.x-p.fx)/lw-0.5)%2?24:0), pop=j.t<0.09?1.4-j.t/0.09*0.4:1; g.globalAlpha=a*fade;
     neonTextCached(j.txt,j.x,jy,'400 '+Math.round(13+Math.min(lw*0.1,7))+'px "Bungee", "Arial Black", sans-serif',j.col,12,pop);
     if(j.sub){ g.font='700 11px "Rubik", system-ui, sans-serif'; g.fillStyle=j.sub==='FRÜH'?'#8cc4ff':'#ffb07a'; g.fillText(j.sub,j.x,jy+17); } }
+  // Tasten-Hinweise am Liedanfang
+  const hintEnd=(G.cdT1||0)+2.5;
+  if(t<hintEnd && !G.demo){ const ha=Math.min(1,(hintEnd-t)/1)*fade;
+    const keys=isTouch?['tippen','tippen','tippen','tippen']:G.players.length>1?(p.i===0?['A','S','W','D']:['←','↓','↑','→']):['← / A','↓ / S','↑ / W','→ / D'];
+    g.font='700 12px "Rubik", system-ui, sans-serif'; g.textAlign='center'; g.textBaseline='middle';
+    for(let l=0;l<4;l++){ const x=laneX(p,l); g.globalAlpha=ha*0.85; g.fillStyle='rgba(4,8,24,0.75)'; const tw=g.measureText(keys[l]).width+12; g.fillRect(x-tw/2,hy-rr*2.2-9,tw,18); g.globalAlpha=ha; g.fillStyle=LANE_HEX[l]; g.fillText(keys[l],x,hy-rr*2.2); } }
+  // Timing-Anzeige: Striche zeigen, wie früh (links) oder spät (rechts) die letzten Treffer waren
+  if(p.errs.length){ const mw2=Math.min(p.fw*0.5,220), mx=p.fx+p.fw/2, my2=hy+rr*2.6+66;
+    g.globalAlpha=fade*0.55; g.fillStyle='rgba(4,8,24,0.6)'; g.fillRect(mx-mw2/2,my2-7,mw2,14);
+    g.fillStyle='rgba(255,224,102,0.18)'; g.fillRect(mx-mw2/2*W_PERF/WIN,my2-7,mw2*W_PERF/WIN,14);
+    g.fillStyle='rgba(255,255,255,0.6)'; g.fillRect(mx-0.5,my2-9,1,18);
+    let sum=0;
+    for(const e of p.errs){ sum+=e.d; const ex=mx+Math.max(-1,Math.min(1,e.d/WIN))*mw2/2; g.globalAlpha=fade*Math.max(0,1-e.age/4);
+      g.fillStyle=e.q===100?'#ffe066':e.q===70?'#6ff3ff':'#8dff9e'; g.fillRect(ex-1,my2-6,2,12); }
+    const av=sum/p.errs.length, ax=mx+Math.max(-1,Math.min(1,av/WIN))*mw2/2;
+    g.globalAlpha=fade*0.9; g.fillStyle='#ffffff'; g.beginPath(); g.moveTo(ax,my2-8); g.lineTo(ax-5,my2-14); g.lineTo(ax+5,my2-14); g.closePath(); g.fill();
+    g.globalAlpha=fade*0.5; g.font='600 9px "Rubik", system-ui, sans-serif'; g.fillStyle='#c8f5ff'; g.textAlign='left'; g.fillText('FRÜH',mx-mw2/2,my2+15); g.textAlign='right'; g.fillText('SPÄT',mx+mw2/2,my2+15); g.textAlign='center'; }
   g.globalAlpha=1;
   // Lunte & Bloom als Neon-Röhren
   const mh=H*0.38, my=hy+28, mw=8;

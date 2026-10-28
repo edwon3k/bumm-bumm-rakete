@@ -12,11 +12,19 @@ function showScreen(name){
   $('#ui').classList.toggle('open', !!name);
   $('#bloomBtn').hidden = !(isTouch && !name && G && G.players && G.players.length===1);
   if(name){ const f=document.querySelector('#s-'+name+' [data-nav]:not([disabled])'); if(f && !f.matches('input[type=range]')) setTimeout(()=>f.focus({preventScroll:true}),30); }
+  if(name==='title') renderStats();
   if(name==='select'){ renderSelect(); PREV.idx=-1; previewQueue(UI.sel); }
   if(name==='gallery') renderGallery();
   if(name==='options') renderOptions();
   if(name==='board' && typeof boardRender==='function') boardRender();
   if(name==='online' && typeof onFillSongs==='function') onFillSongs();
+}
+function renderStats(){
+  const el=$('#t-stats'); if(!el) return; const b=Object.values(SAVE.best||{});
+  if(!b.length && !SAVE.unlocked.length){ el.hidden=true; return; }
+  const s=b.filter(x=>x.grade==='S').length;
+  el.innerHTML='<span><b>'+b.length+'</b> Lieder geschafft</span><span><b>'+s+'</b> × Note S</span><span><b>'+SAVE.unlocked.length+'</b>/'+UNLOCKS.length+' Feuerwerke</span>';
+  el.hidden=false;
 }
 function click(){ audioInit(); SFX.ui(A.ctx.currentTime); UI.lastClick=performance.now(); }
 // leiser Tick, wenn man mit Tastatur oder Controller durchs Menü geht (ändert nichts an der Steuerung)
@@ -29,7 +37,7 @@ document.addEventListener('focusin',e=>{
 });
 // ---------- Hörprobe in der Liedauswahl (Musik mit passendem Feuerwerk) ----------
 const PREV={timer:0,idx:-1,gen:0};
-function previewStop(){ clearTimeout(PREV.timer); PREV.idx=-1; PREV.gen++; if(G&&G.preview) stopGame(); }
+function previewStop(){ clearTimeout(PREV.timer); PREV.idx=-1; PREV.gen++; if(G&&G.preview) stopGame(); document.querySelectorAll('#songs .song.playing').forEach(b=>b.classList.remove('playing')); }
 function previewQueue(i){ if(UI.screen!=='select'||PREV.idx===i) return; clearTimeout(PREV.timer); PREV.timer=setTimeout(()=>previewStart(i),450); }
 async function previewStart(i){
   const s=SONGS[i]; if(!s||UI.screen!=='select'||!A.ctx||A.ctx.state!=='running') return;
@@ -40,6 +48,7 @@ async function previewStart(i){
   if(gen!==PREV.gen||UI.screen!=='select'||(G&&!G.preview)) return;
   if(G) stopGame();
   try{ startGame({mode:'demo',songIdx:i,diff:1,tempo:1,preview:true}); }catch(e){ console.warn(e); G=null; }
+  document.querySelectorAll('#songs .song').forEach(b=>b.classList.toggle('playing',+b.dataset.i===i));
 }
 document.addEventListener('click',e=>{ if(e.target.closest('button')) click(); });
 
@@ -72,7 +81,7 @@ function renderSelect(keepFocus){
   list.innerHTML='';
   SONGS.forEach((s,i)=>{
     if(s.custom && UI.mode==='endless') return;
-    const b=document.createElement('button'); b.className='song'; b.dataset.nav='';
+    const b=document.createElement('button'); b.className='song'+(G&&G.preview&&G.songIdx===i?' playing':''); b.dataset.nav=''; b.dataset.i=i;
     let badges='';
     if(UI.mode==='endless'){ const e=SAVE.endless[s.id]; badges = e? '<span class="badge">Rekord: '+e.laps+' Runden</span>' : ''; }
     else for(let d=0;d<3;d++){ const r=SAVE.best[bestKey(s,d)]; badges+='<span class="badge'+(d===UI.diff?' cur':'')+'" title="'+DIFF_NAMES[d]+'">'+DIFF_NAMES[d][0]+' '+(r?r.grade:'–')+'</span>'; }
@@ -114,7 +123,10 @@ async function launch(opts){
 function togglePause(){
   if(!G||G.ended) return;
   if(!paused){ paused=true; A.ctx.suspend(); const p0=G.players[0]; $('#p-info').textContent=G.song.title+' · '+DIFF_NAMES[G.diff]+(p0&&G.players.length===1?' · '+p0.score.toLocaleString('de-DE')+' Punkte':''); showScreen('pause'); }
-  else { paused=false; showScreen(null); A.ctx.resume(); }
+  else if(G.resumeAt){ G.resumeAt=0; showScreen('pause'); }
+  else { // kurz runterzählen, damit man nicht überrumpelt wird
+    showScreen(null); const tok=G.resumeAt=performance.now()+1200; const g0=G;
+    setTimeout(()=>{ if(G===g0 && G.resumeAt===tok){ G.resumeAt=0; paused=false; A.ctx.resume(); } },1200); }
 }
 $('#p-resume').addEventListener('click',togglePause);
 $('#p-restart').addEventListener('click',()=>{ paused=false; A.ctx.resume(); stopGame(); launch(UI.last); });
@@ -152,18 +164,38 @@ function showResults(){
       '<div class="mid"><b class="cnt" data-to="'+Math.round(gr.pct*100)+'">0</b> %<span>Trefferquote</span></div></div></div>'+
       '<div class="dist" role="img" aria-label="'+parts.map(x=>x[0]+' '+x[1]).join(', ')+'">'+parts.map(x=>'<i style="flex-grow:'+x[1]+';background:'+x[2]+'"></i>').join('')+'</div>'+
       '<div class="legend">'+parts.map(x=>'<span><i style="background:'+x[2]+'"></i>'+x[0]+' <b>'+x[1]+'</b></span>').join('')+'</div>'+
-      '<dl><dt>Beste Kombo</dt><dd>'+p.maxCombo+'</dd><dt>Fehlzündungen</dt><dd>'+p.misfire+'</dd></dl>'+extra;
+      '<dl><dt>Beste Kombo</dt><dd>'+p.maxCombo+'</dd><dt>Fehlzündungen</dt><dd>'+p.misfire+'</dd></dl>'+
+      (p.fc?'<p class="fc">'+p.fc+'</p>':'')+timingHtml(p,multi)+extra;
     res.appendChild(col);
   }
   storeSave();
   showScreen('results');
   if(G.online && typeof onRenderResults==='function') onRenderResults();
-  countUp(res);
+  countUp(res); res.querySelectorAll('canvas.tgraph').forEach(c=>drawTiming(c,ps[+c.dataset.p]));
+  res.querySelectorAll('[data-ofs]').forEach(b=>b.addEventListener('click',()=>{ SETTINGS.offset=+b.dataset.ofs; storeSave(); b.disabled=true; b.textContent='Übernommen: '+(SETTINGS.offset>0?'+':'')+SETTINGS.offset+' ms'; toast('Latenz-Ausgleich jetzt '+(SETTINGS.offset>0?'+':'')+SETTINGS.offset+' ms'); }));
   // Stempel der Note mit Knall
   const g0=gradeOf(ps[0]).g;
   if(!G.failed){ later(0.42,()=>{ if(A.ctx){ SFX.boom(A.ctx.currentTime,0.7,0); if(g0==='S') SFX.unlock(A.ctx.currentTime+0.1); } }); }
   // Abschluss-Feuerwerk
   if(!G.failed) for(let i=0;i<8;i++) later(i*0.18,()=>freeLaunch(W*(0.15+Math.random()*0.7),H*(0.12+Math.random()*0.25),pickFirework(),0.8));
+}
+// Timing über das ganze Lied: Punkt oben = zu spät, unten = zu früh
+function timingHtml(p,multi){
+  if(p.errAll.length<8) return '';
+  const avg=p.errAll.reduce((s,e)=>s+e[1],0)/p.errAll.length*1000, ms=Math.round(Math.abs(avg));
+  let tip='Im Schnitt '+(ms<4?'genau auf dem Punkt':ms+' ms '+(avg>0?'zu spät':'zu früh'));
+  let btn='';
+  if(!multi && ms>=15 && p.errAll.length>=20){ const nv=Math.max(-200,Math.min(200,SETTINGS.offset+Math.round(avg/5)*5));
+    btn='<button class="btn small" data-nav data-ofs="'+nv+'">Latenz-Ausgleich auf '+(nv>0?'+':'')+nv+' ms stellen</button>'; }
+  return '<div class="timing"><canvas class="tgraph" data-p="'+p.i+'" width="680" height="120" aria-label="Timing deiner Treffer über das Lied"></canvas><p class="hint">'+tip+'</p>'+btn+'</div>';
+}
+function drawTiming(c,p){
+  const x=c.getContext('2d'), w=c.width, h=c.height, mid=h/2, T=Math.max(1,p.errAll[p.errAll.length-1][0]);
+  x.fillStyle='rgba(255,224,102,0.12)'; x.fillRect(0,mid-mid*W_PERF/WIN,w,mid*2*W_PERF/WIN);
+  x.fillStyle='rgba(255,255,255,0.35)'; x.fillRect(0,mid,w,1);
+  x.font='600 18px Rubik, sans-serif'; x.fillStyle='rgba(200,245,255,0.55)'; x.fillText('SPÄT',8,22); x.fillText('FRÜH',8,h-8);
+  for(const [tt,d] of p.errAll){ const ad=Math.abs(d); x.fillStyle=ad<=W_PERF?'#ffe066':ad<=W_GREAT?'#6ff3ff':'#8dff9e';
+    x.fillRect(tt/T*(w-8)+2, mid-Math.max(-1,Math.min(1,d/WIN))*(mid-4)-3, 6,6); }
 }
 function countUp(root){
   const els=[...root.querySelectorAll('.cnt')], t0=performance.now(), D=1100;

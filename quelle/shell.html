@@ -242,6 +242,19 @@ dt{text-transform:uppercase;letter-spacing:0.05em;font-size:13px;} dd{color:#fff
 .rec small{font-weight:600;color:#fff;opacity:.8;}
 .rescol>dl,.rescol>.legend,.rescol>p{animation:scrIn .4s .6s both;}
 @media (prefers-reduced-motion:reduce){ .screen:not([hidden]),.menu .btn,#s-title .logo,.grade.stamp,.dist,.rescol>*{animation:none!important;} }
+/* ===== V19 ===== */
+.fc{margin:0;font-family:var(--display);font-size:22px;letter-spacing:.06em;background:linear-gradient(90deg,#ff58dc,#ffd54a,#4cf2ff);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 8px rgba(255,88,220,.6));animation:stamp .5s cubic-bezier(.3,1.6,.5,1) .7s both;}
+.timing{display:flex;flex-direction:column;align-items:center;gap:6px;width:100%;}
+.tgraph{width:100%;max-width:340px;height:60px;background:rgba(4,8,24,.6);border-left:2px solid rgba(76,242,255,.5);}
+.btn.small{min-height:36px;font-size:12px;padding:6px 18px;}
+.btn:disabled{opacity:.6;cursor:default;}
+.tstats{display:flex;gap:6px 16px;justify-content:center;flex-wrap:wrap;margin:2px 0 0;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#c9d2ff;}
+.tstats span{padding:3px 12px;background:linear-gradient(90deg,rgba(76,242,255,.6) 0 2px,rgba(76,242,255,.08) 2px);}
+.tstats b{font-family:var(--display);font-weight:400;color:var(--gold);margin-right:4px;}
+.tstats[hidden]{display:none;}
+.song.playing .tt::after{content:"  ♪";color:var(--cyan);text-shadow:0 0 8px var(--cyan);animation:note 1s ease-in-out infinite;}
+@keyframes note{50%{opacity:.4;}}
+@media (prefers-reduced-motion:reduce){ .fc,.song.playing .tt::after{animation:none;} }
 </style>
 
 <canvas id="cv3" aria-hidden="true"></canvas>
@@ -253,6 +266,7 @@ dt{text-transform:uppercase;letter-spacing:0.05em;font-size:13px;} dd{color:#fff
   <section class="screen" id="s-title">
     <h1 class="logo"><span>Bumm Bumm</span><span>Rakete</span></h1>
     <p class="tag">Zünde die Raketen im Takt und mach den Himmel über dem Hafen bunt.</p>
+    <p class="tstats" id="t-stats" hidden></p>
     <div class="keys" aria-hidden="true"><span class="key" style="background:var(--x)">X</span><span class="key" style="background:var(--a)">A</span><span class="key" style="background:var(--y)">Y</span><span class="key" style="background:var(--b)">B</span></div>
     <div class="menu panel">
       <button class="btn primary wide" data-nav data-mode="arcade">Arcade starten</button>

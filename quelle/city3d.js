@@ -9,9 +9,9 @@ function cityInit(){
     const scene=new THREE.Scene();
     const cam=new THREE.PerspectiveCamera(58,1,2,4000);
     const B=40, ST=9, N=13;          // Blockgröße, Straßenbreite, Raster ±N
-    const uni={uTime:{value:0},uFlash:{value:new THREE.Color(0,0,0)},uFlashPos:{value:new THREE.Vector3(0,400,0)},uFog:{value:new THREE.Color(0.012,0.016,0.045)},uCam:{value:new THREE.Vector3()},uBloom:{value:0}};
+    const uni={uTime:{value:0},uFlash:{value:new THREE.Color(0,0,0)},uFlashPos:{value:new THREE.Vector3(0,400,0)},uFog:{value:new THREE.Color(0.012,0.016,0.045)},uCam:{value:new THREE.Vector3()},uBloom:{value:0},uBeat:{value:0}};
     const common=`
-      uniform float uTime; uniform vec3 uFlash; uniform vec3 uFlashPos; uniform vec3 uFog; uniform vec3 uCam; uniform float uBloom;
+      uniform float uTime; uniform vec3 uFlash; uniform vec3 uFlashPos; uniform vec3 uFog; uniform vec3 uCam; uniform float uBloom; uniform float uBeat;
       float h21(vec2 p){ return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453); }
       vec3 neon(float s){ return s<0.25?vec3(1.0,0.15,0.75):s<0.5?vec3(0.1,0.9,1.0):s<0.75?vec3(0.6,0.25,1.0):vec3(1.0,0.45,0.1); }
       vec3 fogIt(vec3 c, vec3 w){ float d=length(w-uCam); float f=1.0-exp(-d*0.0009); return mix(c,uFog,f); }`;
@@ -50,7 +50,7 @@ function cityInit(){
             col+=mix(wcol, wc*ratio*0.36*0.6+vec3(0.006,0.008,0.015), aa);
             // Neon-Kronen an manchen Türmen
             float top=vH-vW.y;
-            if(seed>0.62 && top>0.6 && top<2.2) col+=neon(fract(seed*7.0))*2.2;
+            if(seed>0.62 && top>0.6 && top<2.2) col+=neon(fract(seed*7.0))*2.2*(1.0+uBeat*0.9);
             if(seed>0.9 && fract(u/6.0)<0.06) col+=neon(fract(seed*3.0))*1.2*step(vW.y,vH-2.5);
           } else {
             col=base*0.7;
@@ -136,6 +136,6 @@ function cityRender(dt,bloom){
   const L=FX.light; const k=Math.min(1.4,L.v)*0.42;
   u.uFlash.value.setRGB(L.r/255*k, L.g/255*k, L.b/255*k);
   u.uFlashPos.value.set(c.x+Math.cos(CITY.ang)*40, 300, c.z+Math.sin(CITY.ang)*40);
-  u.uBloom.value=bloom?1:0;
+  u.uBloom.value=bloom?1:0; u.uBeat.value=BEAT.p;
   CITY.R.render(CITY.scene,cam);
 }

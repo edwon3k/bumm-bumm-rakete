@@ -23,6 +23,7 @@ const fxc=document.createElement('canvas'), fg=fxc.getContext('2d');
 const b1=document.createElement('canvas'), b1g=b1.getContext('2d');
 const b2=document.createElement('canvas'), b2g=b2.getContext('2d');
 const CAM={shake:0,punch:0,z:1,sx:0,sy:0};
+const BEAT={p:0,last:-1};
 function camCompute(){ CAM.z=1+CAM.punch*0.035; CAM.sx=(Math.random()-0.5)*CAM.shake*12; CAM.sy=(Math.random()-0.5)*CAM.shake*12; }
 function camApply(ctx){ const z=CAM.z; ctx.setTransform(DPR*z,0,0,DPR*z,DPR*(W/2*(1-z)+CAM.sx),DPR*(H/2*(1-z)+CAM.sy)); }
 let W=0,H=0,DPR=1;
@@ -172,7 +173,7 @@ function approachTime(diff){ return [2.1,1.7,1.38][diff]/SETTINGS.speed; }
 function newPlayer(i, chart){
   return {i, notes:chart.map(n=>({t:n.t,lane:n.lane,st:0,sp:false})), head:0, score:0, combo:0, maxCombo:0, health:0.6, bloom:0, bloomOn:false,
     hits:0, perfect:0, great:0, good:0, miss:0, misfire:0, flash:[0,0,0,0], judg:[], failed:false, specialDone:false, unlock:null, scoreShown:0, shake:0,
-    rings:[], hitPulse:[0,0,0,0], cPulse:0, mPulse:0, lastM:1, lost:null};
+    rings:[], hitPulse:[0,0,0,0], cPulse:0, mPulse:0, lastM:1, lost:null, errs:[], errAll:[]};
 }
 function startGame(opts){
   // opts: {mode, songIdx, diff, tempo}
@@ -294,6 +295,7 @@ function pressLane(pi,lane,perf){
   p.health=Math.min(1,p.health+(base===100?0.022:0.015));
   if(!p.bloomOn) p.bloom=Math.min(1,p.bloom+(base===100?0.045:0.032));
   judgeText(p,txt,col,x,base<100?(best.t>t?'FRÜH':'SPÄT'):null);
+  { const d=t-best.t; p.errs.push({d,age:0,q:base}); if(p.errs.length>24) p.errs.shift(); p.errAll.push([best.t,d]); }
   p.rings.push({l:lane,t:0,q:base}); p.hitPulse[lane]=1; p.cPulse=1;
   // Feuerwerk!
   const y=hitY()-10-Math.random()*H*0.06;
@@ -356,6 +358,7 @@ function updatePlayers(t,dt){
     p.shake=Math.max(0,p.shake-dt*4);
     p.cPulse=Math.max(0,p.cPulse-dt*6); p.mPulse=Math.max(0,p.mPulse-dt*2.5);
     for(let l=0;l<4;l++) p.hitPulse[l]=Math.max(0,p.hitPulse[l]-dt*7);
+    for(const e of p.errs) e.age+=dt; if(p.errs.length && p.errs[0].age>4) p.errs.shift();
     for(const r of p.rings) r.t+=dt; if(p.rings.length) p.rings=p.rings.filter(r=>r.t<0.4);
     if(p.lost){ p.lost.t+=dt; if(p.lost.t>0.8) p.lost=null; }
     { const m=multOf(p); if(m>p.lastM && !p.failed){ p.mPulse=1; SFX.multUp(A.ctx.currentTime,m); } p.lastM=m; }
@@ -378,7 +381,11 @@ function finishGame(failed){
   const t=A.ctx.currentTime;
   if(failed){ A.music.gain.setTargetAtTime(0,t,0.3); A.lead.gain.setTargetAtTime(0,t,0.2); SFX.dud(t); }
   setBloomAudio(false);
-  setTimeout(()=>showResults(),failed?1400:600);
+  let fc=false;
+  if(!failed) for(const p of G.players){ if(p.hits>0 && p.miss===0 && p.maxCombo===p.hits){ p.fc=p.great+p.good===0?'ALLES PERFEKT':'FULL COMBO'; fc=true; } }
+  if(fc){ const fp=G.players.find(p=>p.fc); toastBig(fp.fc+'!'); salvo(fp.maxCombo); SFX.unlock(t);
+    for(let i=0;i<12;i++) later(0.3+i*0.08,()=>freeLaunch(W*(0.05+Math.random()*0.9),H*(0.08+Math.random()*0.25),pickFirework(),0.6,{s:1})); }
+  setTimeout(()=>showResults(),failed?1400:(fc?2600:600));
 }
 function gradeOf(p){
   const tot=p.perfect+p.great+p.good+p.miss; if(!tot) return {g:'–',acc:0,pct:0};
@@ -548,7 +555,7 @@ function frame(ts){
   if(!PERF.low && !document.hidden){ PERF.slow = dt>1/38 ? PERF.slow+dt : Math.max(0,PERF.slow-dt*0.5); if(PERF.slow>2.5){ PERF.low=true; PERF.slow=0; resize(); } }
   else if(PERF.low && CITY.ok && !document.hidden){ PERF.slow = dt>1/28 ? PERF.slow+dt : Math.max(0,PERF.slow-dt*0.5); if(PERF.slow>3){ CITY.ok=false; document.getElementById('cv3').style.display='none'; } }
   pollPads();
-  let t=0, bloomLvl=0;
+  let t=(G&&A.ctx)?songTime():0, bloomLvl=0;
   const playing=G&&!G.ended;
   if(!paused){
     camT+=dt;
@@ -556,6 +563,7 @@ function frame(ts){
       t=songTime();
       if(!G.ended){
         scheduleAudio();
+        if(G.beatLen && t>=0 && !G.custom){ const bt=Math.floor(t/G.beatLen); if(bt!==BEAT.last){ BEAT.last=bt; const down=bt%4===0; BEAT.p=down?1:0.55; if(down && G.players.length && !G.demo) CAM.punch=Math.max(CAM.punch,0.2); } }
         if(G.players.length) updatePlayers(t,dt);
         demoUpdate(t);
         endlessExtend(t);
@@ -568,7 +576,7 @@ function frame(ts){
       }
     } else if(!G) { attract(dt); }
     visUpdate(); updateFree(); fxUpdate(dt);
-    VIG.miss=Math.max(0,VIG.miss-dt*2.6); CAM.shake=Math.max(0,CAM.shake-dt*2.2); CAM.punch=Math.max(0,CAM.punch-dt*2.5);
+    VIG.miss=Math.max(0,VIG.miss-dt*2.6); BEAT.p=Math.max(0,BEAT.p-dt*4.5); CAM.shake=Math.max(0,CAM.shake-dt*2.2); CAM.punch=Math.max(0,CAM.punch-dt*2.5);
   }
   if(G) for(const p of G.players) if(p.bloomOn) bloomLvl=1;
   camCompute();
