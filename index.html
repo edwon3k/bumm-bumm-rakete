@@ -2400,8 +2400,8 @@ function laneX(p,l){ return p.fx+p.fw*(l+0.5)/4; }
 function placeNotes(notes,from){
   for(let k=from;k<notes.length;k++){ const n=notes[k]; let h=((Math.imul(k+1,2654435761)^Math.imul(Math.round(n.t*1000),40503))>>>0)|1;
     const rnd=()=>{ h^=h<<13; h>>>=0; h^=h>>>17; h^=h<<5; h>>>=0; return h/4294967296; };
-    let tx=0.5; for(let tries=0;tries<8;tries++){ tx=0.5+(rnd()+rnd()-1)*0.24; let ok=true; for(let j=k-1;j>=0&&j>=k-6;j--){ const m=notes[j]; if(n.t-m.t>0.6) break; if(Math.abs(m.tx-tx)<0.07){ ok=false; break; } } if(ok) break; }
-    const r=rnd(); let off; if(r<0.6) off=(rnd()-0.5)*0.06; else if(r<0.85) off=-(0.07+rnd()*0.08); else off=0.07+rnd()*0.07;
+    let tx=0.5; for(let tries=0;tries<8;tries++){ tx=0.5+(rnd()+rnd()-1)*0.22; let ok=true; for(let j=k-1;j>=0&&j>=k-6;j--){ const m=notes[j]; if(n.t-m.t>0.6) break; if(Math.abs(m.tx-tx)<0.07){ ok=false; break; } } if(ok) break; }
+    const r=rnd(); let off; if(r<0.75) off=(rnd()-0.5)*0.03; else if(r<0.9) off=-(0.04+rnd()*0.04); else off=0.04+rnd()*0.04;
     n.tx=tx; n.sx=Math.max(-0.2,Math.min(1.2,tx+off)); }
 }
 function noteX(p,n,u){ const sp=hitLineSpan(p); const f=n.tx+(n.sx-n.tx)*Math.pow(Math.max(0,u),1.7); return sp[0]+(sp[1]-sp[0])*f; }
@@ -2977,12 +2977,12 @@ function drawField(p,t){
     if(ra<=0.01) continue; g.globalAlpha=fade*ra;
     const hex=n.sp?'#ff58dc':(n.gold?'#ffd54a':LANE_HEX[n.lane]), seed=(n.t*7.13)%1;
     // Lichtschleier: langer, weicher, rauchiger Leuchtstreifen unter dem Buchstaben
-    const L=Math.min(H*0.62, sy-y+H*0.12), vw=rr*(5.2+0.5*Math.sin(t*2+seed*6));
+    const L=Math.min(H*0.62, sy-y+H*0.12), vw=rr*(5.2+0.2*Math.sin(t*1.5+seed*6));
     g.globalCompositeOperation='lighter';
-    g.save(); g.translate(x,y-rr*0.6); g.transform(1,0,shx+Math.sin(t*1.4+seed*9)*0.05,1,0,0);
+    g.save(); g.translate(x,y-rr*0.6); g.transform(1,0,shx+Math.sin(t*1.1+seed*9)*0.02,1,0,0);
     g.drawImage(veilSpr(hex,(seed*3)|0),-vw,0,vw*2,L);
     g.restore();
-    { const gs=rr*(1.9+Math.sin(t*11+seed*20)*0.15); g.drawImage(SPRITES[n.sp?C.magenta:(n.gold?C.gold:LANE_COL[n.lane])],x-gs,y-gs,gs*2,gs*2); }
+    { const gs=rr*(1.9+Math.sin(t*5+seed*20)*0.06); g.drawImage(SPRITES[n.sp?C.magenta:(n.gold?C.gold:LANE_COL[n.lane])],x-gs,y-gs,gs*2,gs*2); }
     if(n.gold&&!n.sp){ const gs=rr*(3.2+Math.sin(t*9)*0.5); g.drawImage(SPRITES[C.gold],x-gs,y-gs,gs*2,gs*2); for(let q=0;q<5;q++){ const a=t*4+q*Math.PI*2/5, s2=rr*0.7; g.drawImage(SPRITES[q%2?C.white:C.gold],x+Math.cos(a)*rr*1.7-s2,y+Math.sin(a)*rr*1.7-s2,s2*2,s2*2); } }
     g.globalCompositeOperation='source-over';
     veilHead(x,y,rr,n.lane,hex); g.globalAlpha=fade*ra;

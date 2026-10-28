@@ -266,8 +266,8 @@ function laneX(p,l){ return p.fx+p.fw*(l+0.5)/4; }
 function placeNotes(notes,from){
   for(let k=from;k<notes.length;k++){ const n=notes[k]; let h=((Math.imul(k+1,2654435761)^Math.imul(Math.round(n.t*1000),40503))>>>0)|1;
     const rnd=()=>{ h^=h<<13; h>>>=0; h^=h>>>17; h^=h<<5; h>>>=0; return h/4294967296; };
-    let tx=0.5; for(let tries=0;tries<8;tries++){ tx=0.5+(rnd()+rnd()-1)*0.24; let ok=true; for(let j=k-1;j>=0&&j>=k-6;j--){ const m=notes[j]; if(n.t-m.t>0.6) break; if(Math.abs(m.tx-tx)<0.07){ ok=false; break; } } if(ok) break; }
-    const r=rnd(); let off; if(r<0.6) off=(rnd()-0.5)*0.06; else if(r<0.85) off=-(0.07+rnd()*0.08); else off=0.07+rnd()*0.07;
+    let tx=0.5; for(let tries=0;tries<8;tries++){ tx=0.5+(rnd()+rnd()-1)*0.22; let ok=true; for(let j=k-1;j>=0&&j>=k-6;j--){ const m=notes[j]; if(n.t-m.t>0.6) break; if(Math.abs(m.tx-tx)<0.07){ ok=false; break; } } if(ok) break; }
+    const r=rnd(); let off; if(r<0.75) off=(rnd()-0.5)*0.03; else if(r<0.9) off=-(0.04+rnd()*0.04); else off=0.04+rnd()*0.04;
     n.tx=tx; n.sx=Math.max(-0.2,Math.min(1.2,tx+off)); }
 }
 function noteX(p,n,u){ const sp=hitLineSpan(p); const f=n.tx+(n.sx-n.tx)*Math.pow(Math.max(0,u),1.7); return sp[0]+(sp[1]-sp[0])*f; }
