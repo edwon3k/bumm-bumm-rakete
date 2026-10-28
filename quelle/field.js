@@ -154,17 +154,20 @@ function drawField(p,t){
     const shx=Math.max(-1.6,Math.min(1.6,(noteX(p,n,uu+0.05)-noteX(p,n,uu))/(0.05*(sy-hy))));
     if(G.mods.hidden) ra=Math.max(0,Math.min(1,(uu-0.18)/0.24)); if(G.mods.sudden) ra=Math.min(ra,Math.max(0,Math.min(1,(0.62-uu)/0.1)));
     if(ra<=0.01) continue; g.globalAlpha=fade*ra;
-    const hex=n.sp?'#ff58dc':(n.gold?'#ffd54a':LANE_HEX[n.lane]), seed=(n.t*7.13)%1;
+    const hex=n.sp?'#ff58dc':LANE_HEX[n.lane], seed=(n.t*7.13)%1;
     // Lichtschleier: langer, weicher, rauchiger Leuchtstreifen unter dem Buchstaben
     const L=Math.min(H*0.62, sy-y+H*0.12), vw=rr*(5.2+0.2*Math.sin(t*1.5+seed*6));
     g.globalCompositeOperation='lighter';
     g.save(); g.translate(x,y-rr*0.6); g.transform(1,0,shx+Math.sin(t*1.1+seed*9)*0.02,1,0,0);
     g.drawImage(veilSpr(hex,(seed*3)|0),-vw,0,vw*2,L);
     g.restore();
-    { const gs=rr*(1.9+Math.sin(t*5+seed*20)*0.06); g.drawImage(SPRITES[n.sp?C.magenta:(n.gold?C.gold:LANE_COL[n.lane])],x-gs,y-gs,gs*2,gs*2); }
-    if(n.gold&&!n.sp){ const gs=rr*(3.2+Math.sin(t*9)*0.5); g.drawImage(SPRITES[C.gold],x-gs,y-gs,gs*2,gs*2); for(let q=0;q<5;q++){ const a=t*4+q*Math.PI*2/5, s2=rr*0.7; g.drawImage(SPRITES[q%2?C.white:C.gold],x+Math.cos(a)*rr*1.7-s2,y+Math.sin(a)*rr*1.7-s2,s2*2,s2*2); } }
+    { const gs=rr*(1.9+Math.sin(t*5+seed*20)*0.06); g.drawImage(SPRITES[n.sp?C.magenta:LANE_COL[n.lane]],x-gs,y-gs,gs*2,gs*2); }
+    if(n.gold&&!n.sp){ for(let q=0;q<8;q++){ const a=t*2.4+q*Math.PI/4, s2=rr*(q%2?0.45:0.75)*(0.8+0.3*Math.sin(t*12+q)); g.drawImage(SPRITES[q%2?C.white:C.gold],x+Math.cos(a)*rr*1.9-s2,y+Math.sin(a)*rr*1.9-s2,s2*2,s2*2); } }
     g.globalCompositeOperation='source-over';
     veilHead(x,y,rr,n.lane,hex); g.globalAlpha=fade*ra;
+    if(n.gold&&!n.sp){ // Goldrakete: Farbe bleibt die der Taste, dazu ein funkelnder Goldkranz
+      g.save(); g.lineWidth=2.4; g.strokeStyle='#fff3c4'; g.shadowColor='#ffcf40'; g.shadowBlur=10; g.setLineDash([rr*0.5,rr*0.32]); g.lineDashOffset=-t*30;
+      g.beginPath(); g.arc(x,y,rr*1.55,0,Math.PI*2); g.stroke(); g.restore(); }
     if(n.sp){ g.strokeStyle='#fff'; g.lineWidth=2; g.beginPath(); g.arc(x,y,rr+4+Math.sin(t*20)*2,0,Math.PI*2); g.stroke(); }
   }
   // Urteile

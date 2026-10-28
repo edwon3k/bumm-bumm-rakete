@@ -264,11 +264,22 @@ function multOf(p){ return (1+Math.min(3,Math.floor(p.combo/10)))*(p.bloomOn?2:1
 function laneX(p,l){ return p.fx+p.fw*(l+0.5)/4; }
 // Flugbahnen: jede Rakete zündet an einer eigenen Stelle der Linie und kommt oft schräg angeflogen (für alle Spieler gleich)
 function placeNotes(notes,from){
+  // Lockere Stellen: freie Streuung. Dichte Stellen: Raketen folgen einem ruhigen, langsam wandernden Bogen,
+  // jede Taste hat dort ihren festen kleinen Versatz, damit es geordnet bleibt.
   for(let k=from;k<notes.length;k++){ const n=notes[k]; let h=((Math.imul(k+1,2654435761)^Math.imul(Math.round(n.t*1000),40503))>>>0)|1;
     const rnd=()=>{ h^=h<<13; h>>>=0; h^=h>>>17; h^=h<<5; h>>>=0; return h/4294967296; };
-    let tx=0.5; for(let tries=0;tries<8;tries++){ tx=0.5+(rnd()+rnd()-1)*0.22; let ok=true; for(let j=k-1;j>=0&&j>=k-6;j--){ const m=notes[j]; if(n.t-m.t>0.6) break; if(Math.abs(m.tx-tx)<0.07){ ok=false; break; } } if(ok) break; }
+    let dens=0; for(let j=Math.max(0,k-12);j<Math.min(notes.length,k+13);j++) if(Math.abs(notes[j].t-n.t)<0.6) dens++;
+    const calm=Math.max(0,Math.min(1,(dens-3)/4));
+    const flow=0.5+0.12*Math.sin(n.t*0.7+1.3)+0.04*Math.sin(n.t*1.9), lane=((n.lane||0)-1.5)*0.035;
+    let tx=0.5;
+    const prev=k>0?notes[k-1]:null;
+    if(prev && Math.abs(prev.t-n.t)<0.03 && prev.tx!=null){ tx=prev.tx+(prev.tx<0.5?0.09:-0.09); }   // gleichzeitige Raketen nebeneinander
+    else if(calm>=0.99){ tx=flow+lane+(rnd()-0.5)*0.02; }
+    else { for(let tries=0;tries<8;tries++){ const r0=0.5+(rnd()+rnd()-1)*0.22; tx=r0+(flow+lane-r0)*calm; let ok=true;
+        for(let j=k-1;j>=0&&j>=k-6;j--){ const m=notes[j]; if(n.t-m.t>0.6) break; if(Math.abs(m.tx-tx)<0.07*(1-calm)){ ok=false; break; } } if(ok) break; } }
     const r=rnd(); let off; if(r<0.75) off=(rnd()-0.5)*0.03; else if(r<0.9) off=-(0.04+rnd()*0.04); else off=0.04+rnd()*0.04;
-    n.tx=tx; n.sx=Math.max(-0.2,Math.min(1.2,tx+off)); }
+    off*=1-calm*0.8;
+    n.tx=Math.max(0.2,Math.min(0.8,tx)); n.sx=Math.max(-0.2,Math.min(1.2,n.tx+off)); }
 }
 function noteX(p,n,u){ const sp=hitLineSpan(p); const f=n.tx+(n.sx-n.tx)*Math.pow(Math.max(0,u),1.7); return sp[0]+(sp[1]-sp[0])*f; }
 function hitY(){ return H*0.3; }
@@ -391,7 +402,7 @@ function updatePlayers(t,dt){
       const y=hy+(n.t-t)/G.approach*(sy-hy); const x=noteX(p,n,(n.t-t)/G.approach)+(n.sp?Math.sin(t*12)*8:0);
       if(!n.launched){ n.launched=true; if(n.t-t>G.approach*0.6) SFX.launch(A.ctx.currentTime,(x/W)*2-1); }
       { const u=(n.t-t)/G.approach; if((G.mods.hidden&&u<0.42)||(G.mods.sudden&&u>0.6)) continue; }
-      if(Math.random()<(PERF.low?0.25:0.55) && FX.smoke.length<220) FX.smoke.push({x:x+(Math.random()-0.5)*10,y:y+30+Math.random()*40,vx:(Math.random()-0.5)*6,vy:12+Math.random()*10,r:5,gr:9+Math.random()*6,life:1.6+Math.random(),max:2.6,c:n.sp?C.magenta:(n.gold?C.gold:LANE_COL[n.lane]),lit:0,tint:0.5});
+      if(Math.random()<(PERF.low?0.25:0.55) && FX.smoke.length<220) FX.smoke.push({x:x+(Math.random()-0.5)*10,y:y+30+Math.random()*40,vx:(Math.random()-0.5)*6,vy:12+Math.random()*10,r:5,gr:9+Math.random()*6,life:1.6+Math.random(),max:2.6,c:n.sp?C.magenta:LANE_COL[n.lane],lit:0,tint:0.5});
       if(Math.random()<0.3) addP(x+(Math.random()-0.5)*rr2,y+rr2*0.6,(Math.random()-0.5)*14,20+Math.random()*25,{c:n.sp?pick([C.magenta,C.cyan,C.gold,C.lime]):(Math.random()<0.75?LANE_COL[n.lane]:C.white),life:0.7,size:1.2,drag:2,grav:15,fl:F_TWINKLE});
       if(n.gold && !n.sp && Math.random()<0.7) addP(x+(Math.random()-0.5)*26,y+(Math.random()-0.5)*26,(Math.random()-0.5)*30,(Math.random()-0.5)*30,{c:Math.random()<0.6?C.gold:C.white,life:0.5,size:1.6,drag:2,grav:20,fl:F_TWINKLE});
     }

@@ -22,9 +22,9 @@ function cityInit(){
       vec3 neon(float s){ return s<0.25?vec3(1.0,0.15,0.75):s<0.5?vec3(0.1,0.9,1.0):s<0.75?vec3(0.6,0.25,1.0):vec3(1.0,0.45,0.1); }
       const vec3 MOON=normalize(vec3(-0.42,0.2,1.0));
       vec3 skyGrad(float e){
-        vec3 hor=vec3(0.15,0.07,0.19), mid=vec3(0.05,0.04,0.15), top=vec3(0.01,0.013,0.055);
+        vec3 hor=vec3(0.2,0.06,0.15), mid=vec3(0.06,0.03,0.11), top=vec3(0.006,0.008,0.035);
         vec3 c=mix(hor,mid,smoothstep(0.0,0.16,e)); c=mix(c,top,smoothstep(0.12,0.65,e));
-        c+=vec3(0.45,0.16,0.1)*exp(-max(e,0.0)*30.0)*0.3;        // warmer Schein am Horizont
+        c+=vec3(0.55,0.17,0.12)*exp(-max(e,0.0)*24.0)*0.34;        // warmer Schein am Horizont
         return c;
       }
       vec3 skyCol(vec3 d, bool detail){
@@ -44,11 +44,15 @@ function cityInit(){
         }
         return c;
       }
+      // romantische Nachtstimmung: dunkler, Schatten violett, Lichter warm-rosé
+      vec3 grade(vec3 c){ c*=0.78; float l=dot(c,vec3(0.3,0.59,0.11));
+        c=mix(c*vec3(0.92,0.88,1.12), c*vec3(1.1,0.93,0.9), smoothstep(0.02,0.3,l));
+        c+=vec3(0.012,0.0,0.01)*(1.0-smoothstep(0.0,0.1,l)); return c; }
       vec3 fogIt(vec3 c, vec3 w){ vec3 d=w-uCam; float f=1.0-exp(-length(d)*0.0004); vec3 dn=normalize(d); return mix(c,skyCol(vec3(dn.x,max(dn.y,0.0),dn.z),false)*0.7+uFlash*0.12,f); }`;
     // --- Himmel: große Kugel um die Kamera ---
     const sky=new THREE.Mesh(new THREE.SphereGeometry(8000,48,24), new THREE.ShaderMaterial({uniforms:uni, side:THREE.BackSide, depthWrite:false,
       vertexShader:`varying vec3 vD; void main(){ vD=position; vec4 wp=modelMatrix*vec4(position,1.0); gl_Position=projectionMatrix*viewMatrix*wp; }`,
-      fragmentShader:common+`varying vec3 vD; void main(){ vec3 d=normalize(vD); vec3 c=skyCol(d,true); c+=uFlash*0.22*smoothstep(-0.05,0.4,d.y); gl_FragColor=vec4(c,1.0); }`}));
+      fragmentShader:common+`varying vec3 vD; void main(){ vec3 d=normalize(vD); vec3 c=skyCol(d,true); c+=uFlash*0.22*smoothstep(-0.05,0.4,d.y); gl_FragColor=vec4(grade(c),1.0); }`}));
     sky.renderOrder=-10; scene.add(sky);
     // --- Hochhäuser: drei Fassadentypen (Glas, Beton, Backstein) mit Fensterraster passend zur Kante ---
     const bm=new THREE.ShaderMaterial({uniforms:uni, extensions:{derivatives:true},
@@ -100,10 +104,10 @@ function cityInit(){
             float win=box2(f,lo,hi,fw);
             float frame=typ==0?0.0:box2(f,lo-0.04,hi+0.04,fw)*(1.0-win);         // Fensterlaibung
             float r=h21(id+seed*91.7), r2=h21(id*1.71+seed), r3=h21(id*0.37+7.0+seed);
-            float ratio=0.12+0.34*seed+0.1*sin(seed*20.0);
+            float ratio=0.07+0.22*seed+0.06*sin(seed*20.0);
             float lit=step(r,ratio);
-            vec3 wc=mix(vec3(1.0,0.7,0.38),vec3(1.0,0.86,0.62),r2);
-            if(r2>0.82) wc=vec3(0.62,0.8,1.0);
+            vec3 wc=mix(vec3(1.0,0.62,0.32),vec3(1.0,0.8,0.55),r2);
+            if(r2>0.93) wc=vec3(0.62,0.8,1.0);
             if(seed>0.9) wc=mix(wc,neon(h21(vec2(seed,1.0))),0.45);
             // Innenraum: Deckenlicht oben heller, Vorhänge, ab und zu flackernder Fernseher
             vec2 q=(f-lo)/(hi-lo);
@@ -137,7 +141,7 @@ function cityInit(){
             vec3 avg=mix(wall,vec3(0.012,0.016,0.03)+wc*ratio*0.42,typ==0?0.85:0.42);
             col=mix(fac,avg,far);
             // Neon-Krone auf manchen Türmen
-            if(seed>0.83 && top-vW.y>0.6 && top-vW.y<2.0 && vS.y>30.0) col+=neon(fract(seed*7.0))*1.6*(1.0+uBeat*0.7);
+            if(seed>0.83 && top-vW.y>0.6 && top-vW.y<2.0 && vS.y>30.0) col+=neon(fract(seed*7.0))*1.1*(1.0+uBeat*0.6);
             // Mondlicht, Bodenschatten
             col+=wall*1.2*max(dot(n,MOON),0.0)*0.5;
             col*=0.55+0.45*smoothstep(0.0,10.0,vW.y);
@@ -156,7 +160,7 @@ function cityInit(){
           vec3 L=normalize(uFlashPos-vW);
           float diff=max(dot(n,L),0.0)*0.85+0.15;
           col+=uFlash*diff*(n.y>0.5?0.45:0.5)*(0.4+0.6*clamp(vW.y/120.0,0.0,1.0));
-          gl_FragColor=vec4(fogIt(col,vW),1.0);
+          gl_FragColor=vec4(grade(fogIt(col,vW)),1.0);
         }`});
     const lots=[], trees=[], park=(gx,gz)=>{ if(gx===0&&gz===0) return false; const r=Math.abs(Math.sin(gx*12.9898+gz*78.233)*43758.5453)%1; return r<0.24 || (gz===SHORE && Math.abs(gx)<=2); };
     for(let gx=-NX;gx<=NX;gx++) for(let gz=NZ0;gz<=SHORE;gz++){
@@ -207,7 +211,7 @@ function cityInit(){
           bool ant=vS.x<1.0 && vS.y>6.0;
           if(ant){ col=vec3(0.08); float tp=vS.w+vS.y; col+=vec3(1.0,0.08,0.05)*3.0*step(tp-1.2,vW.y)*step(0.45,fract(uTime*0.7+s)); }
           vec3 L=normalize(uFlashPos-vW); col+=uFlash*(max(dot(n,L),0.0)*0.7+0.2)*0.6;
-          gl_FragColor=vec4(fogIt(col,vW),1.0); }`});
+          gl_FragColor=vec4(grade(fogIt(col,vW)),1.0); }`});
     const pgeo=new THREE.BoxGeometry(1,1,1); pgeo.translate(0,0.5,0);
     const allP=props.map(p=>[p[0],p[1],p[2],p[3],p[4],p[5]]).concat(ants.map(a=>[a[0],a[1],0.5,0.5,a[2],a[3]]));
     const pi=new THREE.InstancedMesh(pgeo,pm,Math.max(1,allP.length));
@@ -232,7 +236,7 @@ function cityInit(){
           col+=vec3(0.9,0.6,0.25)*0.14*clamp(1.0-vW.y/8.0,0.0,1.0);            // Laternenschein von unten
           col+=vec3(0.05,0.07,0.1)*max(dot(n,MOON),0.0);
           vec3 L=normalize(uFlashPos-vW); col+=uFlash*(max(dot(n,L),0.0)*0.6+0.15)*0.6;
-          gl_FragColor=vec4(fogIt(col,vW),1.0); }`});
+          gl_FragColor=vec4(grade(fogIt(col,vW)),1.0); }`});
     const tg=new THREE.IcosahedronGeometry(1,1);
     const ti=new THREE.InstancedMesh(tg,tm,trees.length);
     trees.forEach((t,i)=>{ M.makeScale(t[2],t[2]*1.25,t[2]); M.setPosition(t[0],t[2]*1.1,t[1]); ti.setMatrixAt(i,M); });
@@ -309,7 +313,7 @@ function cityInit(){
           if(d<18.0 && street<0.5){ col=mix(col,vec3(0.06,0.058,0.065)*(0.8+0.3*vnoise(p*1.5)),smoothstep(18.0,17.0,d)); col+=vec3(0.03)*ln(fract(d/2.0),0.0,0.04); }
           col+=neon(0.3)*0.7*exp(-pow(d-12.0,2.0)*0.4);
           col+=uFlash*(0.17+0.12*fres);
-          gl_FragColor=vec4(fogIt(col,vW),1.0);
+          gl_FragColor=vec4(grade(fogIt(col,vW)),1.0);
         }`});
     const land=new THREE.Mesh(new THREE.PlaneGeometry(9000,3000),gm); land.rotation.x=-Math.PI/2; land.position.set(0,0,shoreZ-1500); scene.add(land);
     // --- Meer: Wellen spiegeln Himmel, Mond und Feuerwerk; ankernde Boote ---
@@ -356,7 +360,7 @@ function cityInit(){
           // weicher Horizont: weit draußen geht das Wasser in den Himmelsschein über
           vec3 dv=vW-uCam; vec3 dn=normalize(dv); float fh=1.0-exp(-length(dv)*0.00042);
           col=mix(col,skyCol(vec3(dn.x,0.004,dn.z),false)*0.95+uFlash*0.1,fh);
-          gl_FragColor=vec4(col,1.0);
+          gl_FragColor=vec4(grade(col),1.0);
         }`});
     const sea=new THREE.Mesh(new THREE.PlaneGeometry(16000,8000),sm); sea.rotation.x=-Math.PI/2; sea.position.set(0,-0.6,shoreZ+4000); scene.add(sea);
 
@@ -371,7 +375,7 @@ function cityInit(){
           col+=uFlash*0.25;
           vec3 dv=vW-uCam; vec3 dn=normalize(dv); float fh=1.0-exp(-length(dv)*0.00028);
           col=mix(col,skyCol(vec3(dn.x,0.004,dn.z),false)*0.95,fh*0.82);
-          gl_FragColor=vec4(col,1.0); }`});
+          gl_FragColor=vec4(grade(col),1.0); }`});
     const hill=(z,x0,x1,hs,seed)=>{ const N=260, pos=[], idx=[];
       for(let i=0;i<=N;i++){ const x=x0+(x1-x0)*i/N; let h=0, a=1, f=1/700;
         for(let o=0;o<4;o++){ h+=a*(Math.sin(x*f+seed*(o+1))*0.5+0.5); a*=0.5; f*=2.1; }
@@ -394,7 +398,7 @@ function cityInit(){
         void main(){ vec3 n=normalize(vN); vec3 col=vec3(0.05,0.04,0.04)+vec3(0.05,0.05,0.08)*max(dot(n,MOON),0.0);
           float lamp=pow(0.5+0.5*cos(vW.z*0.2),40.0)*step(0.5,n.y); col+=vec3(1.0,0.75,0.4)*lamp*(exp(-pow(abs(vW.x+60.0)-4.0,2.0)*0.6))*2.0;
           float rings=step(0.5,fract(vW.y/9.0)); if(vW.y>4.5){ col=mix(vec3(0.75,0.72,0.7),vec3(0.6,0.06,0.08),rings)*(0.25+0.4*max(dot(n,MOON),0.0)); }
-          col+=uFlash*0.4; gl_FragColor=vec4(fogIt(col,vW),1.0); }`});
+          col+=uFlash*0.4; gl_FragColor=vec4(grade(fogIt(col,vW)),1.0); }`});
     const pierL=280, pier=new THREE.Mesh(new THREE.BoxGeometry(9,3,pierL),pierMat); pier.position.set(-60,0.8,shoreZ+pierL/2); scene.add(pier);
     const tower=new THREE.Mesh(new THREE.CylinderGeometry(3.2,5,44,16),pierMat); tower.position.set(-60,24,shoreZ+pierL); scene.add(tower);
     const beamMat=new THREE.ShaderMaterial({uniforms:uni, transparent:true, depthWrite:false, blending:THREE.AdditiveBlending, side:THREE.DoubleSide,

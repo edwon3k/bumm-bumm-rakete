@@ -1804,9 +1804,9 @@ function cityInit(){
       vec3 neon(float s){ return s<0.25?vec3(1.0,0.15,0.75):s<0.5?vec3(0.1,0.9,1.0):s<0.75?vec3(0.6,0.25,1.0):vec3(1.0,0.45,0.1); }
       const vec3 MOON=normalize(vec3(-0.42,0.2,1.0));
       vec3 skyGrad(float e){
-        vec3 hor=vec3(0.15,0.07,0.19), mid=vec3(0.05,0.04,0.15), top=vec3(0.01,0.013,0.055);
+        vec3 hor=vec3(0.2,0.06,0.15), mid=vec3(0.06,0.03,0.11), top=vec3(0.006,0.008,0.035);
         vec3 c=mix(hor,mid,smoothstep(0.0,0.16,e)); c=mix(c,top,smoothstep(0.12,0.65,e));
-        c+=vec3(0.45,0.16,0.1)*exp(-max(e,0.0)*30.0)*0.3;        // warmer Schein am Horizont
+        c+=vec3(0.55,0.17,0.12)*exp(-max(e,0.0)*24.0)*0.34;        // warmer Schein am Horizont
         return c;
       }
       vec3 skyCol(vec3 d, bool detail){
@@ -1826,11 +1826,15 @@ function cityInit(){
         }
         return c;
       }
+      // romantische Nachtstimmung: dunkler, Schatten violett, Lichter warm-rosé
+      vec3 grade(vec3 c){ c*=0.78; float l=dot(c,vec3(0.3,0.59,0.11));
+        c=mix(c*vec3(0.92,0.88,1.12), c*vec3(1.1,0.93,0.9), smoothstep(0.02,0.3,l));
+        c+=vec3(0.012,0.0,0.01)*(1.0-smoothstep(0.0,0.1,l)); return c; }
       vec3 fogIt(vec3 c, vec3 w){ vec3 d=w-uCam; float f=1.0-exp(-length(d)*0.0004); vec3 dn=normalize(d); return mix(c,skyCol(vec3(dn.x,max(dn.y,0.0),dn.z),false)*0.7+uFlash*0.12,f); }`;
     // --- Himmel: große Kugel um die Kamera ---
     const sky=new THREE.Mesh(new THREE.SphereGeometry(8000,48,24), new THREE.ShaderMaterial({uniforms:uni, side:THREE.BackSide, depthWrite:false,
       vertexShader:`varying vec3 vD; void main(){ vD=position; vec4 wp=modelMatrix*vec4(position,1.0); gl_Position=projectionMatrix*viewMatrix*wp; }`,
-      fragmentShader:common+`varying vec3 vD; void main(){ vec3 d=normalize(vD); vec3 c=skyCol(d,true); c+=uFlash*0.22*smoothstep(-0.05,0.4,d.y); gl_FragColor=vec4(c,1.0); }`}));
+      fragmentShader:common+`varying vec3 vD; void main(){ vec3 d=normalize(vD); vec3 c=skyCol(d,true); c+=uFlash*0.22*smoothstep(-0.05,0.4,d.y); gl_FragColor=vec4(grade(c),1.0); }`}));
     sky.renderOrder=-10; scene.add(sky);
     // --- Hochhäuser: drei Fassadentypen (Glas, Beton, Backstein) mit Fensterraster passend zur Kante ---
     const bm=new THREE.ShaderMaterial({uniforms:uni, extensions:{derivatives:true},
@@ -1882,10 +1886,10 @@ function cityInit(){
             float win=box2(f,lo,hi,fw);
             float frame=typ==0?0.0:box2(f,lo-0.04,hi+0.04,fw)*(1.0-win);         // Fensterlaibung
             float r=h21(id+seed*91.7), r2=h21(id*1.71+seed), r3=h21(id*0.37+7.0+seed);
-            float ratio=0.12+0.34*seed+0.1*sin(seed*20.0);
+            float ratio=0.07+0.22*seed+0.06*sin(seed*20.0);
             float lit=step(r,ratio);
-            vec3 wc=mix(vec3(1.0,0.7,0.38),vec3(1.0,0.86,0.62),r2);
-            if(r2>0.82) wc=vec3(0.62,0.8,1.0);
+            vec3 wc=mix(vec3(1.0,0.62,0.32),vec3(1.0,0.8,0.55),r2);
+            if(r2>0.93) wc=vec3(0.62,0.8,1.0);
             if(seed>0.9) wc=mix(wc,neon(h21(vec2(seed,1.0))),0.45);
             // Innenraum: Deckenlicht oben heller, Vorhänge, ab und zu flackernder Fernseher
             vec2 q=(f-lo)/(hi-lo);
@@ -1919,7 +1923,7 @@ function cityInit(){
             vec3 avg=mix(wall,vec3(0.012,0.016,0.03)+wc*ratio*0.42,typ==0?0.85:0.42);
             col=mix(fac,avg,far);
             // Neon-Krone auf manchen Türmen
-            if(seed>0.83 && top-vW.y>0.6 && top-vW.y<2.0 && vS.y>30.0) col+=neon(fract(seed*7.0))*1.6*(1.0+uBeat*0.7);
+            if(seed>0.83 && top-vW.y>0.6 && top-vW.y<2.0 && vS.y>30.0) col+=neon(fract(seed*7.0))*1.1*(1.0+uBeat*0.6);
             // Mondlicht, Bodenschatten
             col+=wall*1.2*max(dot(n,MOON),0.0)*0.5;
             col*=0.55+0.45*smoothstep(0.0,10.0,vW.y);
@@ -1938,7 +1942,7 @@ function cityInit(){
           vec3 L=normalize(uFlashPos-vW);
           float diff=max(dot(n,L),0.0)*0.85+0.15;
           col+=uFlash*diff*(n.y>0.5?0.45:0.5)*(0.4+0.6*clamp(vW.y/120.0,0.0,1.0));
-          gl_FragColor=vec4(fogIt(col,vW),1.0);
+          gl_FragColor=vec4(grade(fogIt(col,vW)),1.0);
         }`});
     const lots=[], trees=[], park=(gx,gz)=>{ if(gx===0&&gz===0) return false; const r=Math.abs(Math.sin(gx*12.9898+gz*78.233)*43758.5453)%1; return r<0.24 || (gz===SHORE && Math.abs(gx)<=2); };
     for(let gx=-NX;gx<=NX;gx++) for(let gz=NZ0;gz<=SHORE;gz++){
@@ -1989,7 +1993,7 @@ function cityInit(){
           bool ant=vS.x<1.0 && vS.y>6.0;
           if(ant){ col=vec3(0.08); float tp=vS.w+vS.y; col+=vec3(1.0,0.08,0.05)*3.0*step(tp-1.2,vW.y)*step(0.45,fract(uTime*0.7+s)); }
           vec3 L=normalize(uFlashPos-vW); col+=uFlash*(max(dot(n,L),0.0)*0.7+0.2)*0.6;
-          gl_FragColor=vec4(fogIt(col,vW),1.0); }`});
+          gl_FragColor=vec4(grade(fogIt(col,vW)),1.0); }`});
     const pgeo=new THREE.BoxGeometry(1,1,1); pgeo.translate(0,0.5,0);
     const allP=props.map(p=>[p[0],p[1],p[2],p[3],p[4],p[5]]).concat(ants.map(a=>[a[0],a[1],0.5,0.5,a[2],a[3]]));
     const pi=new THREE.InstancedMesh(pgeo,pm,Math.max(1,allP.length));
@@ -2014,7 +2018,7 @@ function cityInit(){
           col+=vec3(0.9,0.6,0.25)*0.14*clamp(1.0-vW.y/8.0,0.0,1.0);            // Laternenschein von unten
           col+=vec3(0.05,0.07,0.1)*max(dot(n,MOON),0.0);
           vec3 L=normalize(uFlashPos-vW); col+=uFlash*(max(dot(n,L),0.0)*0.6+0.15)*0.6;
-          gl_FragColor=vec4(fogIt(col,vW),1.0); }`});
+          gl_FragColor=vec4(grade(fogIt(col,vW)),1.0); }`});
     const tg=new THREE.IcosahedronGeometry(1,1);
     const ti=new THREE.InstancedMesh(tg,tm,trees.length);
     trees.forEach((t,i)=>{ M.makeScale(t[2],t[2]*1.25,t[2]); M.setPosition(t[0],t[2]*1.1,t[1]); ti.setMatrixAt(i,M); });
@@ -2091,7 +2095,7 @@ function cityInit(){
           if(d<18.0 && street<0.5){ col=mix(col,vec3(0.06,0.058,0.065)*(0.8+0.3*vnoise(p*1.5)),smoothstep(18.0,17.0,d)); col+=vec3(0.03)*ln(fract(d/2.0),0.0,0.04); }
           col+=neon(0.3)*0.7*exp(-pow(d-12.0,2.0)*0.4);
           col+=uFlash*(0.17+0.12*fres);
-          gl_FragColor=vec4(fogIt(col,vW),1.0);
+          gl_FragColor=vec4(grade(fogIt(col,vW)),1.0);
         }`});
     const land=new THREE.Mesh(new THREE.PlaneGeometry(9000,3000),gm); land.rotation.x=-Math.PI/2; land.position.set(0,0,shoreZ-1500); scene.add(land);
     // --- Meer: Wellen spiegeln Himmel, Mond und Feuerwerk; ankernde Boote ---
@@ -2138,7 +2142,7 @@ function cityInit(){
           // weicher Horizont: weit draußen geht das Wasser in den Himmelsschein über
           vec3 dv=vW-uCam; vec3 dn=normalize(dv); float fh=1.0-exp(-length(dv)*0.00042);
           col=mix(col,skyCol(vec3(dn.x,0.004,dn.z),false)*0.95+uFlash*0.1,fh);
-          gl_FragColor=vec4(col,1.0);
+          gl_FragColor=vec4(grade(col),1.0);
         }`});
     const sea=new THREE.Mesh(new THREE.PlaneGeometry(16000,8000),sm); sea.rotation.x=-Math.PI/2; sea.position.set(0,-0.6,shoreZ+4000); scene.add(sea);
 
@@ -2153,7 +2157,7 @@ function cityInit(){
           col+=uFlash*0.25;
           vec3 dv=vW-uCam; vec3 dn=normalize(dv); float fh=1.0-exp(-length(dv)*0.00028);
           col=mix(col,skyCol(vec3(dn.x,0.004,dn.z),false)*0.95,fh*0.82);
-          gl_FragColor=vec4(col,1.0); }`});
+          gl_FragColor=vec4(grade(col),1.0); }`});
     const hill=(z,x0,x1,hs,seed)=>{ const N=260, pos=[], idx=[];
       for(let i=0;i<=N;i++){ const x=x0+(x1-x0)*i/N; let h=0, a=1, f=1/700;
         for(let o=0;o<4;o++){ h+=a*(Math.sin(x*f+seed*(o+1))*0.5+0.5); a*=0.5; f*=2.1; }
@@ -2176,7 +2180,7 @@ function cityInit(){
         void main(){ vec3 n=normalize(vN); vec3 col=vec3(0.05,0.04,0.04)+vec3(0.05,0.05,0.08)*max(dot(n,MOON),0.0);
           float lamp=pow(0.5+0.5*cos(vW.z*0.2),40.0)*step(0.5,n.y); col+=vec3(1.0,0.75,0.4)*lamp*(exp(-pow(abs(vW.x+60.0)-4.0,2.0)*0.6))*2.0;
           float rings=step(0.5,fract(vW.y/9.0)); if(vW.y>4.5){ col=mix(vec3(0.75,0.72,0.7),vec3(0.6,0.06,0.08),rings)*(0.25+0.4*max(dot(n,MOON),0.0)); }
-          col+=uFlash*0.4; gl_FragColor=vec4(fogIt(col,vW),1.0); }`});
+          col+=uFlash*0.4; gl_FragColor=vec4(grade(fogIt(col,vW)),1.0); }`});
     const pierL=280, pier=new THREE.Mesh(new THREE.BoxGeometry(9,3,pierL),pierMat); pier.position.set(-60,0.8,shoreZ+pierL/2); scene.add(pier);
     const tower=new THREE.Mesh(new THREE.CylinderGeometry(3.2,5,44,16),pierMat); tower.position.set(-60,24,shoreZ+pierL); scene.add(tower);
     const beamMat=new THREE.ShaderMaterial({uniforms:uni, transparent:true, depthWrite:false, blending:THREE.AdditiveBlending, side:THREE.DoubleSide,
@@ -2697,11 +2701,22 @@ function multOf(p){ return (1+Math.min(3,Math.floor(p.combo/10)))*(p.bloomOn?2:1
 function laneX(p,l){ return p.fx+p.fw*(l+0.5)/4; }
 // Flugbahnen: jede Rakete zündet an einer eigenen Stelle der Linie und kommt oft schräg angeflogen (für alle Spieler gleich)
 function placeNotes(notes,from){
+  // Lockere Stellen: freie Streuung. Dichte Stellen: Raketen folgen einem ruhigen, langsam wandernden Bogen,
+  // jede Taste hat dort ihren festen kleinen Versatz, damit es geordnet bleibt.
   for(let k=from;k<notes.length;k++){ const n=notes[k]; let h=((Math.imul(k+1,2654435761)^Math.imul(Math.round(n.t*1000),40503))>>>0)|1;
     const rnd=()=>{ h^=h<<13; h>>>=0; h^=h>>>17; h^=h<<5; h>>>=0; return h/4294967296; };
-    let tx=0.5; for(let tries=0;tries<8;tries++){ tx=0.5+(rnd()+rnd()-1)*0.22; let ok=true; for(let j=k-1;j>=0&&j>=k-6;j--){ const m=notes[j]; if(n.t-m.t>0.6) break; if(Math.abs(m.tx-tx)<0.07){ ok=false; break; } } if(ok) break; }
+    let dens=0; for(let j=Math.max(0,k-12);j<Math.min(notes.length,k+13);j++) if(Math.abs(notes[j].t-n.t)<0.6) dens++;
+    const calm=Math.max(0,Math.min(1,(dens-3)/4));
+    const flow=0.5+0.12*Math.sin(n.t*0.7+1.3)+0.04*Math.sin(n.t*1.9), lane=((n.lane||0)-1.5)*0.035;
+    let tx=0.5;
+    const prev=k>0?notes[k-1]:null;
+    if(prev && Math.abs(prev.t-n.t)<0.03 && prev.tx!=null){ tx=prev.tx+(prev.tx<0.5?0.09:-0.09); }   // gleichzeitige Raketen nebeneinander
+    else if(calm>=0.99){ tx=flow+lane+(rnd()-0.5)*0.02; }
+    else { for(let tries=0;tries<8;tries++){ const r0=0.5+(rnd()+rnd()-1)*0.22; tx=r0+(flow+lane-r0)*calm; let ok=true;
+        for(let j=k-1;j>=0&&j>=k-6;j--){ const m=notes[j]; if(n.t-m.t>0.6) break; if(Math.abs(m.tx-tx)<0.07*(1-calm)){ ok=false; break; } } if(ok) break; } }
     const r=rnd(); let off; if(r<0.75) off=(rnd()-0.5)*0.03; else if(r<0.9) off=-(0.04+rnd()*0.04); else off=0.04+rnd()*0.04;
-    n.tx=tx; n.sx=Math.max(-0.2,Math.min(1.2,tx+off)); }
+    off*=1-calm*0.8;
+    n.tx=Math.max(0.2,Math.min(0.8,tx)); n.sx=Math.max(-0.2,Math.min(1.2,n.tx+off)); }
 }
 function noteX(p,n,u){ const sp=hitLineSpan(p); const f=n.tx+(n.sx-n.tx)*Math.pow(Math.max(0,u),1.7); return sp[0]+(sp[1]-sp[0])*f; }
 function hitY(){ return H*0.3; }
@@ -2824,7 +2839,7 @@ function updatePlayers(t,dt){
       const y=hy+(n.t-t)/G.approach*(sy-hy); const x=noteX(p,n,(n.t-t)/G.approach)+(n.sp?Math.sin(t*12)*8:0);
       if(!n.launched){ n.launched=true; if(n.t-t>G.approach*0.6) SFX.launch(A.ctx.currentTime,(x/W)*2-1); }
       { const u=(n.t-t)/G.approach; if((G.mods.hidden&&u<0.42)||(G.mods.sudden&&u>0.6)) continue; }
-      if(Math.random()<(PERF.low?0.25:0.55) && FX.smoke.length<220) FX.smoke.push({x:x+(Math.random()-0.5)*10,y:y+30+Math.random()*40,vx:(Math.random()-0.5)*6,vy:12+Math.random()*10,r:5,gr:9+Math.random()*6,life:1.6+Math.random(),max:2.6,c:n.sp?C.magenta:(n.gold?C.gold:LANE_COL[n.lane]),lit:0,tint:0.5});
+      if(Math.random()<(PERF.low?0.25:0.55) && FX.smoke.length<220) FX.smoke.push({x:x+(Math.random()-0.5)*10,y:y+30+Math.random()*40,vx:(Math.random()-0.5)*6,vy:12+Math.random()*10,r:5,gr:9+Math.random()*6,life:1.6+Math.random(),max:2.6,c:n.sp?C.magenta:LANE_COL[n.lane],lit:0,tint:0.5});
       if(Math.random()<0.3) addP(x+(Math.random()-0.5)*rr2,y+rr2*0.6,(Math.random()-0.5)*14,20+Math.random()*25,{c:n.sp?pick([C.magenta,C.cyan,C.gold,C.lime]):(Math.random()<0.75?LANE_COL[n.lane]:C.white),life:0.7,size:1.2,drag:2,grav:15,fl:F_TWINKLE});
       if(n.gold && !n.sp && Math.random()<0.7) addP(x+(Math.random()-0.5)*26,y+(Math.random()-0.5)*26,(Math.random()-0.5)*30,(Math.random()-0.5)*30,{c:Math.random()<0.6?C.gold:C.white,life:0.5,size:1.6,drag:2,grav:20,fl:F_TWINKLE});
     }
@@ -3274,17 +3289,20 @@ function drawField(p,t){
     const shx=Math.max(-1.6,Math.min(1.6,(noteX(p,n,uu+0.05)-noteX(p,n,uu))/(0.05*(sy-hy))));
     if(G.mods.hidden) ra=Math.max(0,Math.min(1,(uu-0.18)/0.24)); if(G.mods.sudden) ra=Math.min(ra,Math.max(0,Math.min(1,(0.62-uu)/0.1)));
     if(ra<=0.01) continue; g.globalAlpha=fade*ra;
-    const hex=n.sp?'#ff58dc':(n.gold?'#ffd54a':LANE_HEX[n.lane]), seed=(n.t*7.13)%1;
+    const hex=n.sp?'#ff58dc':LANE_HEX[n.lane], seed=(n.t*7.13)%1;
     // Lichtschleier: langer, weicher, rauchiger Leuchtstreifen unter dem Buchstaben
     const L=Math.min(H*0.62, sy-y+H*0.12), vw=rr*(5.2+0.2*Math.sin(t*1.5+seed*6));
     g.globalCompositeOperation='lighter';
     g.save(); g.translate(x,y-rr*0.6); g.transform(1,0,shx+Math.sin(t*1.1+seed*9)*0.02,1,0,0);
     g.drawImage(veilSpr(hex,(seed*3)|0),-vw,0,vw*2,L);
     g.restore();
-    { const gs=rr*(1.9+Math.sin(t*5+seed*20)*0.06); g.drawImage(SPRITES[n.sp?C.magenta:(n.gold?C.gold:LANE_COL[n.lane])],x-gs,y-gs,gs*2,gs*2); }
-    if(n.gold&&!n.sp){ const gs=rr*(3.2+Math.sin(t*9)*0.5); g.drawImage(SPRITES[C.gold],x-gs,y-gs,gs*2,gs*2); for(let q=0;q<5;q++){ const a=t*4+q*Math.PI*2/5, s2=rr*0.7; g.drawImage(SPRITES[q%2?C.white:C.gold],x+Math.cos(a)*rr*1.7-s2,y+Math.sin(a)*rr*1.7-s2,s2*2,s2*2); } }
+    { const gs=rr*(1.9+Math.sin(t*5+seed*20)*0.06); g.drawImage(SPRITES[n.sp?C.magenta:LANE_COL[n.lane]],x-gs,y-gs,gs*2,gs*2); }
+    if(n.gold&&!n.sp){ for(let q=0;q<8;q++){ const a=t*2.4+q*Math.PI/4, s2=rr*(q%2?0.45:0.75)*(0.8+0.3*Math.sin(t*12+q)); g.drawImage(SPRITES[q%2?C.white:C.gold],x+Math.cos(a)*rr*1.9-s2,y+Math.sin(a)*rr*1.9-s2,s2*2,s2*2); } }
     g.globalCompositeOperation='source-over';
     veilHead(x,y,rr,n.lane,hex); g.globalAlpha=fade*ra;
+    if(n.gold&&!n.sp){ // Goldrakete: Farbe bleibt die der Taste, dazu ein funkelnder Goldkranz
+      g.save(); g.lineWidth=2.4; g.strokeStyle='#fff3c4'; g.shadowColor='#ffcf40'; g.shadowBlur=10; g.setLineDash([rr*0.5,rr*0.32]); g.lineDashOffset=-t*30;
+      g.beginPath(); g.arc(x,y,rr*1.55,0,Math.PI*2); g.stroke(); g.restore(); }
     if(n.sp){ g.strokeStyle='#fff'; g.lineWidth=2; g.beginPath(); g.arc(x,y,rr+4+Math.sin(t*20)*2,0,Math.PI*2); g.stroke(); }
   }
   // Urteile
