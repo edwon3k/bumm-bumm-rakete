@@ -119,6 +119,103 @@ kbd{font-family:var(--body);font-size:12px;padding:1px 6px;border-radius:5px;bor
 .onrank li.me,#olive>div.me{background:rgba(255,213,74,0.22);color:var(--gold);font-weight:700;}
 #olive{position:fixed;top:calc(env(safe-area-inset-top,0px) + 64px);right:calc(12px + env(safe-area-inset-right,0px));width:min(220px,46vw);display:flex;flex-direction:column;gap:3px;font-size:13px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:8px;pointer-events:none;z-index:4;}
 #olive[hidden]{display:none;}
+/* ===== V17: Menüs im Neon-Stil der Spielanzeige (schräge Kanten, Cyan/Pink-Leuchten) ===== */
+:root{ --cut:16px; --skew:-14deg; --pink:#ff58dc; --fill1:rgba(14,18,52,0.93); --fill2:rgba(6,8,28,0.95); }
+.panel{position:relative;border:1.5px solid transparent;border-radius:0;
+  background:
+    linear-gradient(to bottom right,transparent 50%,var(--cyan) 50% calc(50% + 2px),transparent 0) top left/var(--cut) var(--cut) no-repeat border-box,
+    linear-gradient(to bottom right,transparent calc(50% - 2px),var(--pink) calc(50% - 2px) 50%,transparent 0) bottom right/var(--cut) var(--cut) no-repeat border-box,
+    linear-gradient(160deg,var(--fill1),var(--fill2)) padding-box,
+    linear-gradient(120deg,var(--cyan),rgba(76,242,255,0.35) 35%,rgba(255,88,220,0.35) 65%,var(--pink)) border-box;
+  clip-path:polygon(var(--cut) 0,100% 0,100% calc(100% - var(--cut)),calc(100% - var(--cut)) 100%,0 100%,0 var(--cut));
+  box-shadow:inset 0 0 40px rgba(76,242,255,0.08),inset 0 1px 0 rgba(255,255,255,0.06);
+  backdrop-filter:none;-webkit-backdrop-filter:none;padding:20px 22px;}
+h2{color:#fff;letter-spacing:0.02em;text-shadow:0 0 6px rgba(76,242,255,0.9),0 0 22px rgba(76,242,255,0.45);}
+.eyebrow{color:var(--pink);font-weight:600;display:flex;align-items:center;gap:8px;margin-bottom:4px;text-shadow:0 0 8px rgba(255,88,220,0.5);}
+.eyebrow::before{content:"";width:22px;height:2px;background:var(--pink);box-shadow:0 0 6px var(--pink);transform:skewX(var(--skew));}
+/* Knöpfe: schräge Leuchtrahmen wie die Anzeigen im Spiel */
+.btn{position:relative;isolation:isolate;border:0;border-radius:0;background:transparent;color:#dfe7ff;
+  font-weight:700;font-size:14px;text-transform:uppercase;letter-spacing:0.08em;padding:10px 22px;transition:color .15s,transform .12s;}
+.btn::before{content:"";position:absolute;inset:0 7px;z-index:-1;transform:skewX(var(--skew));
+  background:linear-gradient(90deg,rgba(76,242,255,0.75) 0 3px,transparent 3px),linear-gradient(180deg,rgba(26,32,82,0.95),rgba(10,12,40,0.95));
+  border:1.5px solid rgba(76,242,255,0.38);transition:border-color .15s,box-shadow .15s,background .15s;}
+.btn:hover{background:transparent;color:#fff;}
+.btn:hover::before{border-color:rgba(76,242,255,0.8);}
+.btn:focus-visible{outline:none;color:#fff;text-shadow:0 0 8px rgba(76,242,255,0.9);transform:translateX(3px);}
+.btn:focus-visible::before{border-color:var(--cyan);
+  background:linear-gradient(90deg,var(--pink) 0 4px,transparent 4px),linear-gradient(90deg,rgba(76,242,255,0.38),rgba(76,242,255,0.12) 60%,rgba(255,88,220,0.18));
+  box-shadow:0 0 14px rgba(76,242,255,0.75),0 0 34px rgba(76,242,255,0.3),inset 0 0 14px rgba(76,242,255,0.35);}
+.btn::after{content:"";position:absolute;inset:0 7px;z-index:-1;transform:skewX(var(--skew));opacity:0;pointer-events:none;
+  background:linear-gradient(100deg,transparent 35%,rgba(255,255,255,0.28) 50%,transparent 65%) 0 0/250% 100% no-repeat;}
+.btn:focus-visible::after{opacity:1;animation:sheen 2.2s ease-in-out infinite;}
+@keyframes sheen{0%{background-position:130% 0;}60%,100%{background-position:-30% 0;}}
+.btn.primary{background:transparent;color:#fff;text-shadow:0 1px 0 rgba(80,0,40,0.5);}
+.btn.primary::before{border-color:rgba(255,213,74,0.85);
+  background:linear-gradient(90deg,#fff3 0 3px,transparent 3px),linear-gradient(90deg,#ff3d8f,#ff6a4a 55%,#ffa42e);
+  box-shadow:0 0 12px rgba(255,90,140,0.45);}
+.btn.primary:focus-visible{text-shadow:0 0 6px rgba(255,255,255,0.8);}
+.btn.primary:focus-visible::before{border-color:#fff3b0;
+  background:linear-gradient(90deg,#fff 0 4px,transparent 4px),linear-gradient(90deg,#ff4f9c,#ff7d55 55%,#ffbb3a);
+  box-shadow:0 0 16px rgba(255,120,120,0.9),0 0 40px rgba(255,88,220,0.45),inset 0 0 12px rgba(255,255,255,0.35);}
+.btn:active{transform:translateX(3px) scale(0.98);}
+.menu{gap:10px 6px;box-sizing:border-box;}
+.menu .btn{min-height:50px;font-size:15px;}
+.menu .btn.wide.primary{min-height:58px;font-size:17px;letter-spacing:0.12em;}
+/* Titel */
+.logo{filter:drop-shadow(0 0 14px rgba(255,120,60,0.55)) drop-shadow(0 0 34px rgba(255,88,220,0.35)) drop-shadow(0 4px 0 #3a0f3f);}
+.tag{color:#c9d2ff;letter-spacing:0.02em;}
+.keys .key{box-shadow:0 0 12px var(--kc,#fff),0 0 0 2px rgba(255,255,255,0.25) inset;}
+.keys .key:nth-child(1){--kc:var(--x);} .keys .key:nth-child(2){--kc:var(--a);} .keys .key:nth-child(3){--kc:var(--y);} .keys .key:nth-child(4){--kc:var(--b);}
+/* Schwierigkeit und Tempo */
+.seg{gap:8px;padding:0;border:0;background:transparent;border-radius:0;}
+.seg button{position:relative;isolation:isolate;border-radius:0;background:transparent;color:#cfd8ff;text-transform:uppercase;letter-spacing:0.08em;font-size:13px;font-weight:700;}
+.seg button::before{content:"";position:absolute;inset:0 5px;z-index:-1;transform:skewX(var(--skew));background:rgba(8,10,34,0.9);border:1.5px solid rgba(76,242,255,0.3);transition:background .15s,box-shadow .15s;}
+.seg button[aria-pressed="true"]{background:transparent;color:#04121a;}
+.seg button[aria-pressed="true"]::before{background:linear-gradient(180deg,#8ff8ff,var(--cyan));border-color:#c8fcff;box-shadow:0 0 14px rgba(76,242,255,0.6);}
+.seg button:focus-visible{outline:none;} .seg button:focus-visible::before{box-shadow:0 0 0 2px var(--pink),0 0 16px rgba(255,88,220,0.6);}
+/* Liedliste und Galerie */
+#songs{padding:2px 4px;gap:7px;}
+.song,.fwcell{border:0;border-radius:0;clip-path:polygon(12px 0,100% 0,calc(100% - 12px) 100%,0 100%);transition:background .15s,box-shadow .15s;}
+.song{padding:10px 24px;background:linear-gradient(90deg,rgba(76,242,255,0.55) 0 3px,transparent 3px) 9px 0/100% 100% no-repeat,linear-gradient(90deg,rgba(24,30,78,0.92),rgba(12,14,44,0.88));}
+.song:hover{background:linear-gradient(90deg,var(--cyan) 0 3px,transparent 3px) 9px 0/100% 100% no-repeat,linear-gradient(90deg,rgba(40,48,120,0.95),rgba(18,20,60,0.9));}
+.song:focus-visible{outline:none;background:linear-gradient(90deg,var(--pink) 0 4px,transparent 4px) 9px 0/100% 100% no-repeat,linear-gradient(90deg,rgba(76,242,255,0.42),rgba(76,242,255,0.14) 55%,rgba(255,88,220,0.22));
+  box-shadow:inset 0 0 0 2px rgba(76,242,255,0.9),inset 0 0 22px rgba(76,242,255,0.35);}
+.song:focus-visible .tt{text-shadow:0 0 8px rgba(76,242,255,0.9);}
+.song .num{text-shadow:0 0 8px rgba(255,213,74,0.6);}
+.fwcell{padding:8px 18px;}
+.fwcell:focus-visible{outline:none;box-shadow:inset 0 0 0 2px var(--cyan),inset 0 0 18px rgba(76,242,255,0.4);}
+.badge{border-radius:2px;background:rgba(76,242,255,0.1);border:1px solid rgba(76,242,255,0.2);}
+.badge.cur{background:rgba(255,213,74,0.18);border-color:rgba(255,213,74,0.5);}
+/* Auswahlfelder, Eingaben, Regler */
+select,#s-online input{border-radius:0;border:1.5px solid rgba(76,242,255,0.4);background:rgba(6,8,30,0.92);color:var(--ink);
+  clip-path:polygon(8px 0,100% 0,calc(100% - 8px) 100%,0 100%);padding-inline:16px;}
+select:focus-visible,#s-online input:focus-visible{outline:none;border-color:var(--cyan);box-shadow:inset 0 0 14px rgba(76,242,255,0.45);background:rgba(16,30,64,0.95);}
+input[type=range]{-webkit-appearance:none;appearance:none;height:22px;background:transparent;}
+input[type=range]::-webkit-slider-runnable-track{height:6px;background:linear-gradient(90deg,rgba(76,242,255,0.6),rgba(255,88,220,0.6));transform:skewX(var(--skew));box-shadow:0 0 8px rgba(76,242,255,0.35);}
+input[type=range]::-moz-range-track{height:6px;background:linear-gradient(90deg,rgba(76,242,255,0.6),rgba(255,88,220,0.6));}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:22px;margin-top:-8px;background:#fff;border:0;transform:skewX(var(--skew));box-shadow:0 0 10px var(--cyan),0 0 2px #fff;}
+input[type=range]::-moz-range-thumb{width:12px;height:22px;border:0;border-radius:0;background:#fff;box-shadow:0 0 10px var(--cyan);}
+input[type=range]:focus-visible{outline:none;}
+input[type=range]:focus-visible::-webkit-slider-thumb{background:var(--pink);box-shadow:0 0 14px var(--pink),0 0 4px #fff;}
+input[type=range]:focus-visible::-moz-range-thumb{background:var(--pink);box-shadow:0 0 14px var(--pink);}
+.opt label{text-transform:uppercase;letter-spacing:0.06em;font-size:13px;font-weight:600;color:#cfd8ff;}
+.opt output{color:var(--cyan);font-weight:700;}
+/* Hilfe, Ergebnis, Online */
+.help>div{padding:10px 12px;background:linear-gradient(90deg,rgba(76,242,255,0.5) 0 2px,rgba(76,242,255,0.05) 2px);}
+.help h3{font-family:var(--display);font-weight:400;color:var(--cyan);letter-spacing:0.03em;text-shadow:0 0 8px rgba(76,242,255,0.5);}
+kbd{border-radius:2px;border-color:rgba(76,242,255,0.4);background:rgba(76,242,255,0.1);}
+.rescol h3{color:var(--cyan);text-shadow:0 0 8px rgba(76,242,255,0.5);}
+dt{text-transform:uppercase;letter-spacing:0.05em;font-size:13px;} dd{color:#fff;}
+.roomcode b{text-shadow:0 0 12px rgba(255,213,74,0.7);}
+#on-players li,.onrank li,#olive>div{border-radius:0;background:linear-gradient(90deg,rgba(76,242,255,0.6) 0 3px,rgba(76,242,255,0.07) 3px);padding-left:12px;}
+.onrank li.me,#olive>div.me{background:linear-gradient(90deg,var(--gold) 0 3px,rgba(255,213,74,0.2) 3px);}
+#olive{border-radius:0;border:1.5px solid rgba(76,242,255,0.5);background:rgba(6,8,28,0.88);box-shadow:0 0 14px rgba(76,242,255,0.3);clip-path:polygon(10px 0,100% 0,100% 100%,0 100%,0 10px);}
+.field{text-transform:uppercase;letter-spacing:0.06em;font-weight:600;font-size:12px;}
+#toast{border-radius:0;border:0;background:linear-gradient(90deg,rgba(255,88,220,0.9),rgba(255,88,220,0.9)) left/4px 100% no-repeat,rgba(6,8,30,0.94);
+  box-shadow:inset 0 -2px 0 var(--cyan);clip-path:polygon(10px 0,100% 0,calc(100% - 10px) 100%,0 100%);padding:9px 24px;letter-spacing:0.03em;}
+#bloomBtn{box-shadow:0 0 18px rgba(255,88,220,0.6);}
+@media (prefers-reduced-motion:reduce){ .btn:focus-visible::after{animation:none;opacity:0;} .btn,.btn::before{transition:none;} }
+@media (max-width:520px){ .panel{padding:16px;} .btn{padding:10px 18px;} }
 </style>
 
 <canvas id="cv3" aria-hidden="true"></canvas>
