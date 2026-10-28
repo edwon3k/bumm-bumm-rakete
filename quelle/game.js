@@ -376,14 +376,14 @@ function updatePlayers(t,dt){
     if(p.lost){ p.lost.t+=dt; if(p.lost.t>0.8) p.lost=null; }
     { const m=multOf(p); if(m>p.lastM && !p.failed){ p.mPulse=1; SFX.multUp(A.ctx.currentTime,m); if(m>=8 && G.mode!=='practice') award('x8'); } p.lastM=m; }
     // Funkenschweif der aufsteigenden Raketen
-    const hy=hitY(), sy=spawnY();
+    const hy=hitY(), sy=spawnY(), rr2=Math.max(11,Math.min(p.fw/4*0.2,19));
     for(let i=p.head;i<p.notes.length;i++){
       const n=p.notes[i]; if(n.t>t+G.approach) break; if(n.st) continue;
       const y=hy+(n.t-t)/G.approach*(sy-hy); const x=laneX(p,n.lane)+(n.sp?Math.sin(t*12)*8:0);
       if(!n.launched){ n.launched=true; if(n.t-t>G.approach*0.6) SFX.launch(A.ctx.currentTime,(x/W)*2-1); }
       { const u=(n.t-t)/G.approach; if((G.mods.hidden&&u<0.42)||(G.mods.sudden&&u>0.6)) continue; }
-      if(Math.random()<(PERF.low?0.25:0.55) && FX.smoke.length<220) FX.smoke.push({x:x+(Math.random()-0.5)*6,y:y+16,vx:(Math.random()-0.5)*6,vy:12+Math.random()*10,r:5,gr:9+Math.random()*6,life:1.6+Math.random(),max:2.6,c:n.sp?C.magenta:(n.gold?C.gold:LANE_COL[n.lane]),lit:0,tint:0.5});
-      if(Math.random()<0.8) addP(x+(Math.random()-0.5)*4,y+12,(Math.random()-0.5)*20,30+Math.random()*30,{c:n.sp?pick([C.magenta,C.cyan,C.gold,C.lime]):(Math.random()<0.5?C.gold:C.ember),life:0.35,size:1.3,drag:2,grav:40});
+      if(Math.random()<(PERF.low?0.25:0.55) && FX.smoke.length<220) FX.smoke.push({x:x+(Math.random()-0.5)*10,y:y+30+Math.random()*40,vx:(Math.random()-0.5)*6,vy:12+Math.random()*10,r:5,gr:9+Math.random()*6,life:1.6+Math.random(),max:2.6,c:n.sp?C.magenta:(n.gold?C.gold:LANE_COL[n.lane]),lit:0,tint:0.5});
+      if(Math.random()<0.3) addP(x+(Math.random()-0.5)*rr2,y+rr2*0.6,(Math.random()-0.5)*14,20+Math.random()*25,{c:n.sp?pick([C.magenta,C.cyan,C.gold,C.lime]):(Math.random()<0.75?LANE_COL[n.lane]:C.white),life:0.7,size:1.2,drag:2,grav:15,fl:F_TWINKLE});
       if(n.gold && !n.sp && Math.random()<0.7) addP(x+(Math.random()-0.5)*26,y+(Math.random()-0.5)*26,(Math.random()-0.5)*30,(Math.random()-0.5)*30,{c:Math.random()<0.6?C.gold:C.white,life:0.5,size:1.6,drag:2,grav:20,fl:F_TWINKLE});
     }
   }
