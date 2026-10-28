@@ -13,6 +13,13 @@ const STYLES = {
   disco:   {k:'X...X...X...X...', s:'....X.......X...', c:'....x.......x...', h:'x...x...x...x...', o:'..x...x...x...x.', t:'xgxgxgxgxgxgxgxg', b:'x.x.x.x.x.x.x.x.'},
   house:   {k:'X...X...X...X...', s:'', c:'....X.......X...', h:'xgxgxgxgxgxgxgxg', o:'..x...x...x...x.', t:'..x...x...x...x.', b:'..x...x...x...x.'},
   surf:    {k:'X...x.x.X...x...', s:'....X.......X...', h:'x.x.x.x.x.x.x.x.', o:'', b:'x.x.x.x.x.x.x.x.', r:true},
+  // ---- Elektro (synthetisiert) ----
+  techno:  {k:'X...X...X...X...', c:'....X.......X...', h:'xgxgxgxgxgxgxgxg', o:'..x...x...x...x.', b:'..xx..xx..xx..xx', e:1},
+  trance:  {k:'X...X...X...X...', c:'....X.......X...', h:'..x...x...x...x.', o:'..x...x...x...x.', b:'.xxx.xxx.xxx.xxx', e:1},
+  hardtek: {k:'X...X...X...X...', c:'....X.......X...', h:'x.x.x.x.x.x.x.x.', o:'..x...x...x...x.', b:'.xx..xx..xx..xx.', e:1, hard:1},
+  electro: {k:'X.....X...X.....', s:'....X.......X...', h:'x.x.x.xxx.x.x.x.', o:'......x.......x.', b:'x..x..x...x.x...', e:1},
+  breaks:  {k:'X.........X.....', s:'....X.....X.X...', h:'x.x.x.x.x.x.x.xx', o:'..x.......x.....', b:'x.....x.x.....x.', e:1},
+  deep:    {k:'X...X...X...X...', c:'....x.......x...', h:'..x...x...x...x.', o:'', t:'', b:'x..x..x...x..x..', e:1},
 };
 const VEL=c=>c==='X'?1:c==='x'?0.75:c==='g'?0.3:0;
 const at=(p,s)=>p?VEL(p[s]):0;
@@ -25,7 +32,8 @@ function guitarRoot(ch){ let r=ch.pc+40; if(r>51) r-=12; return r; }
 // kind: intro | A | B | break | fill | build | C | outro | lap
 function makeSection(song, kind, t0, bpm){
   const P=prepareSong(song), st=STYLES[song.style]||STYLES.rock;
-  DRUMKIT=['rock','metal','surf','skapunk','bigbeat'].includes(song.style)?'rock':'std';
+  DRUMKIT=st.e?(st.hard?'eh':'e'):['rock','metal','surf','skapunk','bigbeat'].includes(song.style)?'rock':'std';
+  const elek=!!st.e;
   const sd=60/bpm/4; const ev=[], cands=[];
   const E=(t,f)=>ev.push({t,f});
   const bassI = BASS[song.bass] || (song.bass==='octave'?BASS.slap:BASS.bass);
@@ -122,12 +130,14 @@ function makeSection(song, kind, t0, bpm){
       // ---------- Begleitung ----------
       const notes=chordNotes(ch,62);
       if(lvl===-1){
-        if(s%half===0){ const dd=half*sd; if(orch) E(t,tt=>strings(tt,dd,[notes[0]-12,...notes,notes[0]+12],1.2)); else E(t,tt=>COMP.epChord(tt,dd,chordNotes(ch,57),0.9)); }
+        if(s%half===0){ const dd=half*sd; if(elek) E(t,tt=>sPad(tt,dd,[...chordNotes(ch,52),chordNotes(ch,52)[0]+12],1.2)); if(orch) E(t,tt=>strings(tt,dd,[notes[0]-12,...notes,notes[0]+12],elek?0.7:1.2)); else if(!elek) E(t,tt=>COMP.epChord(tt,dd,chordNotes(ch,57),0.9)); }
+        if(elek && s%2===0){ const an=chordNotes(ch,57), m=an[(s/2)%an.length]; E(t,tt=>LEAD.pluck(tt,sd*1.5,mtof(m),0.45,eOut())); }
         if(comp==='power' && s%4===0){ const g=chordNotes(ch,52); const m=g[(s/4)%g.length]+12; E(t,tt=>ksPlay(tt,m,'clean',sd*4,0.35,A.music,false)); }
       } else if(lvl===0){ // Intro: Band zählt ein
         if(s===0){ const dd=sd*14, gr=guitarRoot(ch);
           if(comp==='power') E(t,tt=>COMP.power(tt,dd,gr,0.9,false));
           else if(comp==='brass') E(t,tt=>COMP.brassStab(tt,notes,1,b===1));
+          else if(elek) E(t,tt=>sPad(tt,dd,chordNotes(ch,52),1));
           else E(t,tt=>COMP.epChord(tt,dd,chordNotes(ch,57),0.8));
           if(orch) E(t,tt=>strings(tt,dd,notes,0.9)); }
         if((comp==='skank'||comp==='chicken') && s%4===2) E(t,tt=>COMP.skank(tt,notes,0.8));
@@ -154,10 +164,16 @@ function makeSection(song, kind, t0, bpm){
           const pn = song.style==='house'?'X..x..x...x..x..' : song.style==='latin'?'x..x..x.x..x..x.' : null;
           if(pn){ const v=at(pn,s); if(v){ const dd=sd*1.6; E(t,tt=>COMP.epChord(tt,dd,notes,v*0.9)); } }
           else if(s%half===0){ const dd=half*sd; E(t,tt=>COMP.epChord(tt,dd,chordNotes(ch,57),0.9)); }
+        } else if(comp==='stab'){
+          const v=at('X..x..x...x..x..',s); if(v){ const sn=chordNotes(ch,55); E(t,tt=>sStab(tt,sn,v)); }
+        } else if(comp==='synpad'){
+          if(s%half===0){ const dd=half*sd; E(t,tt=>sPad(tt,dd,chordNotes(ch,52),lvl>=2?1.1:0.9)); }
         } else if(comp==='arp'){
           const an=chordNotes(ch,56); const seq=[an[0],an[1],an[2]];
           if(s%2===0||lvl>=3){ const m=seq[(s/(lvl>=3?1:2)|0)%3]+((s>=8&&lvl>=2)?12:0); const dd=sd*3; E(t,tt=>LEAD.ep(tt,dd,mtof(m),0.32,A.music)); }
         }
+        if(elek && lvl>=2){ const an=chordNotes(ch,57); const m=an[s%an.length]+(s%8>=6?12:0); if(s%(lvl>=3?1:2)===0) E(t,tt=>LEAD.pluck(tt,sd*1.2,mtof(m),lvl>=3?0.32:0.26,eOut())); }
+        if(elek && comp!=='synpad' && lvl>=3 && s%half===0){ const dd=half*sd; E(t,tt=>sPad(tt,dd,chordNotes(ch,52),0.8)); }
         // Orchester-Schicht
         if(orch && lvl>=2 && s%half===0){ const dd=half*sd; E(t,tt=>strings(tt,dd,[notes[0]-12,...notes,notes[0]+12],lvl>=3?1.1:0.8)); }
         if(orch==='full' && lvl>=3 && s%half===0){ const dd=half*sd, cn=chordNotes(ch,57); E(t,tt=>choir(tt,dd,cn,1)); }
@@ -172,7 +188,8 @@ function makeSection(song, kind, t0, bpm){
       const t=t0+n.step*sd, d=n.len*sd*0.92, f=mtof(n.midi);
       const v = kind==='break'?0.8:1;
       E(t,tt=>LEAD[song.lead](tt,d,f,v,A.lead));
-      if(lvl>=3 && song.lead!=='guitar' && n.len>=2) { const f2=f*2; E(t,tt=>LEAD[song.lead](tt,d,f2,0.3,A.lead)); }
+      if(lvl>=3 && E_LEADS.includes(song.lead)) { const f2=f/2; E(t,tt=>LEAD[song.lead](tt,d,f2,0.45,A.lead)); }
+      else if(lvl>=3 && song.lead!=='guitar' && n.len>=2) { const f2=f*2; E(t,tt=>LEAD[song.lead](tt,d,f2,0.3,A.lead)); }
       if(lvl>=3 && song.lead==='guitar' && n.len>=4) { const f2=mtof(n.midi+12); E(t,tt=>LEAD.guitar(tt,d,f2,0.35,A.lead)); }
       const band = Math.min(3, Math.floor((n.midi-P.lo)*4/(P.hi-P.lo+1)));
       cands.push({t, step:n.step%16, len:n.len, midi:n.midi, lane:band, beat:sd*4, mel:true});

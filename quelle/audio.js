@@ -15,13 +15,15 @@ function audioInit(){
   A.musicVol = ctx.createGain(); A.musicVol.connect(A.master);
   A.shelf = ctx.createBiquadFilter(); A.shelf.type='highshelf'; A.shelf.frequency.value=2500; A.shelf.gain.value=0;
   // Mix-EQ: mehr Fundament und Glanz, weniger harte Mitten (wie eine fertig gemischte Platte)
-  { const lo=ctx.createBiquadFilter(); lo.type='lowshelf'; lo.frequency.value=110; lo.gain.value=3.5;
-    const mid=ctx.createBiquadFilter(); mid.type='peaking'; mid.frequency.value=1800; mid.Q.value=0.8; mid.gain.value=-3.5;
-    const hi=ctx.createBiquadFilter(); hi.type='highshelf'; hi.frequency.value=7500; hi.gain.value=4.5;
+  { const lo=ctx.createBiquadFilter(); lo.type='lowshelf'; lo.frequency.value=110; lo.gain.value=1;
+    const mid=ctx.createBiquadFilter(); mid.type='peaking'; mid.frequency.value=1800; mid.Q.value=0.8; mid.gain.value=-1;
+    const hi=ctx.createBiquadFilter(); hi.type='highshelf'; hi.frequency.value=7500; hi.gain.value=1.5;
     A.shelf.connect(lo); lo.connect(mid); mid.connect(hi); hi.connect(A.musicVol); }
-  A.music = ctx.createGain(); A.music.connect(A.shelf);
+  A.dc=ctx.createBiquadFilter(); A.dc.type="highpass"; A.dc.frequency.value=24; A.dc.Q.value=0.6; A.dc.connect(A.shelf);
+  A.music = ctx.createGain(); A.music.connect(A.dc);
   A.lead = ctx.createGain(); A.lead.connect(A.music);
   A.drums = ctx.createGain(); A.drums.connect(A.music);
+  A.duck = ctx.createGain(); A.duck.connect(A.music);
   sendTo(A.music, 0.12); sendTo(A.lead, 0.22);
   // SFX
   A.sfx = ctx.createGain(); A.sfx.connect(A.master); sendTo(A.sfx, 0.4);

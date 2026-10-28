@@ -23,7 +23,7 @@ function smpNeeded(song){
   const L={brass:['trumpet','trombone'],guitar:['odgtr'],organ:['organ'],ep:['ep'],bell:['celesta'],strings:['strings']}[song.lead]||[];
   L.forEach(x=>s.add(x));
   s.add(({bass:'fbass',walk:'fbass',pick:'pbass',slap:'slap',octave:'slap'})[song.bass]||'fbass');
-  ({power:['distgtr','mutegtr','cleangtr'],skank:['cleangtr','organ','brass'],brass:['brass','mutegtr'],chicken:['mutegtr','cleangtr','brass'],ep:['ep'],arp:['ep']})[song.pad].forEach(x=>s.add(x));
+  (({power:['distgtr','mutegtr','cleangtr'],skank:['cleangtr','organ','brass'],brass:['brass','mutegtr'],chicken:['mutegtr','cleangtr','brass'],ep:['ep'],arp:['ep']})[song.pad]||[]).forEach(x=>s.add(x));
   if(song.orch){ s.add('strings'); s.add('timpani'); if(song.orch==='full') s.add('choir'); }
   s.add('ep'); s.add('timpani');
   return [...s];
@@ -94,7 +94,7 @@ const DRUM_S = {
   riser(t,dur){ const r=Math.max(0.5,Math.min(2.5,1.6/Math.max(0.2,dur))); const x=fxplay('rise',t,0.35,A.drums,r,1.65); if(!x){ return; } },
   timpani(t,v=1,f=55){ if(SMP.buf.timpani) splay('timpani',t,mFromF(f),1.4,0.9*v,A.drums,{rel:0.5}); else SYN_DRUM.timpani(t,v,f); },
 };
-const DRUM = new Proxy(DRUM_S,{ get:(o,k)=> (k==='cannon'||k==='riser') ? (has('fx')||k==='cannon'?o[k]:SYN_DRUM[k]) : (has('drums')||!SYN_DRUM[k] ? o[k] : SYN_DRUM[k]) });
+const DRUM = new Proxy(DRUM_S,{ get:(o,k)=> (DRUMKIT[0]==='e' && EDRUM[k]) ? EDRUM[k] : (k==='cannon'||k==='riser') ? (has('fx')||k==='cannon'?o[k]:SYN_DRUM[k]) : (has('drums')||!SYN_DRUM[k] ? o[k] : SYN_DRUM[k]) });
 function strings(t,d,notes,v){ if(!has('strings')) return synStrings(t,d,notes,v); notes.forEach(m=>splay('strings',t,m,d,0.24*v,A.music,{att:0.18,rel:0.5})); }
 function choir(t,d,notes,v){ if(!has('choir')) return synChoir(t,d,notes,v); notes.forEach(m=>splay('choir',t,m,d,0.28*v,A.music,{att:0.25,rel:0.6})); }
 // --- Begleitung ---

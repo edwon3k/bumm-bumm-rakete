@@ -8,7 +8,7 @@ const BLOOM_DUR=10;
 
 // ---------- Speicher ----------
 const PERF={low:false,slow:0};
-const SETTINGS={music:0.8,sfx:0.8,speed:1,offset:0,glyphStyle:'buttons',quality:'high'};
+const SETTINGS={music:0.8,sfx:0.8,speed:1,offset:0,glyphStyle:'buttons',quality:'high',musicStyle:'elektro'};
 let SAVE={unlocked:[],best:{},endless:{}};
 function loadSave(){ try{ const s=JSON.parse(localStorage.getItem('bumm-save')||'null'); if(s){ SAVE=Object.assign(SAVE,s); Object.assign(SETTINGS,s.settings||{}); } }catch(e){} }
 function storeSave(){ try{ SAVE.settings=SETTINGS; localStorage.setItem('bumm-save',JSON.stringify(SAVE)); }catch(e){} }
@@ -152,12 +152,13 @@ let G=null; let paused=false;
 const freeRockets=[];
 function newMusicBus(){
   if(!A.ctx) return;
-  const old=[A.music,A.lead,A.drums].filter(Boolean); const t=A.ctx.currentTime;
+  const old=[A.music,A.lead,A.drums,A.duck].filter(Boolean); const t=A.ctx.currentTime;
   old.forEach(n=>{ n.gain.cancelScheduledValues(t); n.gain.setTargetAtTime(0,t,0.05); });
   setTimeout(()=>old.forEach(n=>{ try{n.disconnect();}catch(e){} }),600);
-  A.music=A.ctx.createGain(); A.music.connect(A.shelf);
+  A.music=A.ctx.createGain(); A.music.connect(A.dc||A.shelf);
   A.lead=A.ctx.createGain(); A.lead.connect(A.music);
   A.drums=A.ctx.createGain(); A.drums.connect(A.music);
+  A.duck=A.ctx.createGain(); A.duck.connect(A.music);
   sendTo(A.music,0.12); sendTo(A.lead,0.22); sendTo(A.drums,0.13);
   setBloomAudio(false);
 }

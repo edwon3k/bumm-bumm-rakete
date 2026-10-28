@@ -1,7 +1,7 @@
 // ===== Menüs =====
 const $=s=>document.querySelector(s);
 const MODE_NAMES={arcade:'Arcade',endless:'Endlos',practice:'Training',versus:'2 Spieler'};
-const STYLE_NAMES={own:'Eigene Datei',ska:'Ska',skapunk:'Ska-Punk',rock:'Rock',metal:'Metal',funk:'Funk',bigbeat:'Big Beat',triphop:'Trip-Hop',latin:'Latin',disco:'Disco',house:'House',surf:'Surf-Rock'};
+const STYLE_NAMES={own:'Eigene Datei',ska:'Ska',skapunk:'Ska-Punk',rock:'Rock',metal:'Metal',funk:'Funk',bigbeat:'Big Beat',triphop:'Trip-Hop',latin:'Latin',disco:'Disco',house:'House',surf:'Surf-Rock',techno:'Techno',trance:'Trance',hardtek:'Hard Techno',electro:'Electro',breaks:'Breakbeat',deep:'Deep House'};
 let UI={screen:'title', mode:'arcade', diff:1, tempo:0.75, sel:0, last:null};
 const isTouch = matchMedia('(pointer: coarse)').matches;
 
@@ -232,7 +232,7 @@ function renderGallery(){
 // ---------- Optionen ----------
 function renderOptions(){
   $('#o-music').value=SETTINGS.music*100; $('#o-sfx').value=SETTINGS.sfx*100; $('#o-speed').value=SETTINGS.speed*100; $('#o-offset').value=SETTINGS.offset;
-  $('#o-glyph').value=SETTINGS.glyphStyle; $('#o-quality').value=SETTINGS.quality; updOptLabels();
+  $('#o-mstyle').value=SETTINGS.musicStyle||'elektro'; $('#o-glyph').value=SETTINGS.glyphStyle; $('#o-quality').value=SETTINGS.quality; updOptLabels();
 }
 function updOptLabels(){
   $('#v-music').textContent=Math.round(SETTINGS.music*100)+' %'; $('#v-sfx').textContent=Math.round(SETTINGS.sfx*100)+' %';
@@ -242,6 +242,7 @@ $('#o-music').addEventListener('input',e=>{ SETTINGS.music=e.target.value/100; a
 $('#o-sfx').addEventListener('input',e=>{ SETTINGS.sfx=e.target.value/100; applyVolumes(); updOptLabels(); storeSave(); });
 $('#o-speed').addEventListener('input',e=>{ SETTINGS.speed=e.target.value/100; updOptLabels(); storeSave(); });
 $('#o-offset').addEventListener('input',e=>{ SETTINGS.offset=+e.target.value; updOptLabels(); storeSave(); });
+$('#o-mstyle').addEventListener('change',e=>{ SETTINGS.musicStyle=e.target.value; storeSave(); applyMusicStyle(); toast(e.target.value==='band'?'Musik: Band-Sound (alt)':'Musik: Elektro-Sound'); });
 $('#o-glyph').addEventListener('change',e=>{ SETTINGS.glyphStyle=e.target.value; storeSave(); });
 $('#o-quality').addEventListener('change',e=>{ SETTINGS.quality=e.target.value; PERF.low=SETTINGS.quality!=='high'; PERF.slow=0; storeSave(); resize(); });
 let resetArm=false;
@@ -257,6 +258,7 @@ function toastBig(msg){ const t=$('#big'); t.textContent=msg; t.classList.remove
 
 $('#own-file').addEventListener('change',e=>{ const f=e.target.files[0]; if(f) ownAdd(f); e.target.value=''; });
 // ---------- Start ----------
+applyMusicStyle();
 cityInit();
 gfxInit();
 ownRestore();

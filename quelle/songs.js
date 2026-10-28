@@ -50,6 +50,25 @@ const SONGS = [
     chords:'D,A Bm,F#m G,D G,A D,A Bm,F#m G,D G,A D,A Bm,F#m G,D G,A' },
 ];
 
+// Elektro-Fassung (Standard): gleiche Melodien, aber Techno/Trance/Electro-Produktion wie im Original-Spiel üblich
+const ELEKTRO={
+  blumen:    {style:'deep',   bpm:112, lead:'supersaw', bass:'reese',   pad:'synpad', orch:null},
+  largo:     {style:'trance', bpm:132, lead:'supersaw', bass:'rolling', pad:'synpad', orch:'str'},
+  tell:      {style:'techno', bpm:145, lead:'hoover',   bass:'acid',    pad:'stab',   orch:null},
+  bergkoenig:{style:'hardtek',bpm:140, lead:'hoover',   bass:'reese',   pad:'power',  orch:null},
+  '1812':    {style:'breaks', bpm:128, lead:'supersaw', bass:'reese',   pad:'stab',   orch:'full'},
+  walkueren: {style:'trance', bpm:136, lead:'supersaw', bass:'rolling', pad:'synpad', orch:'str'},
+  mondschein:{style:'electro',bpm:112, lead:'supersaw', bass:'reese',   pad:'synpad', orch:null},
+  carmen:    {style:'electro',bpm:120, lead:'acidlead', bass:'acid',    pad:'stab',   orch:null},
+  schicksal: {style:'hardtek',bpm:138, lead:'hoover',   bass:'rolling', pad:'power',  orch:'str'},
+  toccata:   {style:'techno', bpm:128, lead:'organ',    bass:'acid',    pad:'stab',   orch:null},
+  hummel:    {style:'techno', bpm:132, lead:'acidlead', bass:'rolling', pad:'stab',   orch:null},
+  freude:    {style:'trance', bpm:138, lead:'supersaw', bass:'rolling', pad:'synpad', orch:null},
+  zuckerfee: {style:'deep',   bpm:122, lead:'pluck',    bass:'reese',   pad:'synpad', orch:null},
+  nachtmusik:{style:'techno', bpm:128, lead:'supersaw', bass:'rolling', pad:'stab',   orch:'str'},
+  kanon:     {style:'trance', bpm:132, lead:'supersaw', bass:'rolling', pad:'synpad', orch:'str'},
+};
+SONGS.forEach(s=>{ if(ELEKTRO[s.id]) s.elektro=ELEKTRO[s.id]; });
 const NOTE_BASE = {C:0,D:2,E:4,F:5,G:7,A:9,B:11};
 function noteMidi(name){
   const m = /^([A-G])([#b]?)(\d)$/.exec(name);
