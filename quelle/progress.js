@@ -29,6 +29,7 @@ const ACH=[
   ['daily','Tagwerk','Eine Tages-Challenge schaffen'],
   ['hiddenOk','Blindflug','Ein Lied mit „Versteckt“ schaffen'],
   ['turboA','Überschall','Note A oder besser mit Turbo'],
+  ['goldAll','Goldrausch','Alle Goldraketen eines Liedes treffen'],
 ];
 // ---------- Modifikatoren ----------
 const MOD_INFO={mirror:['Spiegel',1.05],turbo:['Turbo',1.2],hidden:['Versteckt',1.25],sudden:['Plötzlich',1.2]};
@@ -69,6 +70,7 @@ function progAfterGame(){
   if(G.mode==='practice') gain=Math.round(gain*0.4);
   let daily=false;
   if(G.daily && !failed && SAVE.dailyDone!==dayKey()){ gain=Math.round(gain*1.5)+300; SAVE.dailyDone=dayKey(); daily=true; award('daily'); }
+  if(!failed && G.mode!=='practice' && p.goldTotal>=3 && p.goldHit===p.goldTotal) award('goldAll');
   if(!failed && G.mode!=='practice'){ if(G.mods.hidden) award('hiddenOk'); if(G.mods.turbo && (gr.g==='A'||gr.g==='S')) award('turboA'); }
   const before=levelOf(SAVE.xp); SAVE.xp+=gain; const after=levelOf(SAVE.xp); SAVE.stats.games++;
   const arcadeOk=(G.mode==='arcade'||G.mode==='versus')&&!failed;

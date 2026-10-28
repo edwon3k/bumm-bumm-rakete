@@ -170,7 +170,7 @@ function showResults(){
       '<div class="mid"><b class="cnt" data-to="'+Math.round(gr.pct*100)+'">0</b> %<span>Trefferquote</span></div></div></div>'+
       '<div class="dist" role="img" aria-label="'+parts.map(x=>x[0]+' '+x[1]).join(', ')+'">'+parts.map(x=>'<i style="flex-grow:'+x[1]+';background:'+x[2]+'"></i>').join('')+'</div>'+
       '<div class="legend">'+parts.map(x=>'<span><i style="background:'+x[2]+'"></i>'+x[0]+' <b>'+x[1]+'</b></span>').join('')+'</div>'+
-      '<dl><dt>Beste Kombo</dt><dd>'+p.maxCombo+'</dd><dt>Fehlzündungen</dt><dd>'+p.misfire+'</dd></dl>'+
+      '<dl><dt>Beste Kombo</dt><dd>'+p.maxCombo+'</dd><dt>Fehlzündungen</dt><dd>'+p.misfire+'</dd>'+(p.goldTotal?'<dt>Goldraketen</dt><dd class="gold">'+p.goldHit+' / '+p.goldTotal+'</dd>':'')+'</dl>'+
       (p.fc?'<p class="fc">'+p.fc+'</p>':'')+timingHtml(p,multi)+extra;
     res.appendChild(col);
   }

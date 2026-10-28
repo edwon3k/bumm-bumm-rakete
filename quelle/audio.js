@@ -157,6 +157,7 @@ const SFX = {
   tick(t,go){ if(!A.ctx) return; const g=gainEnv(t,0.02,go?0.07:0.045,0.001,go?0.18:0.08,1,A.sfx); osc('triangle',go?1760:1175,t,t+(go?0.3:0.12),g); },
   nav(t){ if(!A.ctx) return; const g=gainEnv(t,0.01,0.018,0.001,0.04,1,A.sfx); osc('sine',1480,t,t+0.06,g); },
   multUp(t,m){ if(!A.ctx) return; const b=mtof(79+Math.min(4,m)*2); [0,7].forEach((iv,i)=>{ const g=gainEnv(t+i*0.06,0.05,0.04,0.002,0.25,0.5,A.sfx); osc('triangle',b*Math.pow(2,iv/12),t+i*0.06,t+i*0.06+0.35,g); }); },
+  gold(t){ if(!A.ctx) return; [0,7,12,19,24].forEach((iv,i)=>{ const g=gainEnv(t+i*0.035,0.07,0.05,0.002,0.4,0.5,A.sfx); osc('triangle',mtof(84+iv),t+i*0.035,t+i*0.035+0.5,g); }); },
   unlock(t){ if(!A.ctx) return; [0,4,7,12,16,19,24].forEach((iv,i)=>{ const g=gainEnv(t+i*0.07,0.1,0.06,0.003,0.5,0.6,A.sfx); osc('triangle',mtof(76+iv),t+i*0.07,t+i*0.07+0.8,g); }); },
 };
 

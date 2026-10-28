@@ -155,7 +155,9 @@ function newMusicBus(){
   const old=[A.music,A.lead,A.drums,A.duck].filter(Boolean); const t=A.ctx.currentTime;
   old.forEach(n=>{ n.gain.cancelScheduledValues(t); n.gain.setTargetAtTime(0,t,0.05); });
   setTimeout(()=>old.forEach(n=>{ try{n.disconnect();}catch(e){} }),600);
-  A.music=A.ctx.createGain(); A.music.connect(A.dc||A.shelf);
+  if(A.mf){ const om=A.mf; setTimeout(()=>{ try{om.disconnect();}catch(e){} },600); }
+  A.mf=A.ctx.createBiquadFilter(); A.mf.type='lowpass'; A.mf.frequency.value=20000; A.mf.Q.value=0.9; A.mf.connect(A.dc||A.shelf); A.mfOn=false;
+  A.music=A.ctx.createGain(); A.music.connect(A.mf);
   A.lead=A.ctx.createGain(); A.lead.connect(A.music);
   A.drums=A.ctx.createGain(); A.drums.connect(A.music);
   A.duck=A.ctx.createGain(); A.duck.connect(A.music);
@@ -172,7 +174,7 @@ function songTime(perf){ return audioNow(perf)-G.startAt-SETTINGS.offset/1000; }
 function approachTime(diff){ return [2.1,1.7,1.38][diff]/SETTINGS.speed; }
 
 function newPlayer(i, chart){
-  return {i, notes:chart.map(n=>({t:n.t,lane:n.lane,st:0,sp:false})), head:0, score:0, combo:0, maxCombo:0, health:0.6, bloom:0, bloomOn:false,
+  const goldOn=G.mode!=='demo'; return {i, notes:chart.map((n,k)=>({t:n.t,lane:n.lane,st:0,sp:false,gold:goldOn&&k%29===14})), goldTotal:goldOn?chart.filter((n,k)=>k%29===14).length:0, goldHit:0, head:0, score:0, combo:0, maxCombo:0, health:0.6, bloom:0, bloomOn:false,
     hits:0, perfect:0, great:0, good:0, miss:0, misfire:0, flash:[0,0,0,0], judg:[], failed:false, specialDone:false, unlock:null, scoreShown:0, shake:0,
     rings:[], hitPulse:[0,0,0,0], cPulse:0, mPulse:0, lastM:1, lost:null, errs:[], errAll:[]};
 }
@@ -252,11 +254,12 @@ function endlessExtend(t){
   const s1=makeSection(G.song,'lap',G.nextLapT,G.bpm); const s2=makeSection(G.song,'fill',s1.end,G.bpm);
   const evs=[...s1.ev,...s2.ev]; G.ev=G.ev.slice(G.evIdx).concat(evs); G.evIdx=0; G.ev.sort((a,b)=>a.t-b.t);
   const chart=makeChart([...s1.cands,...s2.cands], G.diff, 0);
-  for(const p of G.players) for(const n of chart) p.notes.push({t:n.t,lane:G.mods.mirror?3-n.lane:n.lane,st:0,sp:false});
+  for(const p of G.players) for(const n of chart){ const gold=p.notes.length%29===14; if(gold) p.goldTotal++; p.notes.push({t:n.t,lane:G.mods.mirror?3-n.lane:n.lane,st:0,sp:false,gold}); }
   G.total+=chart.length; G.nextLapT=s2.end;
   toast('Runde '+G.lap+' · '+Math.round(G.bpm)+' BPM');
 }
 
+function setDanger(on){ if(!A.mf||A.mfOn===on) return; A.mfOn=on; const t=A.ctx.currentTime; A.mf.frequency.cancelScheduledValues(t); A.mf.frequency.setTargetAtTime(on?900:20000,t,on?0.25:0.12); }
 function multOf(p){ return (1+Math.min(3,Math.floor(p.combo/10)))*(p.bloomOn?2:1); }
 function laneX(p,l){ return p.fx+p.fw*(l+0.5)/4; }
 function hitY(){ return H*0.3; }
@@ -309,6 +312,12 @@ function pressLane(pi,lane,perf){
   SFX.boom(A.ctx.currentTime, 0.75+sc*0.45, (x/W)*2-1);
   shock(x,y,LANE_COL[lane],sc*(p.bloomOn?1.4:1)); CAM.punch=Math.max(CAM.punch,0.22*sc); CAM.shake=Math.max(CAM.shake,0.12*sc);
   setLeadOk(true);
+  if(best.gold && !best.sp){
+    p.goldHit++; p.score+=base*2*multOf(p); p.health=Math.min(1,p.health+0.05); if(!p.bloomOn) p.bloom=Math.min(1,p.bloom+0.08);
+    judgeText(p,'GOLD!','#ffd54a',x,base<100?(best.t>t?'FRÜH':'SPÄT'):null);
+    launchBurst(x,y-H*0.05,'kamuro',C.gold,C.white,s*1.25); SHAPES.ring(x,y-H*0.05,C.gold,-1,s*1.1);
+    flash(x,y,C.gold,H*0.5,1.3); SFX.gold(A.ctx.currentTime); CAM.punch=Math.max(CAM.punch,0.6); CAM.shake=Math.max(CAM.shake,0.3);
+  }
   if(best.sp){
     p.unlock = G.songIdx*3+G.diff;
     SHAPES.multibreak(x,y,C.magenta,C.cyan,1.1); SFX.unlock(A.ctx.currentTime);
@@ -373,8 +382,9 @@ function updatePlayers(t,dt){
       const y=hy+(n.t-t)/G.approach*(sy-hy); const x=laneX(p,n.lane)+(n.sp?Math.sin(t*12)*8:0);
       if(!n.launched){ n.launched=true; if(n.t-t>G.approach*0.6) SFX.launch(A.ctx.currentTime,(x/W)*2-1); }
       { const u=(n.t-t)/G.approach; if((G.mods.hidden&&u<0.42)||(G.mods.sudden&&u>0.6)) continue; }
-      if(Math.random()<(PERF.low?0.25:0.55) && FX.smoke.length<220) FX.smoke.push({x:x+(Math.random()-0.5)*6,y:y+16,vx:(Math.random()-0.5)*6,vy:12+Math.random()*10,r:5,gr:9+Math.random()*6,life:1.6+Math.random(),max:2.6,c:n.sp?C.magenta:LANE_COL[n.lane],lit:0,tint:0.5});
+      if(Math.random()<(PERF.low?0.25:0.55) && FX.smoke.length<220) FX.smoke.push({x:x+(Math.random()-0.5)*6,y:y+16,vx:(Math.random()-0.5)*6,vy:12+Math.random()*10,r:5,gr:9+Math.random()*6,life:1.6+Math.random(),max:2.6,c:n.sp?C.magenta:(n.gold?C.gold:LANE_COL[n.lane]),lit:0,tint:0.5});
       if(Math.random()<0.8) addP(x+(Math.random()-0.5)*4,y+12,(Math.random()-0.5)*20,30+Math.random()*30,{c:n.sp?pick([C.magenta,C.cyan,C.gold,C.lime]):(Math.random()<0.5?C.gold:C.ember),life:0.35,size:1.3,drag:2,grav:40});
+      if(n.gold && !n.sp && Math.random()<0.7) addP(x+(Math.random()-0.5)*26,y+(Math.random()-0.5)*26,(Math.random()-0.5)*30,(Math.random()-0.5)*30,{c:Math.random()<0.6?C.gold:C.white,life:0.5,size:1.6,drag:2,grav:20,fl:F_TWINKLE});
     }
   }
 }
@@ -385,12 +395,12 @@ function finishGame(failed){
   G.ended=true; G.failed=!!failed;
   const t=A.ctx.currentTime;
   if(failed){ A.music.gain.setTargetAtTime(0,t,0.3); A.lead.gain.setTargetAtTime(0,t,0.2); SFX.dud(t); }
-  setBloomAudio(false);
+  setBloomAudio(false); setDanger(false);
   let fc=false;
   if(!failed) for(const p of G.players){ if(p.hits>0 && p.miss===0 && p.maxCombo===p.hits){ p.fc=p.great+p.good===0?'ALLES PERFEKT':'FULL COMBO'; fc=true; } }
-  if(fc){ const fp=G.players.find(p=>p.fc); toastBig(fp.fc+'!'); salvo(fp.maxCombo); SFX.unlock(t);
+  if(fc){ const fp=G.players.find(p=>p.fc); toastBig(fp.fc+'!'); salvo(fp.maxCombo,true); SFX.unlock(t); later(1.7,()=>skyText(W/2,H*0.2,fp.fc==='ALLES PERFEKT'?'PERFEKT':'FULL COMBO',C.cyan,C.white,Math.min(W*0.6,640)));
     for(let i=0;i<12;i++) later(0.3+i*0.08,()=>freeLaunch(W*(0.05+Math.random()*0.9),H*(0.08+Math.random()*0.25),pickFirework(),0.6,{s:1})); }
-  setTimeout(()=>showResults(),failed?1400:(fc?2600:600));
+  setTimeout(()=>showResults(),failed?1400:(fc?3800:600));
 }
 function gradeOf(p){
   const tot=p.perfect+p.great+p.good+p.miss; if(!tot) return {g:'–',acc:0,pct:0};
@@ -428,15 +438,18 @@ function ambience(t){
   for(let i=0;i<n;i++){ const x=W*(0.04+Math.random()*0.92), y=H*(0.08+Math.random()*0.2);
     freeLaunch(x,y,{type:pick(['peony','chrysanthemum','willow','kamuro','ring','palm','crackle']),c:pick([0,1,2,5,6,7,8,9,12])},G.beatLen*2-0.02,{s:0.35+Math.random()*0.25,far:true}); }
 }
-function salvo(n){
+function salvo(n,noText){
   const k=7; for(let i=0;i<k;i++){ const x=W*(0.08+0.84*i/(k-1)); freeLaunch(x,H*(0.12+0.05*Math.abs(3-i)),{type:i%2?'chrysanthemum':'peony',c:pick([C.gold,C.white,C.cyan,C.magenta])},0.7,{s:0.7}); }
   banner(n+'er Kombo', n>=100?'Der Hafen tobt':'Weiter so'); later(0.7,()=>{ CAM.punch=0.7; });
+  if(n>=50 && !noText) freeLaunch(W/2,H*0.15,{type:'peony',c:C.white},0.75,{s:0.3}), later(0.75,()=>{ skyText(W/2,H*0.15,String(n),n>=100?C.magenta:C.gold,C.white,Math.min(W*0.28,300)); SFX.boom(A.ctx.currentTime,1.2,0); });
 }
 function banner(text,sub){ if(G) G.banner={text,sub,t0:FX.time}; }
 function grandFinale(){
   for(let i=0;i<28;i++) later(i*0.1+Math.random()*0.05,()=>freeLaunch(W*(0.05+Math.random()*0.9),H*(0.08+Math.random()*0.28),pickFirework(),0.5+Math.random()*0.35,{s:0.8+Math.random()*0.5}));
   later(2.2,()=>{ for(let i=0;i<7;i++) freeLaunch(W*(0.06+0.88*i/6),H*0.1,{type:'kamuro'},0.5,{s:1.2}); });
   later(3.1,()=>{ for(let i=0;i<3;i++) later(i*0.16,()=>{ launchBurst(W*(0.25+0.25*i),H*0.18,'strobe',C.white,C.silver,1.3); SFX.boom(A.ctx.currentTime,1.3,(i-1)*0.6); CAM.shake=0.9; CAM.punch=1; }); });
+  later(2.5,()=>{ const live=G.players.filter(p=>!p.failed); const best=live.sort((a,b)=>b.score-a.score)[0]; const g=best?gradeOf(best).g:'';
+    const word=g==='S'?'MEGA!':g==='A'?'BUMM!':'BUMM'; skyText(W/2,H*0.17,word,g==='S'?C.magenta:C.gold,C.white,Math.min(W*0.5,560)); SFX.boom(A.ctx.currentTime,1.5,0); CAM.shake=0.6; CAM.punch=1; });
   banner('Großes Finale','');
 }
 function compositeFx(){
@@ -577,6 +590,7 @@ function frame(ts){
           if(!G.openDone && t>-2.4){ G.openDone=true; freeLaunch(W/2,H*0.2,{type:'chrysanthemum',c:C.gold,c2:C.white},1.1,{s:1.25}); later(1.1,()=>{ CAM.punch=0.8; }); }
           if(G.finaleT!==undefined && !G.finaleDone && t>=G.finaleT-0.02){ G.finaleDone=true; if(!G.players.every(p=>p.failed)) grandFinale(); }
         }
+        { const live=G.players.filter(p=>!p.failed); setDanger(!G.demo && G.mode!=='practice' && live.length>0 && live.every(p=>p.health<0.25 && !p.bloomOn)); }
         if(t>G.dur) finishGame(false);
       }
     } else if(!G) { attract(dt); }

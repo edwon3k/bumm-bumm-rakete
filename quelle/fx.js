@@ -94,6 +94,23 @@ const SHAPES = {
     for(const [p,q] of E){ const P1=pr(p),P2=pr(q); for(let i=0;i<=6;i++){ const u=i/6; addP(x,y,(P1[0]+(P2[0]-P1[0])*u)*R*k,(P1[1]+(P2[1]-P1[1])*u)*R*k,{c:(c2>=0&&i%2)?c2:c,life:1.7,size:2.4,drag:k,grav:20*FX.scale}); } }
     flash(x,y,c,R*1.3); },
 };
+// ---- Himmelsschrift: Funken fliegen zu Buchstaben auseinander ----
+const TXT_CACHE={};
+function textPoints(str,step){ const key=str+'|'+step; if(TXT_CACHE[key]) return TXT_CACHE[key];
+  const h=56, pad=8, c=document.createElement('canvas'), x=c.getContext('2d'); const font='400 '+h+'px "Bungee","Arial Black",sans-serif';
+  x.font=font; const w=Math.ceil(x.measureText(str).width)+pad*2, hh=h+pad*2; c.width=w; c.height=hh;
+  x.font=font; x.fillStyle='#fff'; x.textBaseline='middle'; x.textAlign='center'; x.fillText(str,w/2,hh/2+2);
+  const d=x.getImageData(0,0,w,hh).data, pts=[];
+  for(let yy=0;yy<hh;yy+=step) for(let xx=(yy/step)%2?step/2:0;xx<w;xx+=step){ const xi=Math.round(xx); if(d[(yy*w+xi)*4+3]>110) pts.push([xi-w/2,yy-hh/2]); }
+  return TXT_CACHE[key]={pts,w};
+}
+function skyText(x,y,str,c,c2,width){
+  const tp=textPoints(str,PERF.low?4:3); const sc=Math.min(width/tp.w, 3.2), k=2.6;
+  for(let i=0;i<tp.pts.length;i++){ const [px,py]=tp.pts[i]; const j=0.03;
+    addP(x,y,px*sc*k*(1+(Math.random()-0.5)*j),py*sc*k*(1+(Math.random()-0.5)*j),{c:(c2>=0&&Math.random()<0.3)?c2:c,life:3.0,size:2.5,drag:k,grav:7*FX.scale,fl:F_TWINKLE}); }
+  for(let i=0;i<40;i++){ const [dx,dy]=sphereDir(); addP(x,y,dx*width*1.4,dy*width*0.7,{c:C.white,life:0.7,size:2,drag:3}); }
+  flash(x,y,c,width*1.2,1.2);
+}
 const BASE_TYPES=['peony','chrysanthemum','ring','willow','palm','crossette','strobe','crackle'];
 // 45 freischaltbare Feuerwerke: 15 Songs × 3 Schwierigkeitsgrade
 const UNLOCK_SHAPES=[['heart','Herz'],['star','Stern'],['spiral','Spirale'],['saturn','Saturn'],['smiley','Smiley'],['kamuro','Kamuro'],['horsetail','Pferdeschweif'],['butterfly','Schmetterling'],['multibreak','Kettenknall'],['fish','Fischschwarm'],['pistil','Kernblüte'],['doublering','Doppelring'],['cube','Würfel'],['palm','Palme'],['crossette','Kreuzfeuer']];

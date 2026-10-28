@@ -134,7 +134,7 @@ function drawField(p,t){
     const uu=(n.t-t)/G.approach; let ra=1;
     if(G.mods.hidden) ra=Math.max(0,Math.min(1,(uu-0.18)/0.24)); if(G.mods.sudden) ra=Math.min(ra,Math.max(0,Math.min(1,(0.62-uu)/0.1)));
     if(ra<=0.01) continue; g.globalAlpha=fade*ra;
-    const col=n.sp?COLORS[pick([C.magenta,C.cyan,C.gold,C.lime])]:LANE_HEX[n.lane];
+    const col=n.sp?COLORS[pick([C.magenta,C.cyan,C.gold,C.lime])]:(n.gold?'#ffd54a':LANE_HEX[n.lane]);
     const L=Math.min(H*0.24, sy-y+60)*(0.92+Math.random()*0.16);
     g.globalCompositeOperation='lighter';
     const tg=g.createLinearGradient(0,y,0,y+L); tg.addColorStop(0,col); tg.addColorStop(0.35,col+'99'); tg.addColorStop(1,col+'00');
@@ -143,10 +143,12 @@ function drawField(p,t){
     const cg=g.createLinearGradient(0,y,0,y+L*0.5); cg.addColorStop(0,'rgba(255,255,255,0.95)'); cg.addColorStop(1,'rgba(255,255,255,0)');
     g.strokeStyle=cg; g.lineWidth=rr*0.22; g.beginPath(); g.moveTo(x,ty); g.lineTo(x,y+L*0.5); g.stroke();
     const fs=rr*(1.2+Math.random()*0.6); g.drawImage(SPRITES[C.white],x-fs,ty-fs*0.6,fs*2,fs*2);
-    g.drawImage(SPRITES[n.sp?C.magenta:LANE_COL[n.lane]],x-rr*2.2,y-rr*2.2,rr*4.4,rr*4.4);
+    g.drawImage(SPRITES[n.sp?C.magenta:(n.gold?C.gold:LANE_COL[n.lane])],x-rr*2.2,y-rr*2.2,rr*4.4,rr*4.4);
+    if(n.gold&&!n.sp){ const gs=rr*(3.2+Math.sin(t*9)*0.5); g.drawImage(SPRITES[C.gold],x-gs,y-gs,gs*2,gs*2); for(let q=0;q<5;q++){ const a=t*4+q*Math.PI*2/5, s2=rr*0.7; g.drawImage(SPRITES[q%2?C.white:C.gold],x+Math.cos(a)*rr*1.7-s2,y+Math.sin(a)*rr*1.7-s2,s2*2,s2*2); } }
     g.globalCompositeOperation='source-over'; g.lineCap='butt';
     { const sp=rocketSpr(n.lane,rr), sw=sp.width/DPR, sh2=sp.height/DPR; g.drawImage(sp,x-sw/2,y-rr*0.2,sw,sh2); }
     laneBadge(x,y,rr,n.lane,fade*ra,true); g.globalAlpha=fade*ra;
+    if(n.gold&&!n.sp){ g.strokeStyle='#ffd54a'; g.lineWidth=2.5; g.beginPath(); g.arc(x,y,rr+3,0,Math.PI*2); g.stroke(); }
     if(n.sp){ g.strokeStyle='#fff'; g.lineWidth=2; g.beginPath(); g.arc(x,y,rr+4+Math.sin(t*20)*2,0,Math.PI*2); g.stroke(); }
   }
   // Urteile
