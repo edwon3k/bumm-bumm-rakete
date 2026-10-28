@@ -2,12 +2,42 @@
 const NEON_CYAN='#3ff4ff', NEON_PINK='#ff2fb3';
 function neonStroke(col,w,glow){ g.shadowColor=col; g.shadowBlur=glow; g.strokeStyle=col; g.lineWidth=w; g.stroke(); g.shadowBlur=0; g.strokeStyle='rgba(255,255,255,0.9)'; g.lineWidth=Math.max(1,w*0.3); g.stroke(); }
 function neonText(txt,x,y,font,col,glow){ g.font=font; g.shadowColor=col; g.shadowBlur=glow; g.fillStyle=col; g.fillText(txt,x,y); g.shadowBlur=0; g.fillStyle='rgba(255,255,255,0.85)'; g.fillText(txt,x,y); }
+// Leuchteffekte einmal vorzeichnen und als Bild wiederverwenden: Weichzeichnen (shadowBlur) pro Bild ist teuer,
+// besonders in Firefox, und ließ das Spiel bei jedem Treffer ruckeln.
+const GLOW={cache:new Map()};
+function glowSprite(key,w,h,draw){
+  let c=GLOW.cache.get(key); if(c) return c;
+  if(GLOW.cache.size>300) GLOW.cache.clear();
+  c=document.createElement('canvas'); c.width=Math.max(1,Math.ceil(w)); c.height=Math.max(1,Math.ceil(h));
+  draw(c.getContext('2d'),c.width,c.height); GLOW.cache.set(key,c); return c;
+}
+// Text mit Leuchten, mittig an (x,y) (textAlign center, textBaseline middle)
+function neonTextCached(txt,x,y,font,col,glow){
+  const k='t|'+txt+'|'+font+'|'+col+'|'+glow+'|'+DPR;
+  const c=glowSprite(k,1,1,()=>{});
+  if(c.width===1){ // erstmals: messen und zeichnen
+    const m=document.createElement('canvas').getContext('2d'); m.font=font; const tw=m.measureText(txt).width;
+    const fs=parseFloat((font.match(/(\d+(?:\.\d+)?)px/)||[0,20])[1]); const pad=glow*2+4;
+    c.width=Math.ceil((tw+pad*2)*DPR); c.height=Math.ceil((fs*1.4+pad*2)*DPR); c._w=tw+pad*2; c._h=fs*1.4+pad*2;
+    const x2=c.getContext('2d'); x2.scale(DPR,DPR); x2.font=font; x2.textAlign='center'; x2.textBaseline='middle';
+    x2.shadowColor=col; x2.shadowBlur=glow*DPR; x2.fillStyle=col; x2.fillText(txt,c._w/2,c._h/2); x2.shadowBlur=0; x2.fillStyle='rgba(255,255,255,0.85)'; x2.fillText(txt,c._w/2,c._h/2);
+  }
+  g.drawImage(c,x-c._w/2,y-c._h/2,c._w,c._h);
+}
+// Schriften fertig geladen: Vorzeichnungen neu machen
+try{ document.fonts.addEventListener('loadingdone',()=>GLOW.cache.clear()); }catch(e){}
+// Firefox: übrige Weichzeichner im Hauptbild abschalten
+const IS_FF=/firefox/i.test(navigator.userAgent);
+if(IS_FF){ try{ Object.defineProperty(g,'shadowBlur',{get(){ return 0; }, set(v){}, configurable:true}); }catch(e){} }
 function panelPath(x,y,w,h,sl){ g.beginPath(); g.moveTo(x+sl,y); g.lineTo(x+w,y); g.lineTo(x+w-sl,y+h); g.lineTo(x,y+h); g.closePath(); }
 function laneBadge(x,y,r,lane,alpha,bright){
   const col=LANE_HEX[lane];
   g.globalAlpha=alpha;
-  g.fillStyle='rgba(5,6,16,0.85)'; g.beginPath(); g.arc(x,y,r,0,Math.PI*2); g.fill();
-  g.lineWidth=2; g.strokeStyle=col; g.shadowColor=col; g.shadowBlur=bright?14:6; g.stroke(); g.shadowBlur=0;
+  const rb=Math.round(r*2)/2, gl=bright?14:6, pad=gl*2+4, sz=(rb+pad)*2;
+  const spr=glowSprite('b|'+lane+'|'+rb+'|'+gl+'|'+DPR, sz*DPR, sz*DPR, (x2,w)=>{ x2.scale(DPR,DPR); const c0=sz/2;
+    x2.fillStyle='rgba(5,6,16,0.85)'; x2.beginPath(); x2.arc(c0,c0,rb,0,Math.PI*2); x2.fill();
+    x2.lineWidth=2; x2.strokeStyle=col; x2.shadowColor=col; x2.shadowBlur=gl*DPR; x2.stroke(); });
+  g.drawImage(spr,x-sz/2,y-sz/2,sz,sz);
   if(SETTINGS.glyphStyle==='arrows') drawGlyph(x,y,r*0.85,lane,col);
   else { g.fillStyle=col; g.font='700 '+Math.round(r*1.25)+'px "Rubik", system-ui, sans-serif'; g.textAlign='center'; g.textBaseline='middle'; g.fillText(LANE_BTN[lane],x,y+r*0.05); }
   g.globalAlpha=1;
@@ -50,7 +80,7 @@ function drawField(p,t){
   }
   // Urteile
   g.textAlign='center'; g.textBaseline='middle';
-  for(const j of p.judg){ const a=1-j.t/0.7; g.globalAlpha=a*fade; neonText(j.txt,j.x,hy+rr*2.6+j.t*24,'400 '+Math.round(15+Math.min(lw*0.14,9))+'px "Bungee", "Arial Black", sans-serif',j.col,12); }
+  for(const j of p.judg){ const a=1-j.t/0.7; g.globalAlpha=a*fade; neonTextCached(j.txt,j.x,hy+rr*2.6+j.t*24,'400 '+Math.round(15+Math.min(lw*0.14,9))+'px "Bungee", "Arial Black", sans-serif',j.col,12); }
   g.globalAlpha=1;
   // Lunte & Bloom als Neon-Röhren
   const mh=H*0.38, my=hy+28, mw=8;
