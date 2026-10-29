@@ -176,13 +176,13 @@ function approachTime(diff){ return [2.1,1.7,1.38][diff]/SETTINGS.speed; }
 function newPlayer(i, chart){
   const goldOn=G.mode!=='demo'; const notes=chart.map((n,k)=>({t:n.t,lane:n.lane,st:0,sp:false,gold:goldOn&&k%29===14})); placeNotes(notes,0); return {i, notes, goldTotal:goldOn?chart.filter((n,k)=>k%29===14).length:0, goldHit:0, head:0, score:0, combo:0, maxCombo:0, health:0.6, bloom:0, bloomOn:false,
     hits:0, perfect:0, great:0, good:0, miss:0, misfire:0, flash:[0,0,0,0], judg:[], failed:false, specialDone:false, unlock:null, scoreShown:0, shake:0,
-    rings:[], hitPulse:[0,0,0,0], cPulse:0, mPulse:0, lastM:1, lost:null, errs:[], errAll:[]};
+    rings:[], hitPulse:[0,0,0,0], cPulse:0, mPulse:0, lastM:1, lost:null, errs:[], errAll:[], missT:[]};
 }
 function startGame(opts){
   // opts: {mode, songIdx, diff, tempo}
   audioInit(); newMusicBus(); setLeadOk(true);
   const song=SONGS[opts.songIdx]; const tempo=opts.tempo||1;
-  A.music.gain.value=({toccata:1.55,nachtmusik:1.3,freude:1.1,blumen:1.1,carmen:1.25,tell:1.2,sternenmeer:1.12})[song.id]||1;
+  A.music.gain.value=({toccata:1.55,nachtmusik:1.3,freude:1.1,blumen:1.1,carmen:1.25,tell:1.2,sternenmeer:1.12,cancan:1.55})[song.id]||1;
   const mode=opts.mode;
   let ev, cands, dur, marks=[];
   G={mode, song, songIdx:opts.songIdx, diff:opts.diff, tempo, approach:approachTime(opts.diff)*((opts.mods&&opts.mods.turbo)?0.72:1), mods:Object.assign({},opts.mods||{}), daily:!!opts.daily, evIdx:0, ended:false, lap:0, players:[], demo:mode==='demo', online:!!opts.online};
@@ -293,7 +293,7 @@ function pickFirework(){
 }
 function breakCombo(p){ if(p.combo>=10) p.lost={n:p.combo,t:0}; p.combo=0; }
 // nahe Urteile ersetzen statt überlagern
-function judgeText(p,txt,col,x,sub){ p.judg=p.judg.filter(j=>Math.abs(j.x-x)>Math.min(80,W*0.07)); p.judg.push({txt,col,x,t:0,sub}); if(p.judg.length>4) p.judg.shift(); }
+function judgeText(p,txt,col,x,sub){ p.judg=p.judg.filter(j=>Math.abs(j.x-x)>Math.max(96,Math.min(150,W*0.12))); p.judg.push({txt,col,x,t:0,sub}); if(p.judg.length>4) p.judg.shift(); }
 function pressLane(pi,lane,perf){
   if(!G||paused||G.ended) return;
   const p=G.players[pi]; if(!p||p.failed) return;
@@ -373,7 +373,7 @@ function updatePlayers(t,dt){
     for(let i=p.head;i<p.notes.length;i++){
       const n=p.notes[i]; if(n.t>t-WIN) break;
       if(n.st===0 && !p.failed){
-        n.st=2; p.miss++; breakCombo(p); VIG.miss=1; const pen=[0.05,0.07,0.085][G.diff];
+        n.st=2; p.miss++; (p.missT||(p.missT=[])).push(n.t); breakCombo(p); VIG.miss=1; const pen=[0.05,0.07,0.085][G.diff];
         p.health=Math.max(0,p.health-pen); if(!p.bloomOn) p.bloom=Math.max(0,p.bloom-0.05);
         judgeText(p,'DANEBEN','#ff6b6b',noteX(p,n,0)); setLeadOk(false); SFX.dud(A.ctx.currentTime); p.shake=1;
         const x=noteX(p,n,0), y=hitY()-30; for(let k=0;k<14;k++) addP(x,y,(Math.random()-0.5)*60,(Math.random()-0.5)*60,{c:C.silver,life:0.6,size:1.4,drag:2,grav:120*FX.scale});

@@ -461,8 +461,8 @@ function cityInit(){
     const pierL=280, pier=new THREE.Mesh(new THREE.BoxGeometry(9,3,pierL),pierMat); pier.position.set(-60,0.8,shoreZ+pierL/2); scene.add(pier);
     const tower=new THREE.Mesh(new THREE.CylinderGeometry(3.2,5,44,16),pierMat); tower.position.set(-60,24,shoreZ+pierL); scene.add(tower);
     const beamMat=new THREE.ShaderMaterial({uniforms:uni, transparent:true, depthWrite:false, blending:THREE.AdditiveBlending, side:THREE.DoubleSide,
-      vertexShader:`varying float vL; void main(){ vL=uv.y; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }`,
-      fragmentShader:`varying float vL; void main(){ gl_FragColor=vec4(vec3(1.0,0.93,0.75)*0.16*pow(vL,1.5),1.0); }`});
+      vertexShader:`varying float vL; varying vec3 vN; varying vec3 vV; void main(){ vL=uv.y; vec4 mv=modelViewMatrix*vec4(position,1.0); vN=normalize(normalMatrix*normal); vV=normalize(-mv.xyz); gl_Position=projectionMatrix*mv; }`,
+      fragmentShader:`varying float vL; varying vec3 vN; varying vec3 vV; void main(){ float f=abs(dot(normalize(vN),normalize(vV))); float soft=pow(f,2.2); float len=pow(vL,1.6)*smoothstep(0.0,0.35,vL); gl_FragColor=vec4(vec3(1.0,0.86,0.62)*0.11*soft*len,1.0); }`});
     const beamG=new THREE.ConeGeometry(30,700,24,1,true); beamG.translate(0,-350,0); beamG.rotateZ(Math.PI/2);
     const beam=new THREE.Mesh(beamG,beamMat); beam.position.set(-60,47,shoreZ+pierL); scene.add(beam);
     const lampG=new THREE.Mesh(new THREE.SphereGeometry(3.2,12,8),new THREE.MeshBasicMaterial({color:0xfff2c0})); lampG.position.set(-60,47,shoreZ+pierL); scene.add(lampG);

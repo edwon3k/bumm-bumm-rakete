@@ -25,7 +25,7 @@ function renderStats(){
   progInit(); const L=levelOf(SAVE.xp);
   if(!b.length && !SAVE.unlocked.length && !SAVE.xp){ el.hidden=true; return; }
   const s=b.filter(x=>x.grade==='S').length;
-  el.innerHTML='<span class="rk"><b>'+L.level+'</b>'+rankOf(L.level)+'</span><span><b>'+b.length+'</b> Lieder geschafft</span><span><b>'+s+'</b> × Note S</span><span><b>'+SAVE.unlocked.length+'</b>/'+UNLOCKS.length+' Feuerwerke</span>';
+  el.innerHTML='<span class="rk">Stufe <b>'+L.level+'</b>· '+rankOf(L.level)+'</span><span><b>'+b.length+'</b> '+(b.length===1?'Lied':'Lieder')+' geschafft</span><span><b>'+s+'</b> mit Note S</span><span><b>'+SAVE.unlocked.length+'</b>/'+UNLOCKS.length+' Feuerwerke</span>';
   el.hidden=false;
 }
 function click(){ audioInit(); SFX.ui(A.ctx.currentTime); UI.lastClick=performance.now(); }
@@ -210,10 +210,12 @@ function timingHtml(p,multi){
   return '<div class="timing"><canvas class="tgraph" data-p="'+p.i+'" width="680" height="120" aria-label="Timing deiner Treffer über das Lied"></canvas><p class="hint">'+tip+'</p>'+btn+'</div>';
 }
 function drawTiming(c,p){
-  const x=c.getContext('2d'), w=c.width, h=c.height, mid=h/2, T=Math.max(1,p.errAll[p.errAll.length-1][0]);
+  const mt=p.missT||[], x=c.getContext('2d'), w=c.width, h=c.height, mid=h/2, T=Math.max(1,p.errAll[p.errAll.length-1][0],mt.length?mt[mt.length-1]:0);
+  // verpasste Raketen als rote Striche
+  x.fillStyle='rgba(255,107,107,0.38)'; for(const tt of mt) x.fillRect(tt/T*(w-8)+4,4,2,h-8);
   x.fillStyle='rgba(255,224,102,0.12)'; x.fillRect(0,mid-mid*W_PERF/WIN,w,mid*2*W_PERF/WIN);
   x.fillStyle='rgba(255,255,255,0.35)'; x.fillRect(0,mid,w,1);
-  x.font='600 18px "Josefin Sans", sans-serif'; x.fillStyle='rgba(200,245,255,0.55)'; x.fillText('SPÄT',8,22); x.fillText('FRÜH',8,h-8);
+  x.font='600 18px "Josefin Sans", sans-serif'; x.fillStyle='rgba(200,245,255,0.55)'; x.fillText('SPÄT',8,22); x.fillText('FRÜH',8,h-8); if(mt.length){ x.textAlign='right'; x.fillStyle='rgba(255,140,140,0.7)'; x.fillText('│ DANEBEN',w-8,22); x.textAlign='left'; }
   for(const [tt,d] of p.errAll){ const ad=Math.abs(d); x.fillStyle=ad<=W_PERF?'#ffe066':ad<=W_GREAT?'#6ff3ff':'#8dff9e';
     x.fillRect(tt/T*(w-8)+2, mid-Math.max(-1,Math.min(1,d/WIN))*(mid-4)-3, 6,6); }
 }
