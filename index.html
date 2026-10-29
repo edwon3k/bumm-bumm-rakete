@@ -266,6 +266,7 @@ dt{text-transform:uppercase;letter-spacing:0.05em;font-size:13px;} dd{color:#fff
 .tstats span{padding:3px 12px;background:linear-gradient(90deg,rgba(76,242,255,.6) 0 2px,rgba(76,242,255,.08) 2px);}
 .tstats b{font-family:var(--display);font-weight:400;color:var(--gold);margin-right:4px;}
 .tstats[hidden]{display:none;}
+.tnews{margin:2px 0 0;font-size:12px;line-height:1.35;color:#ffe9b0;padding:3px 12px;background:linear-gradient(90deg,rgba(255,213,74,.16),rgba(255,213,74,0));border-left:2px solid var(--gold);max-width:46ch;} .tnews b{color:var(--gold);font-weight:600;letter-spacing:.14em;text-transform:uppercase;font-size:11px;margin-right:6px;} .tnews[hidden]{display:none;}
 .song.playing .tt::after{content:"  ♪";color:var(--cyan);text-shadow:0 0 8px var(--cyan);animation:note 1s ease-in-out infinite;}
 @keyframes note{50%{opacity:.4;}}
 @media (prefers-reduced-motion:reduce){ .fc,.song.playing .tt::after{animation:none;} }
@@ -358,6 +359,7 @@ h2,.rescol h3,.help h3{font-style:italic;font-weight:500;letter-spacing:0.03em;}
     <h1 class="logo"><span>Bumm Bumm</span><span>Rakete</span></h1>
     <p class="tag">Zünde die Raketen im Takt und mach den Himmel über dem Hafen bunt.</p>
     <p class="tstats" id="t-stats" hidden></p>
+    <p class="tnews" id="t-news" hidden></p>
     <div class="keys" aria-hidden="true"><span class="key" style="background:var(--x)">X</span><span class="key" style="background:var(--a)">A</span><span class="key" style="background:var(--y)">Y</span><span class="key" style="background:var(--b)">B</span></div>
     <div class="menu panel">
       <p class="mgroup">Spielen</p>
@@ -3527,6 +3529,8 @@ function drawHud(t){
   if(G.players.length===1){ const r=drawPanels(G.players[0],0,W,t,false); y0=r.top+r.ph+16; }
   g.textAlign='left'; g.textBaseline='top';
   const x=16, ty0=G.players.length>1?16:y0;
+  // während der Titelkarte am Liedanfang ausgeblendet, danach weich einblenden
+  const cineK=(!G.demo && t<0.4)?(t<-0.5?1:Math.max(0,(0.4-t)/0.9)):0; g.globalAlpha=1-cineK;
   // dunkler Verlauf hinter Titel und Info, damit Feuerwerk die Schrift nicht überstrahlt
   { const bw=Math.round(Math.min(W*0.5,360))+x; let c=drawHud.bgc;
     if(!c||c.width!==bw){ c=drawHud.bgc=document.createElement('canvas'); c.width=bw; c.height=60; const q=c.getContext('2d');
@@ -3541,6 +3545,7 @@ function drawHud(t){
   if(G.mods && modsLabel(G.mods)) info+=' · '+modsLabel(G.mods);
   const iy=ty0+19; g.fillText(info,x,iy);
   if(G.dur<Infinity){ const u=Math.max(0,Math.min(1,t/(G.dur-1.5))); const py=iy+20; g.fillStyle='rgba(120,200,255,0.2)'; g.fillRect(x,py,150,3); g.fillStyle=NEON_CYAN; g.shadowColor=NEON_CYAN; g.shadowBlur=8; g.fillRect(x,py,150*u,3); g.shadowBlur=0; }
+  g.globalAlpha=1;
 }
 // ===== Fortschritt: Rang mit Erfahrungspunkten und Erfolge =====
 const RANKS=['Funkenlehrling','Zündler','Böllerfan','Raketenbauer','Pyrotechniker','Lichtkünstler','Feuerwerksmeister','Himmelsmaler','Sternenschmied','Hafenlegende'];
@@ -3616,7 +3621,7 @@ function progAfterGame(){
   if(G.daily && !failed && SAVE.dailyDone!==dayKey()){ gain=Math.round(gain*1.5)+300; SAVE.dailyDone=dayKey(); daily=true; award('daily'); }
   if(!failed && G.mode!=='practice' && p.goldTotal>=3 && p.goldHit===p.goldTotal) award('goldAll');
   if(!failed && G.mode!=='practice'){ if(G.mods.hidden) award('hiddenOk'); if(G.mods.turbo && (gr.g==='A'||gr.g==='S')) award('turboA'); }
-  const before=levelOf(SAVE.xp); SAVE.xp+=gain; const after=levelOf(SAVE.xp); SAVE.stats.games++;
+  const before=levelOf(SAVE.xp); SAVE.xp+=gain; const after=levelOf(SAVE.xp); SAVE.stats.games++; try{ SAVE.newsSeen=NEWS.id; }catch(e){}
   const arcadeOk=(G.mode==='arcade'||G.mode==='versus')&&!failed;
   if(arcadeOk) award('first');
   if(arcadeOk && G.diff===2) award('hard');
@@ -3674,6 +3679,7 @@ function showScreen(name){
   if(name==='online' && typeof onFillSongs==='function') onFillSongs();
 }
 function renderStats(){
+  try{ updNews(); }catch(e){}
   const el=$('#t-stats'); if(!el) return; const b=Object.values(SAVE.best||{});
   progInit(); const L=levelOf(SAVE.xp);
   if(!b.length && !SAVE.unlocked.length && !SAVE.xp){ el.hidden=true; return; }
@@ -3940,6 +3946,11 @@ cityInit();
 gfxInit();
 ownRestore();
 resize();
+// Hinweis auf Neuigkeiten für Wiederkehrer (verschwindet nach dem nächsten Spiel)
+const NEWS={id:'v33',html:'<b>Neu</b>Cancan-Kracher · Elises Funkenregen · Blitzlicht-Option'};
+function updNews(){ const el=$('#t-news'); if(!el) return; const show=(SAVE.stats&&SAVE.stats.games>0)&&SAVE.newsSeen!==NEWS.id; el.hidden=!show; if(show) el.innerHTML=NEWS.html; }
+if(!(SAVE.stats&&SAVE.stats.games>0)) SAVE.newsSeen=NEWS.id; // Neulinge brauchen keinen Hinweis
+updNews();
 showScreen('title');
 requestAnimationFrame(frame);
 

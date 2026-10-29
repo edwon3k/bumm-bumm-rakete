@@ -249,6 +249,8 @@ function drawHud(t){
   if(G.players.length===1){ const r=drawPanels(G.players[0],0,W,t,false); y0=r.top+r.ph+16; }
   g.textAlign='left'; g.textBaseline='top';
   const x=16, ty0=G.players.length>1?16:y0;
+  // während der Titelkarte am Liedanfang ausgeblendet, danach weich einblenden
+  const cineK=(!G.demo && t<0.4)?(t<-0.5?1:Math.max(0,(0.4-t)/0.9)):0; g.globalAlpha=1-cineK;
   // dunkler Verlauf hinter Titel und Info, damit Feuerwerk die Schrift nicht überstrahlt
   { const bw=Math.round(Math.min(W*0.5,360))+x; let c=drawHud.bgc;
     if(!c||c.width!==bw){ c=drawHud.bgc=document.createElement('canvas'); c.width=bw; c.height=60; const q=c.getContext('2d');
@@ -263,4 +265,5 @@ function drawHud(t){
   if(G.mods && modsLabel(G.mods)) info+=' · '+modsLabel(G.mods);
   const iy=ty0+19; g.fillText(info,x,iy);
   if(G.dur<Infinity){ const u=Math.max(0,Math.min(1,t/(G.dur-1.5))); const py=iy+20; g.fillStyle='rgba(120,200,255,0.2)'; g.fillRect(x,py,150,3); g.fillStyle=NEON_CYAN; g.shadowColor=NEON_CYAN; g.shadowBlur=8; g.fillRect(x,py,150*u,3); g.shadowBlur=0; }
+  g.globalAlpha=1;
 }

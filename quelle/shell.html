@@ -254,6 +254,7 @@ dt{text-transform:uppercase;letter-spacing:0.05em;font-size:13px;} dd{color:#fff
 .tstats span{padding:3px 12px;background:linear-gradient(90deg,rgba(76,242,255,.6) 0 2px,rgba(76,242,255,.08) 2px);}
 .tstats b{font-family:var(--display);font-weight:400;color:var(--gold);margin-right:4px;}
 .tstats[hidden]{display:none;}
+.tnews{margin:2px 0 0;font-size:12px;line-height:1.35;color:#ffe9b0;padding:3px 12px;background:linear-gradient(90deg,rgba(255,213,74,.16),rgba(255,213,74,0));border-left:2px solid var(--gold);max-width:46ch;} .tnews b{color:var(--gold);font-weight:600;letter-spacing:.14em;text-transform:uppercase;font-size:11px;margin-right:6px;} .tnews[hidden]{display:none;}
 .song.playing .tt::after{content:"  ♪";color:var(--cyan);text-shadow:0 0 8px var(--cyan);animation:note 1s ease-in-out infinite;}
 @keyframes note{50%{opacity:.4;}}
 @media (prefers-reduced-motion:reduce){ .fc,.song.playing .tt::after{animation:none;} }
@@ -346,6 +347,7 @@ h2,.rescol h3,.help h3{font-style:italic;font-weight:500;letter-spacing:0.03em;}
     <h1 class="logo"><span>Bumm Bumm</span><span>Rakete</span></h1>
     <p class="tag">Zünde die Raketen im Takt und mach den Himmel über dem Hafen bunt.</p>
     <p class="tstats" id="t-stats" hidden></p>
+    <p class="tnews" id="t-news" hidden></p>
     <div class="keys" aria-hidden="true"><span class="key" style="background:var(--x)">X</span><span class="key" style="background:var(--a)">A</span><span class="key" style="background:var(--y)">Y</span><span class="key" style="background:var(--b)">B</span></div>
     <div class="menu panel">
       <p class="mgroup">Spielen</p>

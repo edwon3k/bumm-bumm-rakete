@@ -72,7 +72,7 @@ function progAfterGame(){
   if(G.daily && !failed && SAVE.dailyDone!==dayKey()){ gain=Math.round(gain*1.5)+300; SAVE.dailyDone=dayKey(); daily=true; award('daily'); }
   if(!failed && G.mode!=='practice' && p.goldTotal>=3 && p.goldHit===p.goldTotal) award('goldAll');
   if(!failed && G.mode!=='practice'){ if(G.mods.hidden) award('hiddenOk'); if(G.mods.turbo && (gr.g==='A'||gr.g==='S')) award('turboA'); }
-  const before=levelOf(SAVE.xp); SAVE.xp+=gain; const after=levelOf(SAVE.xp); SAVE.stats.games++;
+  const before=levelOf(SAVE.xp); SAVE.xp+=gain; const after=levelOf(SAVE.xp); SAVE.stats.games++; try{ SAVE.newsSeen=NEWS.id; }catch(e){}
   const arcadeOk=(G.mode==='arcade'||G.mode==='versus')&&!failed;
   if(arcadeOk) award('first');
   if(arcadeOk && G.diff===2) award('hard');

@@ -21,6 +21,7 @@ function showScreen(name){
   if(name==='online' && typeof onFillSongs==='function') onFillSongs();
 }
 function renderStats(){
+  try{ updNews(); }catch(e){}
   const el=$('#t-stats'); if(!el) return; const b=Object.values(SAVE.best||{});
   progInit(); const L=levelOf(SAVE.xp);
   if(!b.length && !SAVE.unlocked.length && !SAVE.xp){ el.hidden=true; return; }
@@ -287,6 +288,11 @@ cityInit();
 gfxInit();
 ownRestore();
 resize();
+// Hinweis auf Neuigkeiten für Wiederkehrer (verschwindet nach dem nächsten Spiel)
+const NEWS={id:'v33',html:'<b>Neu</b>Cancan-Kracher · Elises Funkenregen · Blitzlicht-Option'};
+function updNews(){ const el=$('#t-news'); if(!el) return; const show=(SAVE.stats&&SAVE.stats.games>0)&&SAVE.newsSeen!==NEWS.id; el.hidden=!show; if(show) el.innerHTML=NEWS.html; }
+if(!(SAVE.stats&&SAVE.stats.games>0)) SAVE.newsSeen=NEWS.id; // Neulinge brauchen keinen Hinweis
+updNews();
 showScreen('title');
 requestAnimationFrame(frame);
 
