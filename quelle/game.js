@@ -287,6 +287,8 @@ function spawnY(){ return H*0.97; }
 function pickFirework(){
   // Cancan: Pariser Trikolore am Himmel
   if(G&&G.song&&G.song.id==='cancan'&&Math.random()<0.45) return {type:pick(['peony','chrysanthemum','crossette','ring','peony']),c:pick([C.red,C.white,C.blue]),c2:pick([C.red,C.white,C.blue,-1])};
+  // Für Elise: zarte Formen in Violett, Rosa und Silber
+  if(G&&G.song&&G.song.id==='elise'&&Math.random()<0.4) return {type:pick(['willow','kamuro','chrysanthemum','heart']),c:pick([C.violet,C.pink,C.silver,C.magenta]),c2:pick([C.white,-1])};
   // Ballade: mehr weiche, romantische Formen (Trauerweide, Kamuro, Herzen, Pferdeschweif)
   if(G&&G.song&&G.song.id==='sternenmeer'&&Math.random()<0.5) return {type:pick(['willow','kamuro','heart','horsetail','willow'])};
   const un=SAVE.unlocked;

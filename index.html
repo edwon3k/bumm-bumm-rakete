@@ -563,7 +563,10 @@ const SONGS = [
     chords:'G Em C D Em C C,D G' },
   { id:'cancan', title:'Cancan-Kracher', composer:'Jacques Offenbach', piece:'Höllen-Galopp (Orpheus in der Unterwelt)', bpm:152, style:'skapunk', lead:'brass', bass:'bass', pad:'skank', oct:0, pack:3, keyUp:2,
     mel:'C5-4 C5-4 D5-2 F5-2 E5-2 D5-2 | G5-4 G5-4 G5-2 A5-2 E5-2 F5-2 | D5-4 D5-4 D5-2 F5-2 E5-2 D5-2 | C5-2 C6-2 B5-2 A5-2 G5-2 F5-2 E5-2 D5-2 | C5-4 C5-4 D5-2 F5-2 E5-2 D5-2 | G5-4 G5-4 G5-2 A5-2 E5-2 F5-2 | D5-4 D5-4 D5-2 F5-2 E5-2 D5-2 | C5-2 G5-2 D5-2 E5-2 C5-8',
-    chords:'C C G C,G C C G G,C' }
+    chords:'C C G C,G C C G G,C' },
+  { id:'elise', title:'Elises Funkenregen', composer:'Ludwig van Beethoven', piece:'Für Elise (Bagatelle a-Moll)', bpm:96, style:'triphop', lead:'ep', bass:'bass', pad:'ep', orch:'str', oct:0, pack:3,
+    mel:'E5-1 D#5-1 E5-1 D#5-1 E5-1 B4-1 D5-1 C5-1 A4-5 C4-1 E4-1 A4-1 | B4-5 E4-1 G#4-1 B4-1 C5-5 E4-1 E5-1 D#5-1 | E5-1 D#5-1 E5-1 D#5-1 E5-1 B4-1 D5-1 C5-1 A4-5 C4-1 E4-1 A4-1 | B4-5 E4-1 C5-1 B4-1 A4-8 | A4-5 B4-1 C5-1 D5-1 E5-5 G4-1 F5-1 E5-1 | D5-5 F4-1 E5-1 D5-1 C5-5 E4-1 D5-1 C5-1 | B4-5 E4-1 E5-1 D#5-1 E5-1 D#5-1 E5-1 D#5-1 E5-1 B4-1 D5-1 C5-1 | A4-5 C4-1 E4-1 A4-1 B4-2 E4-1 C5-1 B4-1 A4-3',
+    chords:'Am E,Am Am E,Am Am,C G,Am E,Am E,Am' }
 ];
 
 // Elektro-Fassung (Standard): gleiche Melodien, aber Techno/Trance/Electro-Produktion wie im Original-Spiel üblich
@@ -584,6 +587,7 @@ const ELEKTRO={
   nachtmusik:{style:'techno', bpm:128, lead:'supersaw', bass:'rolling', pad:'stab',   orch:'str'},
   kanon:     {style:'trance', bpm:132, lead:'supersaw', bass:'rolling', pad:'synpad', orch:'str'},
   cancan:    {style:'breaks', bpm:140, lead:'acidlead', bass:'acid',    pad:'stab',   orch:null},
+  elise:     {style:'deep',   bpm:118, lead:'pluck',    bass:'reese',   pad:'synpad', orch:'str'},
 };
 SONGS.forEach(s=>{ if(ELEKTRO[s.id]) s.elektro=ELEKTRO[s.id]; });
 const NOTE_BASE = {C:0,D:2,E:4,F:5,G:7,A:9,B:11};
@@ -1508,7 +1512,7 @@ const BASE_TYPES=['peony','chrysanthemum','ring','willow','palm','crossette','st
 const UNLOCK_SHAPES=[['heart','Herz'],['star','Stern'],['spiral','Spirale'],['saturn','Saturn'],['smiley','Smiley'],['kamuro','Kamuro'],['horsetail','Pferdeschweif'],['butterfly','Schmetterling'],['multibreak','Kettenknall'],['fish','Fischschwarm'],['pistil','Kernblüte'],['doublering','Doppelring'],['cube','Würfel'],['palm','Palme'],['crossette','Kreuzfeuer']];
 const PALETTES=[['Eis',C.cyan,C.white],['Feuer',C.orange,C.red],['Neon',C.magenta,C.lime],['Gold',C.gold,C.white],['Galaxie',C.violet,C.cyan],['Kirsch',C.pink,C.white],['Gift',C.lime,C.violet],['Ozean',C.blue,C.cyan],['Lava',C.red,C.gold],['Polar',C.silver,C.blue],['Sonnen',C.yellow,C.orange],['Mitternacht',C.blue,C.violet],['Bonbon',C.pink,C.cyan],['Smaragd',C.green,C.gold],['Rubin',C.red,C.pink]];
 const UNLOCKS=[];
-(function(){ let i=0; for(let s=0;s<17;s++) for(let d=0;d<3;d++){ const sh=UNLOCK_SHAPES[(s+d*5)%15], pal=PALETTES[(s*2+d*7)%15]; UNLOCKS.push({id:s*3+d, shape:sh[0], name:pal[0]+'-'+sh[1], c:pal[1], c2:pal[2]}); i++; } })();
+(function(){ let i=0; for(let s=0;s<18;s++) for(let d=0;d<3;d++){ const sh=UNLOCK_SHAPES[(s+d*5)%15], pal=PALETTES[(s*2+d*7)%15]; UNLOCKS.push({id:s*3+d, shape:sh[0], name:pal[0]+'-'+sh[1], c:pal[1], c2:pal[2]}); i++; } })();
 
 function launchBurst(x,y,type,c,c2,s){ (SHAPES[type]||SHAPES.peony)(x,y,c,c2===undefined?-1:c2,s||1); }
 
@@ -2856,6 +2860,8 @@ function spawnY(){ return H*0.97; }
 function pickFirework(){
   // Cancan: Pariser Trikolore am Himmel
   if(G&&G.song&&G.song.id==='cancan'&&Math.random()<0.45) return {type:pick(['peony','chrysanthemum','crossette','ring','peony']),c:pick([C.red,C.white,C.blue]),c2:pick([C.red,C.white,C.blue,-1])};
+  // Für Elise: zarte Formen in Violett, Rosa und Silber
+  if(G&&G.song&&G.song.id==='elise'&&Math.random()<0.4) return {type:pick(['willow','kamuro','chrysanthemum','heart']),c:pick([C.violet,C.pink,C.silver,C.magenta]),c2:pick([C.white,-1])};
   // Ballade: mehr weiche, romantische Formen (Trauerweide, Kamuro, Herzen, Pferdeschweif)
   if(G&&G.song&&G.song.id==='sternenmeer'&&Math.random()<0.5) return {type:pick(['willow','kamuro','heart','horsetail','willow'])};
   const un=SAVE.unlocked;

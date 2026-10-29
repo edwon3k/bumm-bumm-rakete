@@ -53,7 +53,10 @@ const SONGS = [
     chords:'G Em C D Em C C,D G' },
   { id:'cancan', title:'Cancan-Kracher', composer:'Jacques Offenbach', piece:'Höllen-Galopp (Orpheus in der Unterwelt)', bpm:152, style:'skapunk', lead:'brass', bass:'bass', pad:'skank', oct:0, pack:3, keyUp:2,
     mel:'C5-4 C5-4 D5-2 F5-2 E5-2 D5-2 | G5-4 G5-4 G5-2 A5-2 E5-2 F5-2 | D5-4 D5-4 D5-2 F5-2 E5-2 D5-2 | C5-2 C6-2 B5-2 A5-2 G5-2 F5-2 E5-2 D5-2 | C5-4 C5-4 D5-2 F5-2 E5-2 D5-2 | G5-4 G5-4 G5-2 A5-2 E5-2 F5-2 | D5-4 D5-4 D5-2 F5-2 E5-2 D5-2 | C5-2 G5-2 D5-2 E5-2 C5-8',
-    chords:'C C G C,G C C G G,C' }
+    chords:'C C G C,G C C G G,C' },
+  { id:'elise', title:'Elises Funkenregen', composer:'Ludwig van Beethoven', piece:'Für Elise (Bagatelle a-Moll)', bpm:96, style:'triphop', lead:'ep', bass:'bass', pad:'ep', orch:'str', oct:0, pack:3,
+    mel:'E5-1 D#5-1 E5-1 D#5-1 E5-1 B4-1 D5-1 C5-1 A4-5 C4-1 E4-1 A4-1 | B4-5 E4-1 G#4-1 B4-1 C5-5 E4-1 E5-1 D#5-1 | E5-1 D#5-1 E5-1 D#5-1 E5-1 B4-1 D5-1 C5-1 A4-5 C4-1 E4-1 A4-1 | B4-5 E4-1 C5-1 B4-1 A4-8 | A4-5 B4-1 C5-1 D5-1 E5-5 G4-1 F5-1 E5-1 | D5-5 F4-1 E5-1 D5-1 C5-5 E4-1 D5-1 C5-1 | B4-5 E4-1 E5-1 D#5-1 E5-1 D#5-1 E5-1 D#5-1 E5-1 B4-1 D5-1 C5-1 | A4-5 C4-1 E4-1 A4-1 B4-2 E4-1 C5-1 B4-1 A4-3',
+    chords:'Am E,Am Am E,Am Am,C G,Am E,Am E,Am' }
 ];
 
 // Elektro-Fassung (Standard): gleiche Melodien, aber Techno/Trance/Electro-Produktion wie im Original-Spiel üblich
@@ -74,6 +77,7 @@ const ELEKTRO={
   nachtmusik:{style:'techno', bpm:128, lead:'supersaw', bass:'rolling', pad:'stab',   orch:'str'},
   kanon:     {style:'trance', bpm:132, lead:'supersaw', bass:'rolling', pad:'synpad', orch:'str'},
   cancan:    {style:'breaks', bpm:140, lead:'acidlead', bass:'acid',    pad:'stab',   orch:null},
+  elise:     {style:'deep',   bpm:118, lead:'pluck',    bass:'reese',   pad:'synpad', orch:'str'},
 };
 SONGS.forEach(s=>{ if(ELEKTRO[s.id]) s.elektro=ELEKTRO[s.id]; });
 const NOTE_BASE = {C:0,D:2,E:4,F:5,G:7,A:9,B:11};
