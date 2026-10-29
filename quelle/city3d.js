@@ -114,7 +114,7 @@ function cityInit(){
             vec2 q=(f-lo)/(hi-lo);
             float inner=(0.7+0.75*q.y)*(0.8+0.6*h21(id+3.1));
             float curt=r3<0.35? smoothstep(0.0,0.12,q.x)*smoothstep(1.0,0.88,q.x)*0.6+0.4 : r3<0.55? mix(1.0,0.45,step(0.5,q.x)) : 1.0;
-            vec3 tv=vec3(0.35,0.5,1.0)*(0.6+0.4*sin(uTime*7.0+r*50.0)*sin(uTime*2.3+r*13.0));
+            vec3 tv=vec3(0.35,0.5,1.0)*(0.6+0.4*sin(uTime*1.3+r*50.0));
             vec3 room=lit*(r3>0.92? tv*0.8 : wc*inner*curt);
             // dunkles Glas spiegelt Himmel und Feuerwerk
             vec3 rf=reflect(v,n); rf.y=abs(rf.y);
@@ -142,7 +142,7 @@ function cityInit(){
             vec3 avg=mix(wall,vec3(0.012,0.016,0.03)+wc*ratio*0.42,typ==0?0.85:0.42);
             col=mix(fac,avg,far);
             // Neon-Krone auf manchen Türmen
-            if(seed>0.83 && top-vW.y>0.6 && top-vW.y<2.0 && vS.y>30.0) col+=neon(fract(seed*7.0))*1.1*(1.0+uBeat*0.6);
+            if(seed>0.83 && top-vW.y>0.6 && top-vW.y<2.0 && vS.y>30.0) col+=neon(fract(seed*7.0))*1.1;
             // Mondlicht, Bodenschatten
             col+=wall*1.2*max(dot(n,MOON),0.0)*0.5;
             col*=0.55+0.45*smoothstep(0.0,10.0,vW.y);
@@ -168,7 +168,7 @@ function cityInit(){
       const x0=gx*B+ST, z0=gz*B+ST, s=B-ST;
       if(gx===0&&gz===0) continue;
       // große dunkle Freifläche zwischen den Türmen: hier starten die Raketen; Baumreihen an den Längsseiten
-      if(gx>=-2&&gx<=1&&gz>=-13&&gz<=-4){ if(gx===-2||gx===1) for(let k=0;k<5;k++) trees.push([gx<0?x0+3:x0+s-3, z0+4+k*(s-8)/4, 2.2+Math.random()*0.6]); continue; }
+      if(gx>=-2&&gx<=1&&gz>=-13&&gz<=-4) continue;
       if(park(gx,gz)){ // Park: lockere Baumgruppen
         for(let k=0;k<22;k++){ const tx=x0+2+Math.random()*(s-4), tz=z0+2+Math.random()*(s-4); if(Math.abs(tx-(x0+s/2))<1.6||Math.abs(tz-(z0+s/2))<1.6) continue; trees.push([tx,tz,1.8+Math.random()*1.8]); }
         continue; }
@@ -300,19 +300,27 @@ function cityInit(){
           }
           // Platz vor den Häusern: gepflasterter Innenhof
           if(!isPark && street<0.5 && inner>1.8){ col=vec3(0.035,0.034,0.042)*(0.8+0.4*vnoise(p*2.0)); }
-          // Freifläche: dunkle Steinplatten, heller Rand, langes Wasserbecken, das Feuerwerk spiegelt
+          // Stadtkanal: Wasser zwischen den Hochhäusern mit Kaimauer, spiegelt Himmel, Fenster und Feuerwerk
           vec2 pc=p-vec2(4.5,-315.5), ph=vec2(75.5,195.5); vec2 pd=ph-abs(pc); float inPl=step(0.0,min(pd.x,pd.y));
           if(inPl>0.5){
-            vec2 tq=fract(p/4.0); float tj=max(ln(tq.x,0.0,0.02),ln(tq.y,0.0,0.02))*(1.0-farK);
-            col=vec3(0.03,0.03,0.036)*(0.8+0.35*vnoise(p*0.7))*(1.0-0.3*tj);
-            float rim=1.0-smoothstep(1.2,1.8,min(pd.x,pd.y)); col=mix(col,vec3(0.13,0.125,0.13)*(0.85+0.3*vnoise(p*2.0)),rim);
-            vec2 wd=vec2(46.0,165.0)-abs(pc); float pool=step(0.0,min(wd.x,wd.y));
-            if(pool>0.5){ vec3 dv=normalize(vW-uCam); vec2 rp=vec2(vnoise(p*0.5+uTime*0.3),vnoise(p*0.5-uTime*0.25+5.0))-0.5;
-              vec3 rf=reflect(dv,normalize(vec3(rp.x*0.06,1.0,rp.y*0.06)));
-              col=vec3(0.004,0.008,0.016)+skyCol(rf,false)*0.35+uFlash*1.4*(0.7+0.6*rp.x); }
-            float edgeP=1.0-smoothstep(0.3,0.7,abs(min(wd.x,wd.y)));
-            col=mix(col,vec3(0.16,0.15,0.15),edgeP*0.8);
-            col+=vec3(1.0,0.75,0.45)*0.9*edgeP*pow(0.5+0.5*cos(pc.y*0.39+pc.x*0.39),30.0);   // kleine Lichter am Beckenrand
+            float e=min(pd.x,pd.y);
+            if(e<2.2){ col=vec3(0.1,0.095,0.1)*(0.8+0.35*vnoise(p*2.0)); col+=vec3(1.0,0.75,0.45)*0.8*pow(0.5+0.5*cos((pd.x<pd.y?pc.y:pc.x)*0.45),40.0)*step(e,1.0); }
+            else {
+              float t=uTime; vec2 g=vec2(0.0);
+              g+=(vec2(vnoise(p*0.12+t*0.25),vnoise(p*0.12-t*0.2+5.0))-0.5)*0.12;
+              g+=(vec2(vnoise(p*0.6+t*0.6),vnoise(p*0.6-t*0.5+9.0))-0.5)*0.06;
+              vec3 nn=normalize(vec3(g.x,1.0,g.y)); vec3 dv=normalize(vW-uCam); vec3 rf=reflect(dv,nn);
+              float fr=0.05+0.95*pow(1.0-max(dot(-dv,nn),0.0),5.0);
+              col=vec3(0.006,0.014,0.03)+skyCol(rf,false)*(0.35+0.6*clamp(fr*1.3,0.0,0.9));
+              // gespiegelte Fensterlichter der Türme am Ufer: warme, zitternde Lichtstreifen
+              float side=pc.x>0.0?1.0:-1.0; float db=pd.x;
+              float col_id=floor(pc.y/3.4+g.y*3.0); float lit=step(0.55,h21(vec2(col_id,side)));
+              float wob=sin(pc.y*0.9+g.x*40.0+t*2.0)*0.5+0.5;
+              col+=vec3(1.0,0.66,0.32)*0.6*lit*exp(-db*0.022)*smoothstep(0.25,1.0,wob)*(0.6+0.4*h21(vec2(col_id,7.0)));
+              col+=vec3(0.9,0.6,0.35)*0.05*(1.0-smoothstep(0.0,60.0,db));                          // warmer Schimmer der Stadt
+              col+=vec3(1.0,0.7,0.4)*0.12*exp(-(e-2.2)*0.6);                                   // Lichtsaum an der Kaimauer
+              col+=uFlash*(0.5+1.6*fr)*(0.7+0.6*g.x*5.0);                                       // Feuerwerk spiegelt sich
+            }
           }
           // Laternen: Lichtkegel am Gehwegrand
           float lx=exp(-pow(f.x-0.6,2.0)*0.8)+exp(-pow(f.x-S+0.6,2.0)*0.8);
@@ -446,22 +454,20 @@ function cityRender(dt,bloom){
   const u=CITY.uni; u.uTime.value+=dt;
   CITY.ang+=dt*0.13*(bloom?1.6:1);
   const ik=CITY.introK||0, ie=ik*ik*(3-2*ik);
-  // Kamerafahrt knapp über den Dächern: legt sich in die Kurven, wippt im Takt, zuckt bei Treffern nach vorn
-  // Blick steil von oben in die Häuserschlucht: Kamera schwebt über der Mittelstraße zwischen den Türmen,
-  // gleitet langsam die Straße entlang, schwenkt leicht und wippt im Takt
+  // Schräger Blick von der Seite über den Stadtkanal auf die Hochhäuser; die Kamera gleitet ruhig, ohne Wackeln
   const a=CITY.ang, sz=CITY.shoreZ, cam=CITY.cam, port=W<H;
-  const px=4.5+Math.sin(a*0.9)*4, pz=-400+Math.sin(a*0.35)*130, py=(port?290:265);
-  const tx=px+Math.sin(a*0.7+0.6)*22, tz=pz+(port?130:170), ty=0;
-  const push=0;
-  cam.position.set(px, py+ie*260, pz-ie*120);
-  const roll=0;
-  cam.up.set(Math.sin(roll),Math.cos(roll),0);
+  const px=-25+Math.sin(a*0.5)*14, pz=-470+Math.sin(a*0.3)*25, py=(port?165:140);
+  const tx=px+70+Math.sin(a*0.4)*12, tz=pz+(port?170:200), ty=0;
+  cam.position.set(px, py+ie*200, pz-ie*60);
+  cam.up.set(0,1,0);
   cam.lookAt(tx, ty, tz);
   const sw=Math.sin(a);
   u.uCam.value.copy(cam.position); CITY.sky.position.copy(cam.position);
-  const L=FX.light; const k=Math.min(1.4,L.v)*0.42;
-  u.uFlash.value.setRGB(L.r/255*k, L.g/255*k, L.b/255*k);
-  u.uFlashPos.value.set(sw*60, 320, sz+260);
+  // Feuerwerkslicht weich nachführen, damit die Stadt nicht flackert
+  const L=FX.light, k=Math.min(1.2,L.v)*0.3, F=CITY.fl||(CITY.fl={r:0,g:0,b:0}), q=1-Math.exp(-dt*4);
+  F.r+=(L.r/255*k-F.r)*q; F.g+=(L.g/255*k-F.g)*q; F.b+=(L.b/255*k-F.b)*q;
+  u.uFlash.value.setRGB(F.r,F.g,F.b);
+  u.uFlashPos.value.set(4.5+sw*40, 200, -250);
   u.uBloom.value=bloom?1:0; u.uBeat.value=BEAT.p; if(CITY.beam) CITY.beam.rotation.y=u.uTime.value*0.6;
   CITY.R.render(CITY.scene,cam);
 }

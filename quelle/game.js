@@ -492,7 +492,7 @@ function compositeFx(){
   g.globalCompositeOperation='source-over';
 }
 function skyLight(){
-  const L=FX.light; if(L.v<0.02) return; const kk=CITY.ok?0.45:1;
+  const L=FX.light; if(L.v<0.02) return; const kk=CITY.ok?0.15:1;
   g.globalCompositeOperation='lighter';
   const gr=g.createLinearGradient(0,0,0,H); const c='rgba('+(L.r|0)+','+(L.g|0)+','+(L.b|0)+',';
   gr.addColorStop(0,c+(kk*Math.min(0.2,L.v*0.12)).toFixed(3)+')'); gr.addColorStop(0.8,c+(kk*Math.min(0.12,L.v*0.07)).toFixed(3)+')'); gr.addColorStop(1,c+'0)');
