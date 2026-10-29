@@ -12,6 +12,7 @@ const STYLES = {
   latin:   {k:'X..x..x.X..x..x.', s:'', m:'x..x..x...x.x...', h:'', t:'xgxgxgxgxgxgxgxg', q:'..x.X..x..x.X..x', b:'x..x..x.x..x..x.'},
   disco:   {k:'X...X...X...X...', s:'....X.......X...', c:'....x.......x...', h:'x...x...x...x...', o:'..x...x...x...x.', t:'xgxgxgxgxgxgxgxg', b:'x.x.x.x.x.x.x.x.'},
   house:   {k:'X...X...X...X...', s:'', c:'....X.......X...', h:'xgxgxgxgxgxgxgxg', o:'..x...x...x...x.', t:'..x...x...x...x.', b:'..x...x...x...x.'},
+  ballad:  {k:'X.........x.....', s:'........x.......', h:'x...x...x...x...', o:'', m:'', b:'x.......x.....x.'},
   surf:    {k:'X...x.x.X...x...', s:'....X.......X...', h:'x.x.x.x.x.x.x.x.', o:'', b:'x.x.x.x.x.x.x.x.', r:true},
   // ---- Elektro (synthetisiert) ----
   techno:  {k:'X...X...X...X...', c:'....X.......X...', h:'xgxgxgxgxgxgxgxg', o:'..x...x...x...x.', b:'..xx..xx..xx..xx', e:1},
@@ -137,6 +138,7 @@ function makeSection(song, kind, t0, bpm){
         if(s===0){ const dd=sd*14, gr=guitarRoot(ch);
           if(comp==='power') E(t,tt=>COMP.power(tt,dd,gr,0.9,false));
           else if(comp==='brass') E(t,tt=>COMP.brassStab(tt,notes,1,b===1));
+          else if(comp==='harp'){ const an=chordNotes(ch,50); [an[0]-12,...an,an[0]+12,an[1]+12].forEach((m,i)=>E(t+i*sd*0.5,tt=>LEAD.harp(tt,sd*8,mtof(m),0.7,A.music))); }
           else if(elek) E(t,tt=>sPad(tt,dd,chordNotes(ch,52),1));
           else E(t,tt=>COMP.epChord(tt,dd,chordNotes(ch,57),0.8));
           if(orch) E(t,tt=>strings(tt,dd,notes,0.9)); }
@@ -168,6 +170,9 @@ function makeSection(song, kind, t0, bpm){
           const v=at('X..x..x...x..x..',s); if(v){ const sn=chordNotes(ch,55); E(t,tt=>sStab(tt,sn,v)); }
         } else if(comp==='synpad'){
           if(s%half===0){ const dd=half*sd; E(t,tt=>sPad(tt,dd,chordNotes(ch,52),lvl>=2?1.1:0.9)); }
+        } else if(comp==='harp'){ // Harfe: auf- und absteigende Akkordbrechung, im Refrain doppelt so dicht
+          const an=chordNotes(ch,50); const seq=[an[0]-12,an[0],an[1],an[2],an[0]+12,an[2],an[1],an[0]];
+          const every=lvl>=3?1:2; if(s%every===0){ const m=seq[(s/every|0)%8]; E(t,tt=>LEAD.harp(tt,sd*4,mtof(m),lvl>=3?0.42:0.5,A.music)); }
         } else if(comp==='arp'){
           const an=chordNotes(ch,56); const seq=[an[0],an[1],an[2]];
           if(s%2===0||lvl>=3){ const m=seq[(s/(lvl>=3?1:2)|0)%3]+((s>=8&&lvl>=2)?12:0); const dd=sd*3; E(t,tt=>LEAD.ep(tt,dd,mtof(m),0.32,A.music)); }
@@ -189,7 +194,7 @@ function makeSection(song, kind, t0, bpm){
       const v = kind==='break'?0.8:1;
       E(t,tt=>LEAD[song.lead](tt,d,f,v,A.lead));
       if(lvl>=3 && E_LEADS.includes(song.lead)) { const f2=f/2; E(t,tt=>LEAD[song.lead](tt,d,f2,0.45,A.lead)); }
-      else if(lvl>=3 && song.lead!=='guitar' && n.len>=2) { const f2=f*2; E(t,tt=>LEAD[song.lead](tt,d,f2,0.3,A.lead)); }
+      else if(lvl>=3 && song.lead!=='guitar' && song.lead!=='flute' && n.len>=2) { const f2=f*2; E(t,tt=>LEAD[song.lead](tt,d,f2,0.3,A.lead)); }
       if(lvl>=3 && song.lead==='guitar' && n.len>=4) { const f2=mtof(n.midi+12); E(t,tt=>LEAD.guitar(tt,d,f2,0.35,A.lead)); }
       const band = Math.min(3, Math.floor((n.midi-P.lo)*4/(P.hi-P.lo+1)));
       cands.push({t, step:n.step%16, len:n.len, midi:n.midi, lane:band, beat:sd*4, mel:true});

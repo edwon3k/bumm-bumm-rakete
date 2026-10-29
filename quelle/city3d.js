@@ -48,7 +48,11 @@ function cityInit(){
       vec3 grade(vec3 c){ c*=0.6; float l=dot(c,vec3(0.3,0.59,0.11));
         c=mix(c*vec3(0.92,0.88,1.12), c*vec3(1.1,0.93,0.9), smoothstep(0.02,0.3,l));
         c+=vec3(0.012,0.0,0.01)*(1.0-smoothstep(0.0,0.1,l)); return c; }
-      vec3 fogIt(vec3 c, vec3 w){ vec3 d=w-uCam; float f=1.0-exp(-length(d)*0.0004); vec3 dn=normalize(d); return mix(c,skyCol(vec3(dn.x,max(dn.y,0.0),dn.z),false)*0.7+uFlash*0.12,f); }`;
+      vec3 fogIt(vec3 c, vec3 w){ vec3 d=w-uCam; float L=length(d); float f=1.0-exp(-L*0.0004); vec3 dn=normalize(d);
+        c=mix(c,skyCol(vec3(dn.x,max(dn.y,0.0),dn.z),false)*0.7+uFlash*0.12,f);
+        // Dunst über der Stadt: warmes Streulicht der Straßenlaternen hängt bodennah in der Luft
+        float hz=(1.0-exp(-L*0.0016))*exp(-max(w.y,0.0)/70.0);
+        return mix(c,vec3(0.2,0.1,0.07)+uFlash*0.2,hz*0.7); }`;
     // --- Himmel: große Kugel um die Kamera ---
     const sky=new THREE.Mesh(new THREE.SphereGeometry(8000,48,24), new THREE.ShaderMaterial({uniforms:uni, side:THREE.BackSide, depthWrite:false,
       vertexShader:`varying vec3 vD; void main(){ vD=position; vec4 wp=modelMatrix*vec4(position,1.0); gl_Position=projectionMatrix*viewMatrix*wp; }`,
@@ -106,8 +110,12 @@ function cityInit(){
             float r=h21(id+seed*91.7), r2=h21(id*1.71+seed), r3=h21(id*0.37+7.0+seed);
             float ratio=0.07+0.22*seed+0.06*sin(seed*20.0);
             float lit=step(r,ratio);
+            float fl=h21(vec2(floor(cell.y),seed*57.0+(sx?3.0:0.0)));
+            bool officeFloor = typ!=2 && fl<0.09+0.05*seed;                                    // ganze Büroetage noch hell erleuchtet
+            if(officeFloor) lit=1.0;
             vec3 wc=mix(vec3(1.0,0.62,0.32),vec3(1.0,0.8,0.55),r2);
             if(r2>0.93) wc=vec3(0.62,0.8,1.0);
+            if(officeFloor) wc=mix(vec3(0.85,0.92,1.0),vec3(1.0,0.95,0.85),fl*8.0);
             if(seed>0.9) wc=mix(wc,neon(h21(vec2(seed,1.0))),0.45);
             // Innenraum: Deckenlicht oben heller, Vorhänge, ab und zu flackernder Fernseher
             vec2 q=(f-lo)/(hi-lo);
@@ -407,6 +415,18 @@ function cityInit(){
     const beamG=new THREE.ConeGeometry(30,700,24,1,true); beamG.translate(0,-350,0); beamG.rotateZ(Math.PI/2);
     const beam=new THREE.Mesh(beamG,beamMat); beam.position.set(-60,47,shoreZ+pierL); scene.add(beam);
     const lampG=new THREE.Mesh(new THREE.SphereGeometry(3.2,12,8),new THREE.MeshBasicMaterial({color:0xfff2c0})); lampG.position.set(-60,47,shoreZ+pierL); scene.add(lampG);
+    // Straßenlaternen als leuchtende Lichtpunkte (natriumorange, vereinzelt weißes LED-Licht)
+    { const lc=document.createElement('canvas'); lc.width=lc.height=64; const lx=lc.getContext('2d'); const gr=lx.createRadialGradient(32,32,0,32,32,32);
+      gr.addColorStop(0,'rgba(255,255,255,1)'); gr.addColorStop(0.12,'rgba(255,255,255,0.85)'); gr.addColorStop(0.35,'rgba(255,255,255,0.18)'); gr.addColorStop(1,'rgba(255,255,255,0)');
+      lx.fillStyle=gr; lx.fillRect(0,0,64,64); const tex=new THREE.CanvasTexture(lc);
+      const P=[], Cc=[]; const add=(x,z,led)=>{ P.push(x,5.5,z); const c=led?[0.75,0.85,1.0]:[1.0,0.62,0.28]; Cc.push(c[0],c[1],c[2]); };
+      for(let gx=-NX;gx<=NX;gx++) for(let gz=NZ0;gz<=SHORE;gz++){ const x0=gx*B, z0=gz*B, led=Math.abs(Math.sin(gx*3.1+gz*7.7))<0.18;
+        for(let k=0;k<2;k++){ add(x0+0.8, z0+ST+4+k*(B-ST-8)/1, led); add(x0+ST-0.8, z0+ST+4+k*(B-ST-8)/1, led);
+          add(x0+ST+4+k*(B-ST-8), z0+0.8, led); add(x0+ST+4+k*(B-ST-8), z0+ST-0.8, led); } }
+      for(let x=-NX*B;x<=NX*B;x+=7) add(x, shoreZ-1.5, false);                          // Promenade
+      const pg=new THREE.BufferGeometry(); pg.setAttribute('position',new THREE.Float32BufferAttribute(P,3)); pg.setAttribute('color',new THREE.Float32BufferAttribute(Cc,3));
+      const pmL=new THREE.PointsMaterial({size:9,map:tex,vertexColors:true,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,sizeAttenuation:true,opacity:0.7});
+      const pts=new THREE.Points(pg,pmL); pts.frustumCulled=false; scene.add(pts); }
     CITY.beam=beam;
     CITY.R=R; CITY.scene=scene; CITY.cam=cam; CITY.uni=uni; CITY.sky=sky; CITY.ang=Math.random()*6; CITY.shoreZ=shoreZ;
     CITY.center=new THREE.Vector3(B*0.5+ST*0.5,0,B*0.5+ST*0.5);

@@ -15,3 +15,4 @@ gekürzt, ausgeblendet und normalisiert:
   "fireworks_2009_close" von matucha (freesound.org/people/matucha) – CC BY 3.0
   "fireworks.wav", "Fireworks 2 16", "Fireworks 3 16" von ramagochi (freesound.org/people/ramagochi) – CC BY 3.0
   "Fireworks#1" von bmlake (freesound.org/people/bmlake) – CC BY 3.0
+flute.mp3, harp.mp3: gerendert aus FluidR3_GM.sf2 (MIT-Lizenz), Programme Flute (74) und Orchestral Harp (47).

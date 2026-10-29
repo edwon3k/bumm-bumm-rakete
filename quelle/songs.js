@@ -48,6 +48,9 @@ const SONGS = [
   { id:'kanon', title:'Kanonen-Kanon', composer:'Johann Pachelbel', piece:'Kanon in D', bpm:124, style:'rock', lead:'guitar', bass:'pick', pad:'power', orch:'str', oct:0, pack:2, cannon:true,
     mel:'F#5-8 E5-8 | D5-8 C#5-8 | B4-8 A4-8 | B4-8 C#5-8 | D5-4 C#5-4 B4-4 A4-4 | G4-4 F#4-4 G4-4 E4-4 | D4-2 F#4-2 A4-2 G4-2 F#4-2 D4-2 F#4-2 E4-2 | D4-2 B3-2 D4-2 A4-2 G4-2 B4-2 A4-2 G4-2 | F#4-2 D4-2 E4-2 C#5-2 D5-2 F#5-2 A5-2 A4-2 | B4-2 G4-2 A4-2 F#4-2 D4-2 D5-2 D5-4 | G4-2 B4-2 A4-2 G4-2 F#4-2 A4-2 G4-2 E4-2 | D4-4 A4-4 D5-8',
     chords:'D,A Bm,F#m G,D G,A D,A Bm,F#m G,D G,A D,A Bm,F#m G,D G,A' },
+  { id:'sternenmeer', title:'Sternenmeer-Ballade', composer:'Bumm Bumm Rakete', piece:'Eigene romantische Ballade', bpm:84, style:'ballad', lead:'flute', bass:'bass', pad:'harp', orch:'full', oct:0, pack:3,
+    mel:'D5-4 E5-2 G5-2 A5-6 G5-2 | B5-4 A5-2 G5-2 E5-4 D5-4 | E5-4 G5-2 A5-2 B5-4 D6-4 | B5-6 A5-2 A5-8 | G5-4 A5-2 B5-2 D6-6 B5-2 | A5-4 G5-2 E5-2 D5-4 E5-4 | G5-4 A5-2 B5-2 A5-4 G5-2 E5-2 | G5-16',
+    chords:'G Em C D Em C C,D G' }
 ];
 
 // Elektro-Fassung (Standard): gleiche Melodien, aber Techno/Trance/Electro-Produktion wie im Original-Spiel üblich

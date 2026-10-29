@@ -1,7 +1,7 @@
 // ===== Menüs =====
 const $=s=>document.querySelector(s);
 const MODE_NAMES={arcade:'Arcade',endless:'Endlos',practice:'Training',versus:'2 Spieler'};
-const STYLE_NAMES={own:'Eigene Datei',ska:'Ska',skapunk:'Ska-Punk',rock:'Rock',metal:'Metal',funk:'Funk',bigbeat:'Big Beat',triphop:'Trip-Hop',latin:'Latin',disco:'Disco',house:'House',surf:'Surf-Rock',techno:'Techno',trance:'Trance',hardtek:'Hard Techno',electro:'Electro',breaks:'Breakbeat',deep:'Deep House'};
+const STYLE_NAMES={own:'Eigene Datei',ballad:'Ballade',ska:'Ska',skapunk:'Ska-Punk',rock:'Rock',metal:'Metal',funk:'Funk',bigbeat:'Big Beat',triphop:'Trip-Hop',latin:'Latin',disco:'Disco',house:'House',surf:'Surf-Rock',techno:'Techno',trance:'Trance',hardtek:'Hard Techno',electro:'Electro',breaks:'Breakbeat',deep:'Deep House'};
 let UI={screen:'title', mode:'arcade', diff:1, tempo:0.75, sel:0, last:null, mods:{}};
 const isTouch = matchMedia('(pointer: coarse)').matches;
 

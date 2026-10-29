@@ -1,5 +1,5 @@
 // ===== Echte Instrumente: aufgenommene Samples (FluidR3 GM, MIT-Lizenz) statt Synthesizer =====
-const SMP_META={"trumpet":{"notes":[52,55,58,61,64,67,70,73,76,79,82,85],"slot":2.4,"t0":0.5},"trombone":{"notes":[40,43,46,49,52,55,58,61,64,67,70],"slot":2.4,"t0":0.5},"brass":{"notes":[48,51,54,57,60,63,66,69,72,75,78,81],"slot":1.4,"t0":0.5},"odgtr":{"notes":[40,43,46,49,52,55,58,61,64,67,70,73,76,79,82,85,88],"slot":2.8,"t0":0.5},"distgtr":{"notes":[40,43,46,49,52,55,58,61,64,67,70,73,76],"slot":2.5,"t0":0.5},"mutegtr":{"notes":[40,43,46,49,52,55,58,61,64,67,70,73,76],"slot":0.7,"t0":0.5},"cleangtr":{"notes":[52,55,58,61,64,67,70,73,76,79,82],"slot":1.9,"t0":0.5},"fbass":{"notes":[28,31,34,37,40,43,46,49,52,55,58],"slot":1.8,"t0":0.5},"pbass":{"notes":[28,31,34,37,40,43,46,49,52,55,58],"slot":1.6,"t0":0.5},"slap":{"notes":[28,31,34,37,40,43,46,49,52,55,58],"slot":1.1,"t0":0.5},"organ":{"notes":[43,46,49,52,55,58,61,64,67,70,73,76,79,82,85,88],"slot":2.5,"t0":0.5},"ep":{"notes":[45,48,51,54,57,60,63,66,69,72,75,78,81,84,87],"slot":2.8,"t0":0.5},"strings":{"notes":[36,39,42,45,48,51,54,57,60,63,66,69,72,75,78,81,84,87],"slot":3.8,"t0":0.5},"choir":{"notes":[48,51,54,57,60,63,66,69,72,75,78],"slot":3.8,"t0":0.5},"celesta":{"notes":[60,63,66,69,72,75,78,81,84,87,90,93,96],"slot":2.0,"t0":0.5},"timpani":{"notes":[36,39,42,45,48,51,54,57],"slot":2.4,"t0":0.5},"drums":{"names":["kick","kick2","snare","snareS","ghost","rim","clap","hat","hatS","pedal","ohat","crash","crash2","ride","bell","tamb","congaH","congaL","tomH","tomM","tomL","tomF","cowbell","splash","shaker"],"slot":1.6,"t0":0.5},"fx":{"names":["c00","c01","c04","c05","c06","c08","c09","c12","c03","c10","rise","thump"],"slot":2.6,"t0":0.5}};
+const SMP_META={"flute":{"notes":[60,63,66,69,72,75,78,81,84,87,90,93,96],"slot":2.4,"t0":0.5},"harp":{"notes":[36,39,42,45,48,51,54,57,60,63,66,69,72,75,78,81,84],"slot":2.6,"t0":0.5},"trumpet":{"notes":[52,55,58,61,64,67,70,73,76,79,82,85],"slot":2.4,"t0":0.5},"trombone":{"notes":[40,43,46,49,52,55,58,61,64,67,70],"slot":2.4,"t0":0.5},"brass":{"notes":[48,51,54,57,60,63,66,69,72,75,78,81],"slot":1.4,"t0":0.5},"odgtr":{"notes":[40,43,46,49,52,55,58,61,64,67,70,73,76,79,82,85,88],"slot":2.8,"t0":0.5},"distgtr":{"notes":[40,43,46,49,52,55,58,61,64,67,70,73,76],"slot":2.5,"t0":0.5},"mutegtr":{"notes":[40,43,46,49,52,55,58,61,64,67,70,73,76],"slot":0.7,"t0":0.5},"cleangtr":{"notes":[52,55,58,61,64,67,70,73,76,79,82],"slot":1.9,"t0":0.5},"fbass":{"notes":[28,31,34,37,40,43,46,49,52,55,58],"slot":1.8,"t0":0.5},"pbass":{"notes":[28,31,34,37,40,43,46,49,52,55,58],"slot":1.6,"t0":0.5},"slap":{"notes":[28,31,34,37,40,43,46,49,52,55,58],"slot":1.1,"t0":0.5},"organ":{"notes":[43,46,49,52,55,58,61,64,67,70,73,76,79,82,85,88],"slot":2.5,"t0":0.5},"ep":{"notes":[45,48,51,54,57,60,63,66,69,72,75,78,81,84,87],"slot":2.8,"t0":0.5},"strings":{"notes":[36,39,42,45,48,51,54,57,60,63,66,69,72,75,78,81,84,87],"slot":3.8,"t0":0.5},"choir":{"notes":[48,51,54,57,60,63,66,69,72,75,78],"slot":3.8,"t0":0.5},"celesta":{"notes":[60,63,66,69,72,75,78,81,84,87,90,93,96],"slot":2.0,"t0":0.5},"timpani":{"notes":[36,39,42,45,48,51,54,57],"slot":2.4,"t0":0.5},"drums":{"names":["kick","kick2","snare","snareS","ghost","rim","clap","hat","hatS","pedal","ohat","crash","crash2","ride","bell","tamb","congaH","congaL","tomH","tomM","tomL","tomF","cowbell","splash","shaker"],"slot":1.6,"t0":0.5},"fx":{"names":["c00","c01","c04","c05","c06","c08","c09","c12","c03","c10","rise","thump"],"slot":2.6,"t0":0.5}};
 const SMP={buf:{}, d0:{}, loading:{}};
 const mFromF=f=>69+12*Math.log2(f/440);
 function smpLoad(name){
@@ -20,10 +20,10 @@ function smpLoad(name){
 function smpNeeded(song){
   const s=new Set(['drums','fx']);
   if(!song || song.custom) return ['fx'];
-  const L={brass:['trumpet','trombone'],guitar:['odgtr'],organ:['organ'],ep:['ep'],bell:['celesta'],strings:['strings']}[song.lead]||[];
+  const L={brass:['trumpet','trombone'],guitar:['odgtr'],organ:['organ'],ep:['ep'],bell:['celesta'],strings:['strings'],flute:['flute']}[song.lead]||[];
   L.forEach(x=>s.add(x));
   s.add(({bass:'fbass',walk:'fbass',pick:'pbass',slap:'slap',octave:'slap'})[song.bass]||'fbass');
-  (({power:['distgtr','mutegtr','cleangtr'],skank:['cleangtr','organ','brass'],brass:['brass','mutegtr'],chicken:['mutegtr','cleangtr','brass'],ep:['ep'],arp:['ep']})[song.pad]||[]).forEach(x=>s.add(x));
+  (({power:['distgtr','mutegtr','cleangtr'],skank:['cleangtr','organ','brass'],brass:['brass','mutegtr'],chicken:['mutegtr','cleangtr','brass'],ep:['ep'],arp:['ep'],harp:['harp']})[song.pad]||[]).forEach(x=>s.add(x));
   if(song.orch){ s.add('strings'); s.add('timpani'); if(song.orch==='full') s.add('choir'); }
   s.add('ep'); s.add('timpani');
   return [...s];
@@ -66,6 +66,8 @@ const LEAD = {
   organ(t,d,f,v,out){ if(!has('organ')) return SYN_LEAD.organ(t,d,f,v,out); splay('organ',t,mFromF(f),d,0.55*v,out,{rel:0.06}); },
   ep(t,d,f,v,out){ if(!has('ep')) return SYN_LEAD.ep(t,d,f,v,out); splay('ep',t,mFromF(f),Math.max(d,0.35)+0.4,0.7*v,out,{rel:0.35}); },
   bell(t,d,f,v,out){ if(!has('celesta')) return SYN_LEAD.bell(t,d,f,v,out); splay('celesta',t,mFromF(f),Math.max(d,0.5)+0.5,0.6*v,out,{rel:0.4}); },
+  flute(t,d,f,v,out){ if(!has('flute')) return SYN_LEAD.strings(t,d,f,v,out); splay('flute',t,mFromF(f),d+0.08,0.6*v,out,{att:0.03,rel:0.3}); },
+  harp(t,d,f,v,out){ if(!has('harp')) return SYN_LEAD.bell(t,d,f,v,out); splay('harp',t,mFromF(f),Math.max(d,0.6)+0.8,0.55*v,out,{rel:0.6}); },
   strings(t,d,f,v,out){ if(!has('strings')) return SYN_LEAD.strings(t,d,f,v,out); splay('strings',t,mFromF(f),d,0.55*v,out,{att:0.04,rel:0.25}); },
 };
 const BASS = {

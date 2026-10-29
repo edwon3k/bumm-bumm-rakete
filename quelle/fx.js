@@ -116,7 +116,7 @@ const BASE_TYPES=['peony','chrysanthemum','ring','willow','palm','crossette','st
 const UNLOCK_SHAPES=[['heart','Herz'],['star','Stern'],['spiral','Spirale'],['saturn','Saturn'],['smiley','Smiley'],['kamuro','Kamuro'],['horsetail','Pferdeschweif'],['butterfly','Schmetterling'],['multibreak','Kettenknall'],['fish','Fischschwarm'],['pistil','Kernblüte'],['doublering','Doppelring'],['cube','Würfel'],['palm','Palme'],['crossette','Kreuzfeuer']];
 const PALETTES=[['Eis',C.cyan,C.white],['Feuer',C.orange,C.red],['Neon',C.magenta,C.lime],['Gold',C.gold,C.white],['Galaxie',C.violet,C.cyan],['Kirsch',C.pink,C.white],['Gift',C.lime,C.violet],['Ozean',C.blue,C.cyan],['Lava',C.red,C.gold],['Polar',C.silver,C.blue],['Sonnen',C.yellow,C.orange],['Mitternacht',C.blue,C.violet],['Bonbon',C.pink,C.cyan],['Smaragd',C.green,C.gold],['Rubin',C.red,C.pink]];
 const UNLOCKS=[];
-(function(){ let i=0; for(let s=0;s<15;s++) for(let d=0;d<3;d++){ const sh=UNLOCK_SHAPES[(s+d*5)%15], pal=PALETTES[(s*2+d*7)%15]; UNLOCKS.push({id:s*3+d, shape:sh[0], name:pal[0]+'-'+sh[1], c:pal[1], c2:pal[2]}); i++; } })();
+(function(){ let i=0; for(let s=0;s<16;s++) for(let d=0;d<3;d++){ const sh=UNLOCK_SHAPES[(s+d*5)%15], pal=PALETTES[(s*2+d*7)%15]; UNLOCKS.push({id:s*3+d, shape:sh[0], name:pal[0]+'-'+sh[1], c:pal[1], c2:pal[2]}); i++; } })();
 
 function launchBurst(x,y,type,c,c2,s){ (SHAPES[type]||SHAPES.peony)(x,y,c,c2===undefined?-1:c2,s||1); }
 

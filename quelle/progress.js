@@ -20,7 +20,7 @@ const ACH=[
   ['bonus','Zugabe','Alle 5 Bonuslieder schaffen'],
   ['unl5','Sammler','5 Spezial-Feuerwerke freischalten'],
   ['unl20','Feuerwerkskiste','20 Spezial-Feuerwerke freischalten'],
-  ['unl45','Komplette Sammlung','Alle 45 Spezial-Feuerwerke freischalten'],
+  ['unl45','Komplette Sammlung','Alle Spezial-Feuerwerke freischalten'],
   ['endless5','Ausdauer','5 Runden im Endlos-Modus'],
   ['own','Eigener Sound','Ein eigenes Lied schaffen'],
   ['versus','Duell','Ein Spiel zu zweit'],
@@ -90,7 +90,7 @@ function progAfterGame(){
   storeSave();
   return {gain, before, after, xp:SAVE.xp, daily};
 }
-function progUnlockAch(){ const n=SAVE.unlocked.length; if(n>=5) award('unl5'); if(n>=20) award('unl20'); if(n>=45) award('unl45'); }
+function progUnlockAch(){ const n=SAVE.unlocked.length; if(n>=5) award('unl5'); if(n>=20) award('unl20'); if(n>=UNLOCKS.length) award('unl45'); }
 function xpHtml(r){
   if(!r) return '';
   const up=r.after.level>r.before.level, pct0=up?0:r.before.into/r.before.need*100, pct1=r.after.into/r.after.need*100;

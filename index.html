@@ -546,6 +546,9 @@ const SONGS = [
   { id:'kanon', title:'Kanonen-Kanon', composer:'Johann Pachelbel', piece:'Kanon in D', bpm:124, style:'rock', lead:'guitar', bass:'pick', pad:'power', orch:'str', oct:0, pack:2, cannon:true,
     mel:'F#5-8 E5-8 | D5-8 C#5-8 | B4-8 A4-8 | B4-8 C#5-8 | D5-4 C#5-4 B4-4 A4-4 | G4-4 F#4-4 G4-4 E4-4 | D4-2 F#4-2 A4-2 G4-2 F#4-2 D4-2 F#4-2 E4-2 | D4-2 B3-2 D4-2 A4-2 G4-2 B4-2 A4-2 G4-2 | F#4-2 D4-2 E4-2 C#5-2 D5-2 F#5-2 A5-2 A4-2 | B4-2 G4-2 A4-2 F#4-2 D4-2 D5-2 D5-4 | G4-2 B4-2 A4-2 G4-2 F#4-2 A4-2 G4-2 E4-2 | D4-4 A4-4 D5-8',
     chords:'D,A Bm,F#m G,D G,A D,A Bm,F#m G,D G,A D,A Bm,F#m G,D G,A' },
+  { id:'sternenmeer', title:'Sternenmeer-Ballade', composer:'Bumm Bumm Rakete', piece:'Eigene romantische Ballade', bpm:84, style:'ballad', lead:'flute', bass:'bass', pad:'harp', orch:'full', oct:0, pack:3,
+    mel:'D5-4 E5-2 G5-2 A5-6 G5-2 | B5-4 A5-2 G5-2 E5-4 D5-4 | E5-4 G5-2 A5-2 B5-4 D6-4 | B5-6 A5-2 A5-8 | G5-4 A5-2 B5-2 D6-6 B5-2 | A5-4 G5-2 E5-2 D5-4 E5-4 | G5-4 A5-2 B5-2 A5-4 G5-2 E5-2 | G5-16',
+    chords:'G Em C D Em C C,D G' }
 ];
 
 // Elektro-Fassung (Standard): gleiche Melodien, aber Techno/Trance/Electro-Produktion wie im Original-Spiel üblich
@@ -922,7 +925,7 @@ const SYN_COMP = {
   epChord(t,d,notes,v){ notes.forEach(m=>SYN_LEAD.ep(t,d,mtof(m),0.45*v,A.music)); },
 };
 // ===== Echte Instrumente: aufgenommene Samples (FluidR3 GM, MIT-Lizenz) statt Synthesizer =====
-const SMP_META={"trumpet":{"notes":[52,55,58,61,64,67,70,73,76,79,82,85],"slot":2.4,"t0":0.5},"trombone":{"notes":[40,43,46,49,52,55,58,61,64,67,70],"slot":2.4,"t0":0.5},"brass":{"notes":[48,51,54,57,60,63,66,69,72,75,78,81],"slot":1.4,"t0":0.5},"odgtr":{"notes":[40,43,46,49,52,55,58,61,64,67,70,73,76,79,82,85,88],"slot":2.8,"t0":0.5},"distgtr":{"notes":[40,43,46,49,52,55,58,61,64,67,70,73,76],"slot":2.5,"t0":0.5},"mutegtr":{"notes":[40,43,46,49,52,55,58,61,64,67,70,73,76],"slot":0.7,"t0":0.5},"cleangtr":{"notes":[52,55,58,61,64,67,70,73,76,79,82],"slot":1.9,"t0":0.5},"fbass":{"notes":[28,31,34,37,40,43,46,49,52,55,58],"slot":1.8,"t0":0.5},"pbass":{"notes":[28,31,34,37,40,43,46,49,52,55,58],"slot":1.6,"t0":0.5},"slap":{"notes":[28,31,34,37,40,43,46,49,52,55,58],"slot":1.1,"t0":0.5},"organ":{"notes":[43,46,49,52,55,58,61,64,67,70,73,76,79,82,85,88],"slot":2.5,"t0":0.5},"ep":{"notes":[45,48,51,54,57,60,63,66,69,72,75,78,81,84,87],"slot":2.8,"t0":0.5},"strings":{"notes":[36,39,42,45,48,51,54,57,60,63,66,69,72,75,78,81,84,87],"slot":3.8,"t0":0.5},"choir":{"notes":[48,51,54,57,60,63,66,69,72,75,78],"slot":3.8,"t0":0.5},"celesta":{"notes":[60,63,66,69,72,75,78,81,84,87,90,93,96],"slot":2.0,"t0":0.5},"timpani":{"notes":[36,39,42,45,48,51,54,57],"slot":2.4,"t0":0.5},"drums":{"names":["kick","kick2","snare","snareS","ghost","rim","clap","hat","hatS","pedal","ohat","crash","crash2","ride","bell","tamb","congaH","congaL","tomH","tomM","tomL","tomF","cowbell","splash","shaker"],"slot":1.6,"t0":0.5},"fx":{"names":["c00","c01","c04","c05","c06","c08","c09","c12","c03","c10","rise","thump"],"slot":2.6,"t0":0.5}};
+const SMP_META={"flute":{"notes":[60,63,66,69,72,75,78,81,84,87,90,93,96],"slot":2.4,"t0":0.5},"harp":{"notes":[36,39,42,45,48,51,54,57,60,63,66,69,72,75,78,81,84],"slot":2.6,"t0":0.5},"trumpet":{"notes":[52,55,58,61,64,67,70,73,76,79,82,85],"slot":2.4,"t0":0.5},"trombone":{"notes":[40,43,46,49,52,55,58,61,64,67,70],"slot":2.4,"t0":0.5},"brass":{"notes":[48,51,54,57,60,63,66,69,72,75,78,81],"slot":1.4,"t0":0.5},"odgtr":{"notes":[40,43,46,49,52,55,58,61,64,67,70,73,76,79,82,85,88],"slot":2.8,"t0":0.5},"distgtr":{"notes":[40,43,46,49,52,55,58,61,64,67,70,73,76],"slot":2.5,"t0":0.5},"mutegtr":{"notes":[40,43,46,49,52,55,58,61,64,67,70,73,76],"slot":0.7,"t0":0.5},"cleangtr":{"notes":[52,55,58,61,64,67,70,73,76,79,82],"slot":1.9,"t0":0.5},"fbass":{"notes":[28,31,34,37,40,43,46,49,52,55,58],"slot":1.8,"t0":0.5},"pbass":{"notes":[28,31,34,37,40,43,46,49,52,55,58],"slot":1.6,"t0":0.5},"slap":{"notes":[28,31,34,37,40,43,46,49,52,55,58],"slot":1.1,"t0":0.5},"organ":{"notes":[43,46,49,52,55,58,61,64,67,70,73,76,79,82,85,88],"slot":2.5,"t0":0.5},"ep":{"notes":[45,48,51,54,57,60,63,66,69,72,75,78,81,84,87],"slot":2.8,"t0":0.5},"strings":{"notes":[36,39,42,45,48,51,54,57,60,63,66,69,72,75,78,81,84,87],"slot":3.8,"t0":0.5},"choir":{"notes":[48,51,54,57,60,63,66,69,72,75,78],"slot":3.8,"t0":0.5},"celesta":{"notes":[60,63,66,69,72,75,78,81,84,87,90,93,96],"slot":2.0,"t0":0.5},"timpani":{"notes":[36,39,42,45,48,51,54,57],"slot":2.4,"t0":0.5},"drums":{"names":["kick","kick2","snare","snareS","ghost","rim","clap","hat","hatS","pedal","ohat","crash","crash2","ride","bell","tamb","congaH","congaL","tomH","tomM","tomL","tomF","cowbell","splash","shaker"],"slot":1.6,"t0":0.5},"fx":{"names":["c00","c01","c04","c05","c06","c08","c09","c12","c03","c10","rise","thump"],"slot":2.6,"t0":0.5}};
 const SMP={buf:{}, d0:{}, loading:{}};
 const mFromF=f=>69+12*Math.log2(f/440);
 function smpLoad(name){
@@ -943,10 +946,10 @@ function smpLoad(name){
 function smpNeeded(song){
   const s=new Set(['drums','fx']);
   if(!song || song.custom) return ['fx'];
-  const L={brass:['trumpet','trombone'],guitar:['odgtr'],organ:['organ'],ep:['ep'],bell:['celesta'],strings:['strings']}[song.lead]||[];
+  const L={brass:['trumpet','trombone'],guitar:['odgtr'],organ:['organ'],ep:['ep'],bell:['celesta'],strings:['strings'],flute:['flute']}[song.lead]||[];
   L.forEach(x=>s.add(x));
   s.add(({bass:'fbass',walk:'fbass',pick:'pbass',slap:'slap',octave:'slap'})[song.bass]||'fbass');
-  (({power:['distgtr','mutegtr','cleangtr'],skank:['cleangtr','organ','brass'],brass:['brass','mutegtr'],chicken:['mutegtr','cleangtr','brass'],ep:['ep'],arp:['ep']})[song.pad]||[]).forEach(x=>s.add(x));
+  (({power:['distgtr','mutegtr','cleangtr'],skank:['cleangtr','organ','brass'],brass:['brass','mutegtr'],chicken:['mutegtr','cleangtr','brass'],ep:['ep'],arp:['ep'],harp:['harp']})[song.pad]||[]).forEach(x=>s.add(x));
   if(song.orch){ s.add('strings'); s.add('timpani'); if(song.orch==='full') s.add('choir'); }
   s.add('ep'); s.add('timpani');
   return [...s];
@@ -989,6 +992,8 @@ const LEAD = {
   organ(t,d,f,v,out){ if(!has('organ')) return SYN_LEAD.organ(t,d,f,v,out); splay('organ',t,mFromF(f),d,0.55*v,out,{rel:0.06}); },
   ep(t,d,f,v,out){ if(!has('ep')) return SYN_LEAD.ep(t,d,f,v,out); splay('ep',t,mFromF(f),Math.max(d,0.35)+0.4,0.7*v,out,{rel:0.35}); },
   bell(t,d,f,v,out){ if(!has('celesta')) return SYN_LEAD.bell(t,d,f,v,out); splay('celesta',t,mFromF(f),Math.max(d,0.5)+0.5,0.6*v,out,{rel:0.4}); },
+  flute(t,d,f,v,out){ if(!has('flute')) return SYN_LEAD.strings(t,d,f,v,out); splay('flute',t,mFromF(f),d+0.08,0.6*v,out,{att:0.03,rel:0.3}); },
+  harp(t,d,f,v,out){ if(!has('harp')) return SYN_LEAD.bell(t,d,f,v,out); splay('harp',t,mFromF(f),Math.max(d,0.6)+0.8,0.55*v,out,{rel:0.6}); },
   strings(t,d,f,v,out){ if(!has('strings')) return SYN_LEAD.strings(t,d,f,v,out); splay('strings',t,mFromF(f),d,0.55*v,out,{att:0.04,rel:0.25}); },
 };
 const BASS = {
@@ -1138,6 +1143,7 @@ const STYLES = {
   latin:   {k:'X..x..x.X..x..x.', s:'', m:'x..x..x...x.x...', h:'', t:'xgxgxgxgxgxgxgxg', q:'..x.X..x..x.X..x', b:'x..x..x.x..x..x.'},
   disco:   {k:'X...X...X...X...', s:'....X.......X...', c:'....x.......x...', h:'x...x...x...x...', o:'..x...x...x...x.', t:'xgxgxgxgxgxgxgxg', b:'x.x.x.x.x.x.x.x.'},
   house:   {k:'X...X...X...X...', s:'', c:'....X.......X...', h:'xgxgxgxgxgxgxgxg', o:'..x...x...x...x.', t:'..x...x...x...x.', b:'..x...x...x...x.'},
+  ballad:  {k:'X.........x.....', s:'........x.......', h:'x...x...x...x...', o:'', m:'', b:'x.......x.....x.'},
   surf:    {k:'X...x.x.X...x...', s:'....X.......X...', h:'x.x.x.x.x.x.x.x.', o:'', b:'x.x.x.x.x.x.x.x.', r:true},
   // ---- Elektro (synthetisiert) ----
   techno:  {k:'X...X...X...X...', c:'....X.......X...', h:'xgxgxgxgxgxgxgxg', o:'..x...x...x...x.', b:'..xx..xx..xx..xx', e:1},
@@ -1263,6 +1269,7 @@ function makeSection(song, kind, t0, bpm){
         if(s===0){ const dd=sd*14, gr=guitarRoot(ch);
           if(comp==='power') E(t,tt=>COMP.power(tt,dd,gr,0.9,false));
           else if(comp==='brass') E(t,tt=>COMP.brassStab(tt,notes,1,b===1));
+          else if(comp==='harp'){ const an=chordNotes(ch,50); [an[0]-12,...an,an[0]+12,an[1]+12].forEach((m,i)=>E(t+i*sd*0.5,tt=>LEAD.harp(tt,sd*8,mtof(m),0.7,A.music))); }
           else if(elek) E(t,tt=>sPad(tt,dd,chordNotes(ch,52),1));
           else E(t,tt=>COMP.epChord(tt,dd,chordNotes(ch,57),0.8));
           if(orch) E(t,tt=>strings(tt,dd,notes,0.9)); }
@@ -1294,6 +1301,9 @@ function makeSection(song, kind, t0, bpm){
           const v=at('X..x..x...x..x..',s); if(v){ const sn=chordNotes(ch,55); E(t,tt=>sStab(tt,sn,v)); }
         } else if(comp==='synpad'){
           if(s%half===0){ const dd=half*sd; E(t,tt=>sPad(tt,dd,chordNotes(ch,52),lvl>=2?1.1:0.9)); }
+        } else if(comp==='harp'){ // Harfe: auf- und absteigende Akkordbrechung, im Refrain doppelt so dicht
+          const an=chordNotes(ch,50); const seq=[an[0]-12,an[0],an[1],an[2],an[0]+12,an[2],an[1],an[0]];
+          const every=lvl>=3?1:2; if(s%every===0){ const m=seq[(s/every|0)%8]; E(t,tt=>LEAD.harp(tt,sd*4,mtof(m),lvl>=3?0.42:0.5,A.music)); }
         } else if(comp==='arp'){
           const an=chordNotes(ch,56); const seq=[an[0],an[1],an[2]];
           if(s%2===0||lvl>=3){ const m=seq[(s/(lvl>=3?1:2)|0)%3]+((s>=8&&lvl>=2)?12:0); const dd=sd*3; E(t,tt=>LEAD.ep(tt,dd,mtof(m),0.32,A.music)); }
@@ -1315,7 +1325,7 @@ function makeSection(song, kind, t0, bpm){
       const v = kind==='break'?0.8:1;
       E(t,tt=>LEAD[song.lead](tt,d,f,v,A.lead));
       if(lvl>=3 && E_LEADS.includes(song.lead)) { const f2=f/2; E(t,tt=>LEAD[song.lead](tt,d,f2,0.45,A.lead)); }
-      else if(lvl>=3 && song.lead!=='guitar' && n.len>=2) { const f2=f*2; E(t,tt=>LEAD[song.lead](tt,d,f2,0.3,A.lead)); }
+      else if(lvl>=3 && song.lead!=='guitar' && song.lead!=='flute' && n.len>=2) { const f2=f*2; E(t,tt=>LEAD[song.lead](tt,d,f2,0.3,A.lead)); }
       if(lvl>=3 && song.lead==='guitar' && n.len>=4) { const f2=mtof(n.midi+12); E(t,tt=>LEAD.guitar(tt,d,f2,0.35,A.lead)); }
       const band = Math.min(3, Math.floor((n.midi-P.lo)*4/(P.hi-P.lo+1)));
       cands.push({t, step:n.step%16, len:n.len, midi:n.midi, lane:band, beat:sd*4, mel:true});
@@ -1474,7 +1484,7 @@ const BASE_TYPES=['peony','chrysanthemum','ring','willow','palm','crossette','st
 const UNLOCK_SHAPES=[['heart','Herz'],['star','Stern'],['spiral','Spirale'],['saturn','Saturn'],['smiley','Smiley'],['kamuro','Kamuro'],['horsetail','Pferdeschweif'],['butterfly','Schmetterling'],['multibreak','Kettenknall'],['fish','Fischschwarm'],['pistil','Kernblüte'],['doublering','Doppelring'],['cube','Würfel'],['palm','Palme'],['crossette','Kreuzfeuer']];
 const PALETTES=[['Eis',C.cyan,C.white],['Feuer',C.orange,C.red],['Neon',C.magenta,C.lime],['Gold',C.gold,C.white],['Galaxie',C.violet,C.cyan],['Kirsch',C.pink,C.white],['Gift',C.lime,C.violet],['Ozean',C.blue,C.cyan],['Lava',C.red,C.gold],['Polar',C.silver,C.blue],['Sonnen',C.yellow,C.orange],['Mitternacht',C.blue,C.violet],['Bonbon',C.pink,C.cyan],['Smaragd',C.green,C.gold],['Rubin',C.red,C.pink]];
 const UNLOCKS=[];
-(function(){ let i=0; for(let s=0;s<15;s++) for(let d=0;d<3;d++){ const sh=UNLOCK_SHAPES[(s+d*5)%15], pal=PALETTES[(s*2+d*7)%15]; UNLOCKS.push({id:s*3+d, shape:sh[0], name:pal[0]+'-'+sh[1], c:pal[1], c2:pal[2]}); i++; } })();
+(function(){ let i=0; for(let s=0;s<16;s++) for(let d=0;d<3;d++){ const sh=UNLOCK_SHAPES[(s+d*5)%15], pal=PALETTES[(s*2+d*7)%15]; UNLOCKS.push({id:s*3+d, shape:sh[0], name:pal[0]+'-'+sh[1], c:pal[1], c2:pal[2]}); i++; } })();
 
 function launchBurst(x,y,type,c,c2,s){ (SHAPES[type]||SHAPES.peony)(x,y,c,c2===undefined?-1:c2,s||1); }
 
@@ -1838,7 +1848,11 @@ function cityInit(){
       vec3 grade(vec3 c){ c*=0.6; float l=dot(c,vec3(0.3,0.59,0.11));
         c=mix(c*vec3(0.92,0.88,1.12), c*vec3(1.1,0.93,0.9), smoothstep(0.02,0.3,l));
         c+=vec3(0.012,0.0,0.01)*(1.0-smoothstep(0.0,0.1,l)); return c; }
-      vec3 fogIt(vec3 c, vec3 w){ vec3 d=w-uCam; float f=1.0-exp(-length(d)*0.0004); vec3 dn=normalize(d); return mix(c,skyCol(vec3(dn.x,max(dn.y,0.0),dn.z),false)*0.7+uFlash*0.12,f); }`;
+      vec3 fogIt(vec3 c, vec3 w){ vec3 d=w-uCam; float L=length(d); float f=1.0-exp(-L*0.0004); vec3 dn=normalize(d);
+        c=mix(c,skyCol(vec3(dn.x,max(dn.y,0.0),dn.z),false)*0.7+uFlash*0.12,f);
+        // Dunst über der Stadt: warmes Streulicht der Straßenlaternen hängt bodennah in der Luft
+        float hz=(1.0-exp(-L*0.0016))*exp(-max(w.y,0.0)/70.0);
+        return mix(c,vec3(0.2,0.1,0.07)+uFlash*0.2,hz*0.7); }`;
     // --- Himmel: große Kugel um die Kamera ---
     const sky=new THREE.Mesh(new THREE.SphereGeometry(8000,48,24), new THREE.ShaderMaterial({uniforms:uni, side:THREE.BackSide, depthWrite:false,
       vertexShader:`varying vec3 vD; void main(){ vD=position; vec4 wp=modelMatrix*vec4(position,1.0); gl_Position=projectionMatrix*viewMatrix*wp; }`,
@@ -1896,8 +1910,12 @@ function cityInit(){
             float r=h21(id+seed*91.7), r2=h21(id*1.71+seed), r3=h21(id*0.37+7.0+seed);
             float ratio=0.07+0.22*seed+0.06*sin(seed*20.0);
             float lit=step(r,ratio);
+            float fl=h21(vec2(floor(cell.y),seed*57.0+(sx?3.0:0.0)));
+            bool officeFloor = typ!=2 && fl<0.09+0.05*seed;                                    // ganze Büroetage noch hell erleuchtet
+            if(officeFloor) lit=1.0;
             vec3 wc=mix(vec3(1.0,0.62,0.32),vec3(1.0,0.8,0.55),r2);
             if(r2>0.93) wc=vec3(0.62,0.8,1.0);
+            if(officeFloor) wc=mix(vec3(0.85,0.92,1.0),vec3(1.0,0.95,0.85),fl*8.0);
             if(seed>0.9) wc=mix(wc,neon(h21(vec2(seed,1.0))),0.45);
             // Innenraum: Deckenlicht oben heller, Vorhänge, ab und zu flackernder Fernseher
             vec2 q=(f-lo)/(hi-lo);
@@ -2197,6 +2215,18 @@ function cityInit(){
     const beamG=new THREE.ConeGeometry(30,700,24,1,true); beamG.translate(0,-350,0); beamG.rotateZ(Math.PI/2);
     const beam=new THREE.Mesh(beamG,beamMat); beam.position.set(-60,47,shoreZ+pierL); scene.add(beam);
     const lampG=new THREE.Mesh(new THREE.SphereGeometry(3.2,12,8),new THREE.MeshBasicMaterial({color:0xfff2c0})); lampG.position.set(-60,47,shoreZ+pierL); scene.add(lampG);
+    // Straßenlaternen als leuchtende Lichtpunkte (natriumorange, vereinzelt weißes LED-Licht)
+    { const lc=document.createElement('canvas'); lc.width=lc.height=64; const lx=lc.getContext('2d'); const gr=lx.createRadialGradient(32,32,0,32,32,32);
+      gr.addColorStop(0,'rgba(255,255,255,1)'); gr.addColorStop(0.12,'rgba(255,255,255,0.85)'); gr.addColorStop(0.35,'rgba(255,255,255,0.18)'); gr.addColorStop(1,'rgba(255,255,255,0)');
+      lx.fillStyle=gr; lx.fillRect(0,0,64,64); const tex=new THREE.CanvasTexture(lc);
+      const P=[], Cc=[]; const add=(x,z,led)=>{ P.push(x,5.5,z); const c=led?[0.75,0.85,1.0]:[1.0,0.62,0.28]; Cc.push(c[0],c[1],c[2]); };
+      for(let gx=-NX;gx<=NX;gx++) for(let gz=NZ0;gz<=SHORE;gz++){ const x0=gx*B, z0=gz*B, led=Math.abs(Math.sin(gx*3.1+gz*7.7))<0.18;
+        for(let k=0;k<2;k++){ add(x0+0.8, z0+ST+4+k*(B-ST-8)/1, led); add(x0+ST-0.8, z0+ST+4+k*(B-ST-8)/1, led);
+          add(x0+ST+4+k*(B-ST-8), z0+0.8, led); add(x0+ST+4+k*(B-ST-8), z0+ST-0.8, led); } }
+      for(let x=-NX*B;x<=NX*B;x+=7) add(x, shoreZ-1.5, false);                          // Promenade
+      const pg=new THREE.BufferGeometry(); pg.setAttribute('position',new THREE.Float32BufferAttribute(P,3)); pg.setAttribute('color',new THREE.Float32BufferAttribute(Cc,3));
+      const pmL=new THREE.PointsMaterial({size:9,map:tex,vertexColors:true,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,sizeAttenuation:true,opacity:0.7});
+      const pts=new THREE.Points(pg,pmL); pts.frustumCulled=false; scene.add(pts); }
     CITY.beam=beam;
     CITY.R=R; CITY.scene=scene; CITY.cam=cam; CITY.uni=uni; CITY.sky=sky; CITY.ang=Math.random()*6; CITY.shoreZ=shoreZ;
     CITY.center=new THREE.Vector3(B*0.5+ST*0.5,0,B*0.5+ST*0.5);
@@ -3417,7 +3447,7 @@ const ACH=[
   ['bonus','Zugabe','Alle 5 Bonuslieder schaffen'],
   ['unl5','Sammler','5 Spezial-Feuerwerke freischalten'],
   ['unl20','Feuerwerkskiste','20 Spezial-Feuerwerke freischalten'],
-  ['unl45','Komplette Sammlung','Alle 45 Spezial-Feuerwerke freischalten'],
+  ['unl45','Komplette Sammlung','Alle Spezial-Feuerwerke freischalten'],
   ['endless5','Ausdauer','5 Runden im Endlos-Modus'],
   ['own','Eigener Sound','Ein eigenes Lied schaffen'],
   ['versus','Duell','Ein Spiel zu zweit'],
@@ -3487,7 +3517,7 @@ function progAfterGame(){
   storeSave();
   return {gain, before, after, xp:SAVE.xp, daily};
 }
-function progUnlockAch(){ const n=SAVE.unlocked.length; if(n>=5) award('unl5'); if(n>=20) award('unl20'); if(n>=45) award('unl45'); }
+function progUnlockAch(){ const n=SAVE.unlocked.length; if(n>=5) award('unl5'); if(n>=20) award('unl20'); if(n>=UNLOCKS.length) award('unl45'); }
 function xpHtml(r){
   if(!r) return '';
   const up=r.after.level>r.before.level, pct0=up?0:r.before.into/r.before.need*100, pct1=r.after.into/r.after.need*100;
@@ -3507,7 +3537,7 @@ function renderAch(){
 // ===== Menüs =====
 const $=s=>document.querySelector(s);
 const MODE_NAMES={arcade:'Arcade',endless:'Endlos',practice:'Training',versus:'2 Spieler'};
-const STYLE_NAMES={own:'Eigene Datei',ska:'Ska',skapunk:'Ska-Punk',rock:'Rock',metal:'Metal',funk:'Funk',bigbeat:'Big Beat',triphop:'Trip-Hop',latin:'Latin',disco:'Disco',house:'House',surf:'Surf-Rock',techno:'Techno',trance:'Trance',hardtek:'Hard Techno',electro:'Electro',breaks:'Breakbeat',deep:'Deep House'};
+const STYLE_NAMES={own:'Eigene Datei',ballad:'Ballade',ska:'Ska',skapunk:'Ska-Punk',rock:'Rock',metal:'Metal',funk:'Funk',bigbeat:'Big Beat',triphop:'Trip-Hop',latin:'Latin',disco:'Disco',house:'House',surf:'Surf-Rock',techno:'Techno',trance:'Trance',hardtek:'Hard Techno',electro:'Electro',breaks:'Breakbeat',deep:'Deep House'};
 let UI={screen:'title', mode:'arcade', diff:1, tempo:0.75, sel:0, last:null, mods:{}};
 const isTouch = matchMedia('(pointer: coarse)').matches;
 
