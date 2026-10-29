@@ -24,7 +24,7 @@ const b1=document.createElement('canvas'), b1g=b1.getContext('2d');
 const b2=document.createElement('canvas'), b2g=b2.getContext('2d');
 const CAM={shake:0,punch:0,z:1,sx:0,sy:0};
 const BEAT={p:0,last:-1};
-function camCompute(){ CAM.z=1+CAM.punch*0.035; CAM.sx=(Math.random()-0.5)*CAM.shake*12; CAM.sy=(Math.random()-0.5)*CAM.shake*12; }
+function camCompute(){ CAM.z=1+CAM.punch*0.012; CAM.sx=(Math.random()-0.5)*CAM.shake*3.5; CAM.sy=(Math.random()-0.5)*CAM.shake*3.5; }
 function camApply(ctx){ const z=CAM.z; ctx.setTransform(DPR*z,0,0,DPR*z,DPR*(W/2*(1-z)+CAM.sx),DPR*(H/2*(1-z)+CAM.sy)); }
 let W=0,H=0,DPR=1;
 function resize(){

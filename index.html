@@ -2217,11 +2217,11 @@ function cityRender(dt,bloom){
   // Blick steil von oben in die Häuserschlucht: Kamera schwebt über der Mittelstraße zwischen den Türmen,
   // gleitet langsam die Straße entlang, schwenkt leicht und wippt im Takt
   const a=CITY.ang, sz=CITY.shoreZ, cam=CITY.cam, port=W<H;
-  const px=4.5+Math.sin(a*0.9)*4, pz=-400+Math.sin(a*0.35)*130, py=(port?230:205)+Math.sin(a*1.3)*12+BEAT.p*3;
+  const px=4.5+Math.sin(a*0.9)*4, pz=-400+Math.sin(a*0.35)*130, py=(port?230:205)+Math.sin(a*1.3)*8+BEAT.p*0.8;
   const tx=px+Math.sin(a*0.7+0.6)*22, tz=pz+(port?120:150), ty=0;
-  const push=CAM.punch*22;
-  cam.position.set(px+CAM.sx*2, py-push+ie*260+CAM.sy*2, pz-ie*120);
-  const roll=Math.max(-0.08,Math.min(0.08,Math.cos(a*0.9)*0.06));
+  const push=CAM.punch*5;
+  cam.position.set(px+CAM.sx*0.3, py-push+ie*260+CAM.sy*0.3, pz-ie*120);
+  const roll=Math.max(-0.08,Math.min(0.08,Math.cos(a*0.9)*0.025));
   cam.up.set(Math.sin(roll),Math.cos(roll),0);
   cam.lookAt(tx, ty, tz);
   const sw=Math.sin(a);
@@ -2468,7 +2468,7 @@ const b1=document.createElement('canvas'), b1g=b1.getContext('2d');
 const b2=document.createElement('canvas'), b2g=b2.getContext('2d');
 const CAM={shake:0,punch:0,z:1,sx:0,sy:0};
 const BEAT={p:0,last:-1};
-function camCompute(){ CAM.z=1+CAM.punch*0.035; CAM.sx=(Math.random()-0.5)*CAM.shake*12; CAM.sy=(Math.random()-0.5)*CAM.shake*12; }
+function camCompute(){ CAM.z=1+CAM.punch*0.012; CAM.sx=(Math.random()-0.5)*CAM.shake*3.5; CAM.sy=(Math.random()-0.5)*CAM.shake*3.5; }
 function camApply(ctx){ const z=CAM.z; ctx.setTransform(DPR*z,0,0,DPR*z,DPR*(W/2*(1-z)+CAM.sx),DPR*(H/2*(1-z)+CAM.sy)); }
 let W=0,H=0,DPR=1;
 function resize(){
