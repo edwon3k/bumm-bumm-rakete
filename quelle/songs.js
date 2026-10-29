@@ -51,7 +51,7 @@ const SONGS = [
   { id:'sternenmeer', title:'Sternenmeer-Ballade', composer:'Bumm Bumm Rakete', piece:'Eigene romantische Ballade', bpm:84, style:'ballad', lead:'flute', bass:'bass', pad:'harp', orch:'full', oct:0, pack:3, keyUp:2,
     mel:'D5-4 E5-2 G5-2 A5-6 G5-2 | B5-4 A5-2 G5-2 E5-4 D5-4 | E5-4 G5-2 A5-2 B5-4 D6-4 | B5-6 A5-2 A5-8 | G5-4 A5-2 B5-2 D6-6 B5-2 | A5-4 G5-2 E5-2 D5-4 E5-4 | G5-4 A5-2 B5-2 A5-4 G5-2 E5-2 | G5-16',
     chords:'G Em C D Em C C,D G' },
-  { id:'cancan', title:'Cancan-Kracher', composer:'Jacques Offenbach', piece:'Höllen-Galopp (Orpheus in der Unterwelt)', bpm:152, style:'skapunk', lead:'brass', bass:'bass', pad:'skank', oct:0, pack:3,
+  { id:'cancan', title:'Cancan-Kracher', composer:'Jacques Offenbach', piece:'Höllen-Galopp (Orpheus in der Unterwelt)', bpm:152, style:'skapunk', lead:'brass', bass:'bass', pad:'skank', oct:0, pack:3, keyUp:2,
     mel:'C5-4 C5-4 D5-2 F5-2 E5-2 D5-2 | G5-4 G5-4 G5-2 A5-2 E5-2 F5-2 | D5-4 D5-4 D5-2 F5-2 E5-2 D5-2 | C5-2 C6-2 B5-2 A5-2 G5-2 F5-2 E5-2 D5-2 | C5-4 C5-4 D5-2 F5-2 E5-2 D5-2 | G5-4 G5-4 G5-2 A5-2 E5-2 F5-2 | D5-4 D5-4 D5-2 F5-2 E5-2 D5-2 | C5-2 G5-2 D5-2 E5-2 C5-8',
     chords:'C C G C,G C C G G,C' }
 ];

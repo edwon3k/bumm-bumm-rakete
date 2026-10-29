@@ -21,6 +21,7 @@ function addP(x,y,vx,vy,o){
 function sphereDir(){ const z=Math.random()*2-1, a=Math.random()*Math.PI*2, r=Math.sqrt(1-z*z); return [r*Math.cos(a), r*Math.sin(a)]; }
 function pick(arr){ return arr[(Math.random()*arr.length)|0]; }
 function flash(x,y,c,r,str=1){
+  if(SETTINGS.calm) str*=0.3; // Option: Blitze dämpfen
   FX.flashes.push({x,y,c,r,life:0.45,max:0.45,str});
   // Himmel und Stadt werden kurz in der Farbe der Explosion angeleuchtet
   const k=Math.min(1,0.35*str*(r/(250*FX.scale)));

@@ -255,7 +255,7 @@ function renderGallery(){
 // ---------- Optionen ----------
 function renderOptions(){
   $('#o-music').value=SETTINGS.music*100; $('#o-sfx').value=SETTINGS.sfx*100; $('#o-speed').value=SETTINGS.speed*100; $('#o-offset').value=SETTINGS.offset;
-  $('#o-mstyle').value=SETTINGS.musicStyle||'elektro'; $('#o-glyph').value=SETTINGS.glyphStyle; $('#o-quality').value=SETTINGS.quality; updOptLabels();
+  $('#o-mstyle').value=SETTINGS.musicStyle||'elektro'; $('#o-glyph').value=SETTINGS.glyphStyle; $('#o-quality').value=SETTINGS.quality; $('#o-calm').value=SETTINGS.calm?'1':'0'; updOptLabels();
 }
 function updOptLabels(){
   $('#v-music').textContent=Math.round(SETTINGS.music*100)+' %'; $('#v-sfx').textContent=Math.round(SETTINGS.sfx*100)+' %';
@@ -267,6 +267,7 @@ $('#o-speed').addEventListener('input',e=>{ SETTINGS.speed=e.target.value/100; u
 $('#o-offset').addEventListener('input',e=>{ SETTINGS.offset=+e.target.value; updOptLabels(); storeSave(); });
 $('#o-mstyle').addEventListener('change',e=>{ SETTINGS.musicStyle=e.target.value; storeSave(); applyMusicStyle(); toast(e.target.value==='band'?'Musik: Band-Sound (alt)':'Musik: Elektro-Sound'); });
 $('#o-glyph').addEventListener('change',e=>{ SETTINGS.glyphStyle=e.target.value; storeSave(); });
+$('#o-calm').addEventListener('change',e=>{ SETTINGS.calm=e.target.value==='1'; storeSave(); toast(SETTINGS.calm?'Blitze gedämpft':'Blitze normal'); });
 $('#o-quality').addEventListener('change',e=>{ SETTINGS.quality=e.target.value; PERF.low=SETTINGS.quality!=='high'; PERF.slow=0; storeSave(); resize(); });
 let resetArm=false;
 $('#o-reset').addEventListener('click',e=>{

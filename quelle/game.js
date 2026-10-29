@@ -8,7 +8,7 @@ const BLOOM_DUR=10;
 
 // ---------- Speicher ----------
 const PERF={low:false,slow:0};
-const SETTINGS={music:0.8,sfx:0.8,speed:1,offset:0,glyphStyle:'buttons',quality:'high',musicStyle:'elektro'};
+const SETTINGS={music:0.8,sfx:0.8,speed:1,offset:0,glyphStyle:'buttons',quality:'high',musicStyle:'elektro',calm:(()=>{ try{ return matchMedia('(prefers-reduced-motion: reduce)').matches; }catch(e){ return false; } })()};
 let SAVE={unlocked:[],best:{},endless:{}};
 function loadSave(){ try{ const s=JSON.parse(localStorage.getItem('bumm-save')||'null'); if(s){ SAVE=Object.assign(SAVE,s); Object.assign(SETTINGS,s.settings||{}); } }catch(e){} }
 function storeSave(){ try{ SAVE.settings=SETTINGS; localStorage.setItem('bumm-save',JSON.stringify(SAVE)); }catch(e){} }
@@ -285,6 +285,8 @@ function noteX(p,n,u){ const sp=hitLineSpan(p); const f=n.tx+(n.sx-n.tx)*Math.po
 function hitY(){ return H*0.3; }
 function spawnY(){ return H*0.97; }
 function pickFirework(){
+  // Cancan: Pariser Trikolore am Himmel
+  if(G&&G.song&&G.song.id==='cancan'&&Math.random()<0.45) return {type:pick(['peony','chrysanthemum','crossette','ring','peony']),c:pick([C.red,C.white,C.blue]),c2:pick([C.red,C.white,C.blue,-1])};
   // Ballade: mehr weiche, romantische Formen (Trauerweide, Kamuro, Herzen, Pferdeschweif)
   if(G&&G.song&&G.song.id==='sternenmeer'&&Math.random()<0.5) return {type:pick(['willow','kamuro','heart','horsetail','willow'])};
   const un=SAVE.unlocked;

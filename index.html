@@ -478,6 +478,7 @@ h2,.rescol h3,.help h3{font-style:italic;font-weight:500;letter-spacing:0.03em;}
     <div class="opt"><label for="o-mstyle">Musikstil</label><select id="o-mstyle" data-nav><option value="elektro">Elektro (Techno, Trance)</option><option value="band">Band (alter Sound)</option></select><span></span></div>
     <div class="opt"><label for="o-glyph">Symbole</label><select id="o-glyph" data-nav><option value="buttons">Xbox-Knöpfe (X A Y B)</option><option value="arrows">Pfeile</option></select><span></span></div>
     <div class="opt"><label for="o-quality">Grafik</label><select id="o-quality" data-nav><option value="high">Hoch</option><option value="low">Sparsam (schwache Geräte)</option></select><span></span></div>
+    <div class="opt"><label for="o-calm">Blitzlicht</label><select id="o-calm" data-nav><option value="0">Normal</option><option value="1">Gedämpft (für lichtempfindliche Augen)</option></select><span></span></div>
     <p class="fine">Latenz-Ausgleich: Wenn du die Raketen immer zu spät triffst, schiebe den Regler ins Plus, bei zu frühen Treffern ins Minus.</p>
     <div class="row"><button class="btn" data-nav id="o-reset">Fortschritt zurücksetzen</button><button class="btn primary" data-nav data-go="title">Fertig</button></div>
   </section>
@@ -560,7 +561,7 @@ const SONGS = [
   { id:'sternenmeer', title:'Sternenmeer-Ballade', composer:'Bumm Bumm Rakete', piece:'Eigene romantische Ballade', bpm:84, style:'ballad', lead:'flute', bass:'bass', pad:'harp', orch:'full', oct:0, pack:3, keyUp:2,
     mel:'D5-4 E5-2 G5-2 A5-6 G5-2 | B5-4 A5-2 G5-2 E5-4 D5-4 | E5-4 G5-2 A5-2 B5-4 D6-4 | B5-6 A5-2 A5-8 | G5-4 A5-2 B5-2 D6-6 B5-2 | A5-4 G5-2 E5-2 D5-4 E5-4 | G5-4 A5-2 B5-2 A5-4 G5-2 E5-2 | G5-16',
     chords:'G Em C D Em C C,D G' },
-  { id:'cancan', title:'Cancan-Kracher', composer:'Jacques Offenbach', piece:'Höllen-Galopp (Orpheus in der Unterwelt)', bpm:152, style:'skapunk', lead:'brass', bass:'bass', pad:'skank', oct:0, pack:3,
+  { id:'cancan', title:'Cancan-Kracher', composer:'Jacques Offenbach', piece:'Höllen-Galopp (Orpheus in der Unterwelt)', bpm:152, style:'skapunk', lead:'brass', bass:'bass', pad:'skank', oct:0, pack:3, keyUp:2,
     mel:'C5-4 C5-4 D5-2 F5-2 E5-2 D5-2 | G5-4 G5-4 G5-2 A5-2 E5-2 F5-2 | D5-4 D5-4 D5-2 F5-2 E5-2 D5-2 | C5-2 C6-2 B5-2 A5-2 G5-2 F5-2 E5-2 D5-2 | C5-4 C5-4 D5-2 F5-2 E5-2 D5-2 | G5-4 G5-4 G5-2 A5-2 E5-2 F5-2 | D5-4 D5-4 D5-2 F5-2 E5-2 D5-2 | C5-2 G5-2 D5-2 E5-2 C5-8',
     chords:'C C G C,G C C G G,C' }
 ];
@@ -1411,6 +1412,7 @@ function addP(x,y,vx,vy,o){
 function sphereDir(){ const z=Math.random()*2-1, a=Math.random()*Math.PI*2, r=Math.sqrt(1-z*z); return [r*Math.cos(a), r*Math.sin(a)]; }
 function pick(arr){ return arr[(Math.random()*arr.length)|0]; }
 function flash(x,y,c,r,str=1){
+  if(SETTINGS.calm) str*=0.3; // Option: Blitze dämpfen
   FX.flashes.push({x,y,c,r,life:0.45,max:0.45,str});
   // Himmel und Stadt werden kurz in der Farbe der Explosion angeleuchtet
   const k=Math.min(1,0.35*str*(r/(250*FX.scale)));
@@ -2575,7 +2577,7 @@ const BLOOM_DUR=10;
 
 // ---------- Speicher ----------
 const PERF={low:false,slow:0};
-const SETTINGS={music:0.8,sfx:0.8,speed:1,offset:0,glyphStyle:'buttons',quality:'high',musicStyle:'elektro'};
+const SETTINGS={music:0.8,sfx:0.8,speed:1,offset:0,glyphStyle:'buttons',quality:'high',musicStyle:'elektro',calm:(()=>{ try{ return matchMedia('(prefers-reduced-motion: reduce)').matches; }catch(e){ return false; } })()};
 let SAVE={unlocked:[],best:{},endless:{}};
 function loadSave(){ try{ const s=JSON.parse(localStorage.getItem('bumm-save')||'null'); if(s){ SAVE=Object.assign(SAVE,s); Object.assign(SETTINGS,s.settings||{}); } }catch(e){} }
 function storeSave(){ try{ SAVE.settings=SETTINGS; localStorage.setItem('bumm-save',JSON.stringify(SAVE)); }catch(e){} }
@@ -2852,6 +2854,8 @@ function noteX(p,n,u){ const sp=hitLineSpan(p); const f=n.tx+(n.sx-n.tx)*Math.po
 function hitY(){ return H*0.3; }
 function spawnY(){ return H*0.97; }
 function pickFirework(){
+  // Cancan: Pariser Trikolore am Himmel
+  if(G&&G.song&&G.song.id==='cancan'&&Math.random()<0.45) return {type:pick(['peony','chrysanthemum','crossette','ring','peony']),c:pick([C.red,C.white,C.blue]),c2:pick([C.red,C.white,C.blue,-1])};
   // Ballade: mehr weiche, romantische Formen (Trauerweide, Kamuro, Herzen, Pferdeschweif)
   if(G&&G.song&&G.song.id==='sternenmeer'&&Math.random()<0.5) return {type:pick(['willow','kamuro','heart','horsetail','willow'])};
   const un=SAVE.unlocked;
@@ -3898,7 +3902,7 @@ function renderGallery(){
 // ---------- Optionen ----------
 function renderOptions(){
   $('#o-music').value=SETTINGS.music*100; $('#o-sfx').value=SETTINGS.sfx*100; $('#o-speed').value=SETTINGS.speed*100; $('#o-offset').value=SETTINGS.offset;
-  $('#o-mstyle').value=SETTINGS.musicStyle||'elektro'; $('#o-glyph').value=SETTINGS.glyphStyle; $('#o-quality').value=SETTINGS.quality; updOptLabels();
+  $('#o-mstyle').value=SETTINGS.musicStyle||'elektro'; $('#o-glyph').value=SETTINGS.glyphStyle; $('#o-quality').value=SETTINGS.quality; $('#o-calm').value=SETTINGS.calm?'1':'0'; updOptLabels();
 }
 function updOptLabels(){
   $('#v-music').textContent=Math.round(SETTINGS.music*100)+' %'; $('#v-sfx').textContent=Math.round(SETTINGS.sfx*100)+' %';
@@ -3910,6 +3914,7 @@ $('#o-speed').addEventListener('input',e=>{ SETTINGS.speed=e.target.value/100; u
 $('#o-offset').addEventListener('input',e=>{ SETTINGS.offset=+e.target.value; updOptLabels(); storeSave(); });
 $('#o-mstyle').addEventListener('change',e=>{ SETTINGS.musicStyle=e.target.value; storeSave(); applyMusicStyle(); toast(e.target.value==='band'?'Musik: Band-Sound (alt)':'Musik: Elektro-Sound'); });
 $('#o-glyph').addEventListener('change',e=>{ SETTINGS.glyphStyle=e.target.value; storeSave(); });
+$('#o-calm').addEventListener('change',e=>{ SETTINGS.calm=e.target.value==='1'; storeSave(); toast(SETTINGS.calm?'Blitze gedämpft':'Blitze normal'); });
 $('#o-quality').addEventListener('change',e=>{ SETTINGS.quality=e.target.value; PERF.low=SETTINGS.quality!=='high'; PERF.slow=0; storeSave(); resize(); });
 let resetArm=false;
 $('#o-reset').addEventListener('click',e=>{
