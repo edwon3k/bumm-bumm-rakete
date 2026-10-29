@@ -163,6 +163,7 @@ function showResults(){
   $('#res-song').textContent=G.song.title+' · '+DIFF_NAMES[G.diff]+(G.mode==='practice'?' · Training '+Math.round(G.tempo*100)+'%':'');
   for(const p of ps){
     const gr=gradeOf(p); const failed=G.failed||p.failed;
+    if(p.i===0) UI.share={song:G.song.title,diff:DIFF_NAMES[G.diff],score:p.score,grade:failed&&G.mode!=='endless'?'–':gr.g,pct:Math.round(gr.pct*100),combo:p.maxCombo,mode:G.mode,laps:G.lap-1};
     const col=document.createElement('div'); col.className='rescol';
     let extra='';
     if(G.mode==='arcade' && !failed){
@@ -285,3 +286,13 @@ ownRestore();
 resize();
 showScreen('title');
 requestAnimationFrame(frame);
+
+// Ergebnis teilen: über das Teilen-Menü des Geräts, sonst in die Zwischenablage
+$('#r-share').addEventListener('click',async()=>{
+  const s=UI.share; if(!s) return;
+  const txt='🎆 Bumm Bumm Rakete: „'+s.song+'“ ('+s.diff+') – '+s.score.toLocaleString('de-DE')+' Punkte'+(s.mode==='endless'?', '+s.laps+' Runden':', Note '+s.grade+', '+s.pct+' %')+', Kombo '+s.combo+'. Schaffst du mehr?';
+  const url=location.protocol.startsWith('http')&&!/claude/.test(location.host)?location.href.split('#')[0]:'https://edwon3k.github.io/bumm-bumm-rakete/';
+  try{ if(navigator.share){ await navigator.share({title:'Bumm Bumm Rakete',text:txt,url}); return; } }catch(e){ if(e&&e.name==='AbortError') return; }
+  try{ await navigator.clipboard.writeText(txt+' '+url); toast('Ergebnis kopiert – einfach einfügen und verschicken'); }
+  catch(e){ toast('Kopieren nicht möglich'); }
+});

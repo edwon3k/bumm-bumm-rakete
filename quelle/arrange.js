@@ -30,9 +30,16 @@ function chordNotes(ch, base){ // Akkordtöne nahe 'base'
 }
 function bassRoot(ch){ let r=ch.pc+36; if(r<40) r+=12; return r; }
 function guitarRoot(ch){ let r=ch.pc+40; if(r>51) r-=12; return r; }
+function transposeP(P,tr){
+  P._tr=P._tr||{}; if(P._tr[tr]) return P._tr[tr];
+  const T={...P, mel:{...P.mel, notes:P.mel.notes.map(n=>({...n,midi:n.midi+tr}))}, chords:P.chords.map(bar=>bar.map(c=>({pc:(c.pc+tr+12)%12, iv:c.iv}))), lo:P.lo+tr, hi:P.hi+tr};
+  return P._tr[tr]=T;
+}
 // kind: intro | A | B | break | fill | build | C | outro | lap
 function makeSection(song, kind, t0, bpm){
-  const P=prepareSong(song), st=STYLES[song.style]||STYLES.rock;
+  // Rückung: manche Lieder steigen im großen Finale einen Ganzton höher
+  const tr=(song.keyUp&&(kind==='C'||kind==='lap'||kind==='outro'))?song.keyUp:0;
+  const P=tr?transposeP(prepareSong(song),tr):prepareSong(song), st=STYLES[song.style]||STYLES.rock;
   DRUMKIT=st.e?(st.hard?'eh':'e'):['rock','metal','surf','skapunk','bigbeat'].includes(song.style)?'rock':'std';
   const elek=!!st.e;
   const sd=60/bpm/4; const ev=[], cands=[];

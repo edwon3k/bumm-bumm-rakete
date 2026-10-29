@@ -396,7 +396,7 @@ h2,.rescol h3,.help h3{font-style:italic;font-weight:500;letter-spacing:0.03em;}
   <section class="screen panel" id="s-results" hidden>
     <div><p class="eyebrow" id="res-song"></p><h2 id="res-title">Show beendet!</h2></div>
     <div id="res-body"></div>
-    <div class="row"><button class="btn primary" data-nav id="r-again">Nochmal</button><button class="btn" data-nav id="r-select">Liedauswahl</button><button class="btn" data-nav id="r-menu">Hauptmenü</button></div>
+    <div class="row"><button class="btn primary" data-nav id="r-again">Nochmal</button><button class="btn" data-nav id="r-select">Liedauswahl</button><button class="btn" data-nav id="r-menu">Hauptmenü</button><button class="btn" data-nav id="r-share" title="Ergebnis teilen oder kopieren">Teilen</button></div>
   </section>
 
   <section class="screen panel" id="s-online" data-back="title" hidden>
@@ -548,7 +548,7 @@ const SONGS = [
   { id:'kanon', title:'Kanonen-Kanon', composer:'Johann Pachelbel', piece:'Kanon in D', bpm:124, style:'rock', lead:'guitar', bass:'pick', pad:'power', orch:'str', oct:0, pack:2, cannon:true,
     mel:'F#5-8 E5-8 | D5-8 C#5-8 | B4-8 A4-8 | B4-8 C#5-8 | D5-4 C#5-4 B4-4 A4-4 | G4-4 F#4-4 G4-4 E4-4 | D4-2 F#4-2 A4-2 G4-2 F#4-2 D4-2 F#4-2 E4-2 | D4-2 B3-2 D4-2 A4-2 G4-2 B4-2 A4-2 G4-2 | F#4-2 D4-2 E4-2 C#5-2 D5-2 F#5-2 A5-2 A4-2 | B4-2 G4-2 A4-2 F#4-2 D4-2 D5-2 D5-4 | G4-2 B4-2 A4-2 G4-2 F#4-2 A4-2 G4-2 E4-2 | D4-4 A4-4 D5-8',
     chords:'D,A Bm,F#m G,D G,A D,A Bm,F#m G,D G,A D,A Bm,F#m G,D G,A' },
-  { id:'sternenmeer', title:'Sternenmeer-Ballade', composer:'Bumm Bumm Rakete', piece:'Eigene romantische Ballade', bpm:84, style:'ballad', lead:'flute', bass:'bass', pad:'harp', orch:'full', oct:0, pack:3,
+  { id:'sternenmeer', title:'Sternenmeer-Ballade', composer:'Bumm Bumm Rakete', piece:'Eigene romantische Ballade', bpm:84, style:'ballad', lead:'flute', bass:'bass', pad:'harp', orch:'full', oct:0, pack:3, keyUp:2,
     mel:'D5-4 E5-2 G5-2 A5-6 G5-2 | B5-4 A5-2 G5-2 E5-4 D5-4 | E5-4 G5-2 A5-2 B5-4 D6-4 | B5-6 A5-2 A5-8 | G5-4 A5-2 B5-2 D6-6 B5-2 | A5-4 G5-2 E5-2 D5-4 E5-4 | G5-4 A5-2 B5-2 A5-4 G5-2 E5-2 | G5-16',
     chords:'G Em C D Em C C,D G' }
 ];
@@ -1163,9 +1163,16 @@ function chordNotes(ch, base){ // Akkordtöne nahe 'base'
 }
 function bassRoot(ch){ let r=ch.pc+36; if(r<40) r+=12; return r; }
 function guitarRoot(ch){ let r=ch.pc+40; if(r>51) r-=12; return r; }
+function transposeP(P,tr){
+  P._tr=P._tr||{}; if(P._tr[tr]) return P._tr[tr];
+  const T={...P, mel:{...P.mel, notes:P.mel.notes.map(n=>({...n,midi:n.midi+tr}))}, chords:P.chords.map(bar=>bar.map(c=>({pc:(c.pc+tr+12)%12, iv:c.iv}))), lo:P.lo+tr, hi:P.hi+tr};
+  return P._tr[tr]=T;
+}
 // kind: intro | A | B | break | fill | build | C | outro | lap
 function makeSection(song, kind, t0, bpm){
-  const P=prepareSong(song), st=STYLES[song.style]||STYLES.rock;
+  // Rückung: manche Lieder steigen im großen Finale einen Ganzton höher
+  const tr=(song.keyUp&&(kind==='C'||kind==='lap'||kind==='outro'))?song.keyUp:0;
+  const P=tr?transposeP(prepareSong(song),tr):prepareSong(song), st=STYLES[song.style]||STYLES.rock;
   DRUMKIT=st.e?(st.hard?'eh':'e'):['rock','metal','surf','skapunk','bigbeat'].includes(song.style)?'rock':'std';
   const elek=!!st.e;
   const sd=60/bpm/4; const ev=[], cands=[];
@@ -3771,6 +3778,7 @@ function showResults(){
   $('#res-song').textContent=G.song.title+' · '+DIFF_NAMES[G.diff]+(G.mode==='practice'?' · Training '+Math.round(G.tempo*100)+'%':'');
   for(const p of ps){
     const gr=gradeOf(p); const failed=G.failed||p.failed;
+    if(p.i===0) UI.share={song:G.song.title,diff:DIFF_NAMES[G.diff],score:p.score,grade:failed&&G.mode!=='endless'?'–':gr.g,pct:Math.round(gr.pct*100),combo:p.maxCombo,mode:G.mode,laps:G.lap-1};
     const col=document.createElement('div'); col.className='rescol';
     let extra='';
     if(G.mode==='arcade' && !failed){
@@ -3893,6 +3901,16 @@ ownRestore();
 resize();
 showScreen('title');
 requestAnimationFrame(frame);
+
+// Ergebnis teilen: über das Teilen-Menü des Geräts, sonst in die Zwischenablage
+$('#r-share').addEventListener('click',async()=>{
+  const s=UI.share; if(!s) return;
+  const txt='🎆 Bumm Bumm Rakete: „'+s.song+'“ ('+s.diff+') – '+s.score.toLocaleString('de-DE')+' Punkte'+(s.mode==='endless'?', '+s.laps+' Runden':', Note '+s.grade+', '+s.pct+' %')+', Kombo '+s.combo+'. Schaffst du mehr?';
+  const url=location.protocol.startsWith('http')&&!/claude/.test(location.host)?location.href.split('#')[0]:'https://edwon3k.github.io/bumm-bumm-rakete/';
+  try{ if(navigator.share){ await navigator.share({title:'Bumm Bumm Rakete',text:txt,url}); return; } }catch(e){ if(e&&e.name==='AbortError') return; }
+  try{ await navigator.clipboard.writeText(txt+' '+url); toast('Ergebnis kopiert – einfach einfügen und verschicken'); }
+  catch(e){ toast('Kopieren nicht möglich'); }
+});
 // ===== Online ohne Claude: Räume direkt von Browser zu Browser (PeerJS) =====
 // Der Gastgeber ist der Knoten in der Mitte: Gäste schicken ihm ihren Zustand, er verteilt die Liste an alle.
 // Gleiche Form wie claude.use('room'): join() liefert presence/peers/onPeers/leave, dazu fetchFile für eigene Lieder.
