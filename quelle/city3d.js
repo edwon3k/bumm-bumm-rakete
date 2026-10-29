@@ -37,6 +37,14 @@ function cityInit(){
           vec2 id=floor(sc), f=fract(sc)-0.5; float r=h21(id);
           float star=step(0.985,r)*smoothstep(0.3,0.0,length(f))*(0.6+0.4*sin(uTime*(1.5+r*3.0)+r*40.0));
           c+=vec3(0.85,0.9,1.0)*star*smoothstep(0.03,0.25,e)*(1.0-smoothstep(0.9993,0.9999,m));
+          // Sternschnuppe: etwa alle 11 Sekunden zieht eine kurze Leuchtspur über den Himmel
+          { float cyc=uTime/11.0; float k=floor(cyc), ph=fract(cyc)*11.0;
+            if(ph<0.9){ vec2 a0=vec2(h21(vec2(k,1.3))*6.2832-3.1416, 0.35+0.4*h21(vec2(k,7.1)));
+              vec2 dir=normalize(vec2(h21(vec2(k,3.7))<0.5?-1.0:1.0, -0.45-0.3*h21(vec2(k,9.9))));
+              vec2 hp=a0+dir*ph*0.35, tp=hp-dir*0.12; vec2 ac=vec2(atan(d.z,d.x),asin(clamp(e,-1.0,1.0)));
+              vec2 pa=ac-tp, ba=hp-tp; float hh=clamp(dot(pa,ba)/dot(ba,ba),0.0,1.0); float dl=length(pa-ba*hh);
+              float fade=smoothstep(0.0,0.1,ph)*smoothstep(0.9,0.55,ph);
+              c+=vec3(0.9,0.95,1.0)*smoothstep(0.004,0.0,dl)*hh*hh*fade*1.6; } }
           vec2 cp=d.xz/(e+0.08)*0.9+vec2(uTime*0.01,0.0);
           float cl=smoothstep(0.45,0.85,fbm(cp*1.3))*smoothstep(0.0,0.06,e)*(1.0-smoothstep(0.35,0.7,e));
           vec3 cc=vec3(0.10,0.07,0.16)+vec3(0.35,0.32,0.45)*pow(max(m,0.0),6.0)*0.6+uFlash*1.6;
@@ -122,7 +130,7 @@ function cityInit(){
             float sill=typ==0?0.0:box2(f,vec2(lo.x-0.06,lo.y-0.075),vec2(hi.x+0.06,lo.y-0.025),fw); // Fensterbank
             float r=h21(id+seed*91.7), r2=h21(id*1.71+seed), r3=h21(id*0.37+7.0+seed), r4=h21(id*2.9+seed*3.3);
             float ratio=0.07+0.22*seed+0.06*sin(seed*20.0);
-            float lit=step(r,ratio);
+            float lit=step(r,ratio+0.05*sin(uTime*0.04+r*400.0));              // ab und zu geht irgendwo ein Licht an oder aus
             float fl=h21(vec2(floor(cell.y),seed*57.0+(sx?3.0:0.0)));
             bool officeFloor = typ!=2 && fl<0.09+0.05*seed;                                    // ganze Büroetage noch hell erleuchtet
             if(officeFloor) lit=1.0;
@@ -470,6 +478,20 @@ function cityInit(){
       const pg=new THREE.BufferGeometry(); pg.setAttribute('position',new THREE.Float32BufferAttribute(P,3)); pg.setAttribute('color',new THREE.Float32BufferAttribute(Cc,3));
       const pmL=new THREE.PointsMaterial({size:6,map:tex,vertexColors:true,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,sizeAttenuation:true,opacity:0.7});
       const pts=new THREE.Points(pg,pmL); pts.frustumCulled=false; scene.add(pts); }
+    // Himmelslaternen: steigen bei der Ballade langsam aus der Stadt auf
+    { const N=160, pos=[], sd=[]; for(let i=0;i<N;i++){ pos.push((Math.random()-0.5)*1000, 0, -240+Math.random()*420); sd.push(Math.random()); }
+      const lg=new THREE.BufferGeometry(); lg.setAttribute('position',new THREE.Float32BufferAttribute(pos,3)); lg.setAttribute('aSeed',new THREE.Float32BufferAttribute(sd,1));
+      const lm=new THREE.ShaderMaterial({uniforms:Object.assign({uLant:{value:0},uPix:{value:1}},uni), transparent:true, depthWrite:false, blending:THREE.AdditiveBlending,
+        vertexShader:`uniform float uTime; uniform float uLant; uniform float uPix; attribute float aSeed; varying float vA; varying float vF;
+          void main(){ vec3 p=position; float sp=3.0+aSeed*3.0; p.y=mod(uTime*sp+aSeed*600.0,600.0)+8.0;
+            p.x+=sin(uTime*0.3+aSeed*30.0)*8.0+p.y*0.08; p.z+=cos(uTime*0.25+aSeed*17.0)*6.0;
+            vec4 mv=modelViewMatrix*vec4(p,1.0); gl_Position=projectionMatrix*mv;
+            gl_PointSize=uPix*clamp(4200.0/-mv.z,2.0,30.0);
+            vA=uLant*smoothstep(8.0,40.0,p.y)*(1.0-smoothstep(420.0,600.0,p.y)); vF=0.75+0.25*sin(uTime*7.0+aSeed*50.0); }`,
+        fragmentShader:`varying float vA; varying float vF; void main(){ vec2 q=gl_PointCoord-0.5; float r=length(q);
+          float core=smoothstep(0.22,0.05,r)*(0.6+0.4*smoothstep(0.0,-0.2,q.y)); float halo=smoothstep(0.5,0.0,r)*0.35;
+          gl_FragColor=vec4(vec3(1.0,0.55,0.2)*(core*1.4+halo)*vF*vA,1.0); }`});
+      const lp=new THREE.Points(lg,lm); lp.frustumCulled=false; scene.add(lp); CITY.lant=lm; }
     CITY.beam=beam;
     CITY.R=R; CITY.scene=scene; CITY.cam=cam; CITY.uni=uni; CITY.sky=sky; CITY.ang=Math.random()*6; CITY.shoreZ=shoreZ;
     CITY.center=new THREE.Vector3(B*0.5+ST*0.5,0,B*0.5+ST*0.5);
@@ -504,5 +526,7 @@ function cityRender(dt,bloom){
   u.uFlash.value.setRGB(F.r,F.g,F.b);
   u.uFlashPos.value.set(sw*60, 320, sz+260);
   u.uBloom.value=bloom?1:0; u.uBeat.value=BEAT.p; if(CITY.beam) CITY.beam.rotation.y=u.uTime.value*0.6;
+  if(CITY.lant){ const want=(typeof G!=='undefined'&&G&&!G.ended&&G.song&&G.song.id==='sternenmeer')?1:0;
+    const lu=CITY.lant.uniforms.uLant; lu.value+=(want-lu.value)*(1-Math.exp(-dt*0.5)); CITY.lant.uniforms.uPix.value=CITY.R.getPixelRatio(); }
   CITY.R.render(CITY.scene,cam);
 }

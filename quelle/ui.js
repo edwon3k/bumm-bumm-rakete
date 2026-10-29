@@ -90,7 +90,7 @@ function renderSelect(keepFocus){
     if(UI.mode==='endless'){ const e=SAVE.endless[s.id]; badges = e? '<span class="badge">Rekord: '+e.laps+' Runden</span>' : ''; }
     else for(let d=0;d<3;d++){ const r=SAVE.best[bestKey(s,d)]; badges+='<span class="badge'+(d===UI.diff?' cur':'')+'" title="'+DIFF_NAMES[d]+'">'+DIFF_NAMES[d][0]+' '+(r?r.grade:'–')+'</span>'; }
     const un=s.custom?-1:[0,1,2].filter(d=>SAVE.unlocked.includes(i*3+d)).length;
-    b.innerHTML='<span class="num">'+String(i+1).padStart(2,'0')+'</span><span class="st"><span class="tt">'+s.title+'</span><span class="sub">'+s.composer+' · '+s.piece+'</span></span><span class="meta"><span class="style">'+STYLE_NAMES[s.style]+' · '+s.bpm+' BPM'+(s.pack===2?' · Bonus':'')+'</span><span class="badges">'+badges+(un>=0?'<span class="badge fw" title="Freigeschaltete Feuerwerke">✦ '+un+'/3</span>':'')+'</span></span>';
+    b.innerHTML='<span class="num">'+String(i+1).padStart(2,'0')+'</span><span class="st"><span class="tt">'+s.title+'</span><span class="sub">'+s.composer+' · '+s.piece+'</span></span><span class="meta"><span class="style">'+STYLE_NAMES[s.style]+' · '+s.bpm+' BPM'+(s.pack===2?' · Bonus':s.pack===3?' · Neu':'')+songLevelHtml(s,UI.diff)+'</span><span class="badges">'+badges+(un>=0?'<span class="badge fw" title="Freigeschaltete Feuerwerke">✦ '+un+'/3</span>':'')+'</span></span>';
     b.addEventListener('click',()=>{ UI.sel=i; launch(); });
     b.addEventListener('focus',()=>{ UI.sel=i; previewQueue(i); });
     b.addEventListener('pointerenter',()=>previewQueue(i));
@@ -140,6 +140,17 @@ $('#p-quit').addEventListener('click',()=>{ paused=false; A.ctx.resume(); stopGa
 function stopGame(){ if(G){ if(G.src){ try{ G.src.stop(); }catch(e){} } newMusicBus(); G=null; } paused=false; }
 
 // ---------- Ergebnis ----------
+// Schwierigkeitsanzeige in der Liederliste: Raketen pro Sekunde der gewählten Stufe als 1–5 Punkte
+const LVL_CACHE={};
+function songLevel(s,d){
+  if(s.custom) return 0;
+  const k=s.id+'|'+d+'|'+(SETTINGS.musicStyle||'');
+  if(LVL_CACHE[k]===undefined){ try{ const bld=buildArcade(s,1); const ch=makeChart(bld.cands,d,0); const nps=ch.length/Math.max(1,bld.dur);
+    LVL_CACHE[k]=Math.max(1,Math.min(5,Math.round((nps-LVL_BASE[d])/LVL_STEP[d])+1)); }catch(e){ LVL_CACHE[k]=0; } }
+  return LVL_CACHE[k];
+}
+const LVL_BASE=[0.9,1.0,1.1], LVL_STEP=[0.3,0.65,0.65];
+function songLevelHtml(s,d){ const l=songLevel(s,d); if(!l) return ''; return ' · <span class="lvl" title="Schwierigkeit '+l+' von 5" aria-label="Schwierigkeit '+l+' von 5">'+'●'.repeat(l)+'<i>'+'●'.repeat(5-l)+'</i></span>'; }
 function showResults(){
   if(!G) return;
   const res=$('#res-body'); res.innerHTML='';

@@ -182,7 +182,7 @@ function startGame(opts){
   // opts: {mode, songIdx, diff, tempo}
   audioInit(); newMusicBus(); setLeadOk(true);
   const song=SONGS[opts.songIdx]; const tempo=opts.tempo||1;
-  A.music.gain.value=({toccata:1.55,nachtmusik:1.3,freude:1.1,blumen:1.1})[song.id]||1;
+  A.music.gain.value=({toccata:1.55,nachtmusik:1.3,freude:1.1,blumen:1.1,carmen:1.25,tell:1.2,sternenmeer:1.12})[song.id]||1;
   const mode=opts.mode;
   let ev, cands, dur, marks=[];
   G={mode, song, songIdx:opts.songIdx, diff:opts.diff, tempo, approach:approachTime(opts.diff)*((opts.mods&&opts.mods.turbo)?0.72:1), mods:Object.assign({},opts.mods||{}), daily:!!opts.daily, evIdx:0, ended:false, lap:0, players:[], demo:mode==='demo', online:!!opts.online};
@@ -285,12 +285,15 @@ function noteX(p,n,u){ const sp=hitLineSpan(p); const f=n.tx+(n.sx-n.tx)*Math.po
 function hitY(){ return H*0.3; }
 function spawnY(){ return H*0.97; }
 function pickFirework(){
+  // Ballade: mehr weiche, romantische Formen (Trauerweide, Kamuro, Herzen, Pferdeschweif)
+  if(G&&G.song&&G.song.id==='sternenmeer'&&Math.random()<0.5) return {type:pick(['willow','kamuro','heart','horsetail','willow'])};
   const un=SAVE.unlocked;
   if(un.length && Math.random()<0.33){ const u=UNLOCKS[pick(un)]; return {type:u.shape,c:u.c,c2:u.c2}; }
   return {type:pick(BASE_TYPES)};
 }
 function breakCombo(p){ if(p.combo>=10) p.lost={n:p.combo,t:0}; p.combo=0; }
-function judgeText(p,txt,col,x,sub){ p.judg=p.judg.filter(j=>Math.abs(j.x-x)>2); p.judg.push({txt,col,x,t:0,sub}); if(p.judg.length>4) p.judg.shift(); }
+// nahe Urteile ersetzen statt überlagern
+function judgeText(p,txt,col,x,sub){ p.judg=p.judg.filter(j=>Math.abs(j.x-x)>Math.min(80,W*0.07)); p.judg.push({txt,col,x,t:0,sub}); if(p.judg.length>4) p.judg.shift(); }
 function pressLane(pi,lane,perf){
   if(!G||paused||G.ended) return;
   const p=G.players[pi]; if(!p||p.failed) return;
