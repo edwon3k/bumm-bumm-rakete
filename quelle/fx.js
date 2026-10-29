@@ -97,7 +97,7 @@ const SHAPES = {
 // ---- Himmelsschrift: Funken fliegen zu Buchstaben auseinander ----
 const TXT_CACHE={};
 function textPoints(str,step){ const key=str+'|'+step; if(TXT_CACHE[key]) return TXT_CACHE[key];
-  const h=56, pad=8, c=document.createElement('canvas'), x=c.getContext('2d'); const font='400 '+h+'px "Playfair Display","Arial Black",sans-serif';
+  const h=56, pad=8, c=document.createElement('canvas'), x=c.getContext('2d'); const font='italic 600 '+h+'px "Playfair Display",Georgia,serif';
   x.font=font; const w=Math.ceil(x.measureText(str).width)+pad*2, hh=h+pad*2; c.width=w; c.height=hh;
   x.font=font; x.fillStyle='#fff'; x.textBaseline='middle'; x.textAlign='center'; x.fillText(str,w/2,hh/2+2);
   const d=x.getImageData(0,0,w,hh).data, pts=[];

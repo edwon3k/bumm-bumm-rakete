@@ -22,7 +22,7 @@ function cityInit(){
       vec3 neon(float s){ return s<0.25?vec3(1.0,0.15,0.75):s<0.5?vec3(0.1,0.9,1.0):s<0.75?vec3(0.6,0.25,1.0):vec3(1.0,0.45,0.1); }
       const vec3 MOON=normalize(vec3(-0.42,0.2,1.0));
       vec3 skyGrad(float e){
-        vec3 hor=vec3(0.2,0.06,0.15), mid=vec3(0.06,0.03,0.11), top=vec3(0.006,0.008,0.035);
+        vec3 hor=vec3(0.17,0.05,0.13), mid=vec3(0.045,0.022,0.085), top=vec3(0.004,0.005,0.025);
         vec3 c=mix(hor,mid,smoothstep(0.0,0.16,e)); c=mix(c,top,smoothstep(0.12,0.65,e));
         c+=vec3(0.55,0.17,0.12)*exp(-max(e,0.0)*24.0)*0.34;        // warmer Schein am Horizont
         return c;
@@ -45,7 +45,7 @@ function cityInit(){
         return c;
       }
       // romantische Nachtstimmung: dunkler, Schatten violett, Lichter warm-rosé
-      vec3 grade(vec3 c){ c*=0.78; float l=dot(c,vec3(0.3,0.59,0.11));
+      vec3 grade(vec3 c){ c*=0.6; float l=dot(c,vec3(0.3,0.59,0.11));
         c=mix(c*vec3(0.92,0.88,1.12), c*vec3(1.1,0.93,0.9), smoothstep(0.02,0.3,l));
         c+=vec3(0.012,0.0,0.01)*(1.0-smoothstep(0.0,0.1,l)); return c; }
       vec3 fogIt(vec3 c, vec3 w){ vec3 d=w-uCam; float f=1.0-exp(-length(d)*0.0004); vec3 dn=normalize(d); return mix(c,skyCol(vec3(dn.x,max(dn.y,0.0),dn.z),false)*0.7+uFlash*0.12,f); }`;
@@ -424,7 +424,7 @@ function cityResize(){
 function cityRender(dt,bloom){
   if(!CITY.ok) return;
   const u=CITY.uni; u.uTime.value+=dt;
-  CITY.ang+=dt*0.13*(bloom?1.6:1);
+  CITY.ang+=dt*0.065*(bloom?1.4:1);
   const ik=CITY.introK||0, ie=ik*ik*(3-2*ik);
   // Ruhige Kamerafahrt knapp über den Dächern, ohne Wackeln
   const a=CITY.ang, sz=CITY.shoreZ, cam=CITY.cam, port=W<H;
