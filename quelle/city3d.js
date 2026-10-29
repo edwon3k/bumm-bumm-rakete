@@ -95,19 +95,32 @@ function cityInit(){
             vec2 tp=vec2(u,y);
             float grime=fbm(tp*vec2(0.15,0.05)+seed*40.0);                         // Schmutzschlieren von oben nach unten
             float streak=vnoise(vec2(u*1.3,y*0.04+seed*9.0));
+            // ---------- Wandmaterial ----------
+            float nearK=1.0-far;                                                   // Details nur, wo sie scharf erscheinen
             vec3 wall;
-            if(typ==0){ wall=mix(vec3(0.07,0.08,0.1),vec3(0.1,0.1,0.12),seed*2.0); }
-            else if(typ==1){ wall=mix(vec3(0.06,0.057,0.062),vec3(0.095,0.088,0.085),fract(seed*7.3))*(0.75+0.35*grime)*(0.92+0.08*streak); }
-            else { vec2 bk=vec2(tp.x/0.62+step(0.5,fract(tp.y/0.26*0.5))*0.5,tp.y/0.26); vec2 bf=fract(bk);
-              float mort=1.0-box2(bf,vec2(0.06),vec2(0.94),fwidth(bk)*0.8+0.01); float bfar=clamp(length(fwidth(bk))*1.5-0.3,0.0,1.0);
-              vec3 brick=mix(vec3(0.16,0.065,0.045),vec3(0.2,0.1,0.06),h21(floor(bk)))*(0.8+0.3*grime);
-              wall=mix(mix(brick,vec3(0.11,0.1,0.09),mort*0.7),brick*0.9,bfar); }
-            // Fenster
-            vec2 lo = typ==0?vec2(0.04,0.08) : typ==1?vec2(0.2,0.22) : vec2(0.24,0.2);
-            vec2 hi = typ==0?vec2(0.96,0.92) : typ==1?vec2(0.8,0.82) : vec2(0.76,0.78);
+            if(typ==0){ // Glasfassade: Paneele mit leicht unterschiedlicher Tönung (verzogene Scheiben)
+              wall=mix(vec3(0.075,0.085,0.11),vec3(0.11,0.11,0.13),seed*2.0);
+            } else if(typ==1){ // Sichtbeton: große Platten mit Fugen, Schalungslöcher, Regenschlieren
+              vec3 cc=mix(vec3(0.085,0.08,0.085),vec3(0.13,0.12,0.115),fract(seed*7.3));
+              vec2 pf=fract(vec2(u/cw*0.5,y/fh)); float joint=max(1.0-aaStep(0.012,pf.x,fw.x*0.5),1.0-aaStep(0.015,pf.y,fw.y*0.5));
+              vec2 hol=fract(vec2(u/0.9,y/0.75))-0.5; float holes=smoothstep(0.09,0.05,length(hol))*0.35*nearK;
+              float mott=vnoise(tp*2.3)*0.5+vnoise(tp*7.1)*0.25*nearK;
+              wall=cc*(0.72+0.38*grime)*(0.85+0.3*mott)*(0.9+0.12*streak)*(1.0-0.45*joint*nearK)*(1.0-holes);
+            } else { // Backstein: einzelne Steine mit Farbschwankung, Fugen, ab und zu dunkle Klinker
+              vec2 bk=vec2(tp.x/0.62+step(0.5,fract(tp.y/0.26*0.5))*0.5,tp.y/0.26); vec2 bf=fract(bk); vec2 bid=floor(bk);
+              float mort=1.0-box2(bf,vec2(0.05,0.08),vec2(0.95,0.92),fwidth(bk)*0.8+0.01); float bfar=clamp(length(fwidth(bk))*1.5-0.3,0.0,1.0);
+              float hb=h21(bid), hb2=h21(bid+13.7);
+              vec3 brick=mix(vec3(0.17,0.065,0.042),vec3(0.22,0.11,0.065),hb)*(hb2<0.08?0.55:1.0)*(0.8+0.3*grime)*(0.9+0.2*vnoise(tp*9.0));
+              vec3 mortar=vec3(0.13,0.12,0.11)*(0.85+0.3*grime);
+              wall=mix(mix(brick,mortar,mort*0.8),mix(brick,mortar,0.25)*0.95,bfar); }
+            wall*=1.25;
+            // ---------- Fenster ----------
+            vec2 lo = typ==0?vec2(0.04,0.1) : typ==1?vec2(0.18,0.22) : vec2(0.24,0.2);
+            vec2 hi = typ==0?vec2(0.96,0.94) : typ==1?vec2(0.82,0.84) : vec2(0.76,0.8);
             float win=box2(f,lo,hi,fw);
-            float frame=typ==0?0.0:box2(f,lo-0.04,hi+0.04,fw)*(1.0-win);         // Fensterlaibung
-            float r=h21(id+seed*91.7), r2=h21(id*1.71+seed), r3=h21(id*0.37+7.0+seed);
+            float frame=typ==0?0.0:box2(f,lo-vec2(0.035,0.03),hi+vec2(0.035,0.02),fw)*(1.0-win);   // Rahmen um das Glas
+            float sill=typ==0?0.0:box2(f,vec2(lo.x-0.06,lo.y-0.075),vec2(hi.x+0.06,lo.y-0.025),fw); // Fensterbank
+            float r=h21(id+seed*91.7), r2=h21(id*1.71+seed), r3=h21(id*0.37+7.0+seed), r4=h21(id*2.9+seed*3.3);
             float ratio=0.07+0.22*seed+0.06*sin(seed*20.0);
             float lit=step(r,ratio);
             float fl=h21(vec2(floor(cell.y),seed*57.0+(sx?3.0:0.0)));
@@ -117,21 +130,51 @@ function cityInit(){
             if(r2>0.93) wc=vec3(0.62,0.8,1.0);
             if(officeFloor) wc=mix(vec3(0.85,0.92,1.0),vec3(1.0,0.95,0.85),fl*8.0);
             if(seed>0.9) wc=mix(wc,neon(h21(vec2(seed,1.0))),0.45);
-            // Innenraum: Deckenlicht oben heller, Vorhänge, ab und zu flackernder Fernseher
-            vec2 q=(f-lo)/(hi-lo);
-            float inner=(0.55+0.6*q.y)*(0.75+0.5*h21(id+3.1));
-            float curt=r3<0.35? smoothstep(0.0,0.12,q.x)*smoothstep(1.0,0.88,q.x)*0.6+0.4 : r3<0.55? mix(1.0,0.45,step(0.5,q.x)) : 1.0;
-            vec3 tv=vec3(0.35,0.5,1.0)*(0.6+0.4*sin(uTime*1.3+r*50.0));
-            vec3 room=lit*(r3>0.92? tv*0.8 : wc*inner*curt);
-            // dunkles Glas spiegelt Himmel und Feuerwerk
-            vec3 rf=reflect(v,n); rf.y=abs(rf.y);
-            float fr=0.08+0.6*pow(1.0-max(dot(-v,n),0.0),3.0);
-            vec3 glassRef=skyCol(rf,false)*(typ==0?1.5:0.7)*(0.8+0.4*r2)+uFlash*0.6;
+            vec2 q=clamp((f-lo)/(hi-lo),0.0,1.0);
+            // Innenraum mit Tiefe: Rückwand, Deckenleuchte, Möbel-Silhouetten unten
+            float lampX=0.3+0.4*r4;
+            float inner=(0.45+0.5*q.y)*(0.75+0.5*h21(id+3.1));
+            inner+=1.1*exp(-pow(q.x-lampX,2.0)*14.0-pow(q.y-0.92,2.0)*22.0);              // Lichtkegel der Deckenlampe
+            float furn=0.0;
+            if(!officeFloor){ float fx0=0.1+0.5*r2, fw0=0.2+0.25*r3; furn=step(fx0,q.x)*step(q.x,fx0+fw0)*step(q.y,0.22+0.18*r4); // Sofa/Schrank
+              furn=max(furn,step(abs(q.x-(0.8-0.5*r3)),0.05)*step(q.y,0.5)*step(0.6,r4)); }                                  // Stehlampe/Person
+            else { furn=step(q.y,0.3)*step(0.5,fract(q.x*3.0+r))*0.6; }                                                        // Schreibtische
+            float rm=inner*(1.0-0.7*furn*nearK);
+            // Sichtschutz: Vorhänge mit Faltenwurf, Jalousien halb heruntergelassen, oder offen
+            float folds=0.75+0.25*sin(q.x*55.0+r*20.0);
+            float curtL=smoothstep(0.24,0.18,q.x), curtR=smoothstep(0.76,0.82,q.x);
+            vec3 cuCol=mix(vec3(1.0,0.75,0.55),vec3(0.95,0.45,0.35),step(0.5,r4));
+            vec3 room=wc*rm;
+            if(r3<0.35){ float cmask=max(curtL,curtR); room=mix(room,wc*cuCol*0.55*folds*(0.6+0.4*q.y),cmask*nearK+cmask*0.0); }
+            else if(r3<0.55 && !officeFloor){ float bl=step(1.0-(0.35+0.5*r4),q.y); float slat=0.55+0.45*step(0.45,fract(q.y*18.0)); room=mix(room,wc*0.5*slat,bl*mix(1.0,0.8,far)); }
+            vec3 tv=vec3(0.35,0.5,1.0)*(0.6+0.4*sin(uTime*1.3+r*50.0))*(0.5+0.5*q.y);
+            room=lit*(r3>0.92&&!officeFloor? tv*0.8 : room);
+            // dunkles Glas spiegelt Himmel und Feuerwerk; Scheiben leicht verzogen
+            vec3 nw=normalize(n+vec3((r2-0.5)*0.06,(r3-0.5)*0.05,(r4-0.5)*0.06));
+            vec3 rf=reflect(v,nw); rf.y=abs(rf.y);
+            float fr=0.08+0.6*pow(1.0-max(dot(-v,nw),0.0),3.0);
+            vec3 glassRef=skyCol(rf,false)*(typ==0?1.5:0.8)*(0.8+0.4*r2)+uFlash*0.6;
             vec3 tint=typ==0?mix(vec3(0.02,0.035,0.06),vec3(0.03,0.05,0.05),step(0.5,fract(seed*13.0))):vec3(0.012,0.015,0.025);
             vec3 glass=mix(tint*(0.8+0.5*r3),glassRef,typ==0?min(1.0,fr+0.25):fr)+room*(typ==0?0.75:0.95);
-            // Glasfassade: durchgehende Brüstungsbänder und feine Pfosten
-            if(typ==0){ float band=1.0-box2(f,vec2(-1.0,0.12),vec2(2.0,1.0),fw); wall=mix(wall,vec3(0.07,0.08,0.11),band); }
-            vec3 fac=mix(wall,glass,win)+frame*vec3(0.03,0.03,0.035);
+            // Sprossen: Fensterkreuz bei Altbau, Mittelpfosten beim Büro
+            float mull=0.0;
+            if(typ==2){ mull=max(1.0-aaStep(0.025,abs(q.x-0.5),fw.x*2.0),1.0-aaStep(0.02,abs(q.y-0.68),fw.y*2.0)); }
+            else if(typ==1){ mull=1.0-aaStep(0.018,abs(q.x-0.5),fw.x*2.0); }
+            else { mull=1.0-aaStep(0.012,abs(q.x-0.5),fw.x*2.0); }
+            glass=mix(glass,vec3(0.06,0.06,0.065)+room*0.15,mull*nearK);
+            // Laibungsschatten innen am Glasrand
+            float rec=smoothstep(0.0,0.07,min(q.x,1.0-q.x))*smoothstep(0.0,0.07,min(q.y,1.0-q.y));
+            glass*=mix(1.0,0.55+0.45*rec,nearK);
+            // Glasfassade: durchgehende Brüstungsbänder
+            if(typ==0){ float band=1.0-box2(f,vec2(-1.0,0.1),vec2(2.0,1.0),fw); wall=mix(wall,vec3(0.07,0.08,0.11),band); }
+            // Regenschlieren unter den Fenstern
+            float under=step(f.y,lo.y)*step(lo.x,f.x)*step(f.x,hi.x)*(typ==0?0.0:1.0);
+            float drip=vnoise(vec2(f.x*18.0+id.x*7.0,f.y*2.0))*smoothstep(0.0,lo.y,f.y);
+            wall*=1.0-0.3*under*drip*nearK;
+            vec3 frameCol=typ==2?vec3(0.16,0.15,0.14):vec3(0.05,0.05,0.055);
+            vec3 fac=mix(wall,glass,win);
+            fac=mix(fac,frameCol,frame*nearK+frame*0.3*far);
+            fac=mix(fac,wall*1.6+0.02,sill*nearK);
             // Gesimse alle paar Etagen, Eckpfeiler, Dachkante
             float ledge=(typ==1)?(1.0-aaStep(0.06,fract(y/(fh*4.0)),fw.y*0.25)):0.0;
             float corner=1.0-aaStep(0.7,min(u,wid-u),0.15);
@@ -425,7 +468,7 @@ function cityInit(){
           add(x0+ST+4+k*(B-ST-8), z0+0.8, led); add(x0+ST+4+k*(B-ST-8), z0+ST-0.8, led); } }
       for(let x=-NX*B;x<=NX*B;x+=7) add(x, shoreZ-1.5, false);                          // Promenade
       const pg=new THREE.BufferGeometry(); pg.setAttribute('position',new THREE.Float32BufferAttribute(P,3)); pg.setAttribute('color',new THREE.Float32BufferAttribute(Cc,3));
-      const pmL=new THREE.PointsMaterial({size:9,map:tex,vertexColors:true,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,sizeAttenuation:true,opacity:0.7});
+      const pmL=new THREE.PointsMaterial({size:6,map:tex,vertexColors:true,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,sizeAttenuation:true,opacity:0.7});
       const pts=new THREE.Points(pg,pmL); pts.frustumCulled=false; scene.add(pts); }
     CITY.beam=beam;
     CITY.R=R; CITY.scene=scene; CITY.cam=cam; CITY.uni=uni; CITY.sky=sky; CITY.ang=Math.random()*6; CITY.shoreZ=shoreZ;
