@@ -163,10 +163,12 @@ function cityInit(){
           col+=uFlash*diff*(n.y>0.5?0.45:0.5)*(0.4+0.6*clamp(vW.y/120.0,0.0,1.0));
           gl_FragColor=vec4(grade(fogIt(col,vW)),1.0);
         }`});
-    const lots=[], trees=[], park=(gx,gz)=>{ if(gx===0&&gz===0) return false; const r=Math.abs(Math.sin(gx*12.9898+gz*78.233)*43758.5453)%1; return (r<0.24 && !(Math.abs(gx+0.5)<=1.5 && gz>=-15 && gz<=-1)) || (gz===SHORE && Math.abs(gx)<=2); };
+    const lots=[], trees=[], park=(gx,gz)=>{ if(gx===0&&gz===0) return false; const r=Math.abs(Math.sin(gx*12.9898+gz*78.233)*43758.5453)%1; return (r<0.24 && !(Math.abs(gx+0.5)<=3.5 && gz>=-15 && gz<=-1)) || (gz===SHORE && Math.abs(gx)<=2); };
     for(let gx=-NX;gx<=NX;gx++) for(let gz=NZ0;gz<=SHORE;gz++){
       const x0=gx*B+ST, z0=gz*B+ST, s=B-ST;
       if(gx===0&&gz===0) continue;
+      // große dunkle Freifläche zwischen den Türmen: hier starten die Raketen; Baumreihen an den Längsseiten
+      if(gx>=-2&&gx<=1&&gz>=-13&&gz<=-4){ if(gx===-2||gx===1) for(let k=0;k<5;k++) trees.push([gx<0?x0+3:x0+s-3, z0+4+k*(s-8)/4, 2.2+Math.random()*0.6]); continue; }
       if(park(gx,gz)){ // Park: lockere Baumgruppen
         for(let k=0;k<22;k++){ const tx=x0+2+Math.random()*(s-4), tz=z0+2+Math.random()*(s-4); if(Math.abs(tx-(x0+s/2))<1.6||Math.abs(tz-(z0+s/2))<1.6) continue; trees.push([tx,tz,1.8+Math.random()*1.8]); }
         continue; }
@@ -178,8 +180,8 @@ function cityInit(){
         const w=s*pw-2.5, dd=s*pd-2.5; if(w<4||dd<4) continue;
         let h=(8+Math.pow(Math.random(),2.2)*55)*boost; if(Math.random()<0.03) h*=1.7;
         // Häuserschlucht unter der Kamera: entlang der Mittelstraße stehen hohe Türme
-        const canyon=Math.abs(gx+0.5)<=2.5 && gz>=-15 && gz<=-1 ? Math.exp(-Math.pow((Math.abs(gx+0.5)-0.5)/1.6,2)) : 0;
-        if(canyon>0) h=Math.max(h, 70+canyon*(30+Math.random()*80));
+        const canyon=Math.abs(gx+0.5)<=3.5 && gz>=-15 && gz<=-2;
+        if(canyon) h=Math.max(h, (Math.abs(gx+0.5)<3?95:70)+Math.random()*75);
         lots.push([x0+s*px+w/2+1.25, z0+s*pz+dd/2+1.25, w*(0.8+Math.random()*0.2), dd*(0.8+Math.random()*0.2), Math.min(h,230)]);
       }
     }
@@ -280,7 +282,7 @@ function cityInit(){
             col=mix(col,vec3(0.2,0.19,0.16)+vec3(0.12,0.1,0.0)*czl,clamp(czl,0.0,1.0)*0.75*(1.0-farK*0.8));
           }
           float pr=fract(abs(sin(id.x*12.9898+id.y*78.233)*43758.5453));
-          bool isPark=((pr<0.24 && !(abs(id.x+0.5)<=1.5 && id.y>=-15.0 && id.y<=-1.0)) || (id.y==${SHORE.toFixed(1)} && abs(id.x)<=2.0)) && !(id.x==0.0&&id.y==0.0);
+          bool isPark=((pr<0.24 && !(abs(id.x+0.5)<=3.5 && id.y>=-15.0 && id.y<=-1.0)) || (id.y==${SHORE.toFixed(1)} && abs(id.x)<=2.0)) && !(id.x==0.0&&id.y==0.0);
           vec2 q=f-vec2(S+(B-S)*0.5);
           if(isPark && street<0.5 && inner>1.8){
             // Rasen mit Mähstreifen und Blumenbeeten, Kieswege, in manchen Parks ein Teich
@@ -298,11 +300,25 @@ function cityInit(){
           }
           // Platz vor den Häusern: gepflasterter Innenhof
           if(!isPark && street<0.5 && inner>1.8){ col=vec3(0.035,0.034,0.042)*(0.8+0.4*vnoise(p*2.0)); }
+          // Freifläche: dunkle Steinplatten, heller Rand, langes Wasserbecken, das Feuerwerk spiegelt
+          vec2 pc=p-vec2(4.5,-315.5), ph=vec2(75.5,195.5); vec2 pd=ph-abs(pc); float inPl=step(0.0,min(pd.x,pd.y));
+          if(inPl>0.5){
+            vec2 tq=fract(p/4.0); float tj=max(ln(tq.x,0.0,0.02),ln(tq.y,0.0,0.02))*(1.0-farK);
+            col=vec3(0.03,0.03,0.036)*(0.8+0.35*vnoise(p*0.7))*(1.0-0.3*tj);
+            float rim=1.0-smoothstep(1.2,1.8,min(pd.x,pd.y)); col=mix(col,vec3(0.13,0.125,0.13)*(0.85+0.3*vnoise(p*2.0)),rim);
+            vec2 wd=vec2(46.0,165.0)-abs(pc); float pool=step(0.0,min(wd.x,wd.y));
+            if(pool>0.5){ vec3 dv=normalize(vW-uCam); vec2 rp=vec2(vnoise(p*0.5+uTime*0.3),vnoise(p*0.5-uTime*0.25+5.0))-0.5;
+              vec3 rf=reflect(dv,normalize(vec3(rp.x*0.06,1.0,rp.y*0.06)));
+              col=vec3(0.004,0.008,0.016)+skyCol(rf,false)*0.35+uFlash*1.4*(0.7+0.6*rp.x); }
+            float edgeP=1.0-smoothstep(0.3,0.7,abs(min(wd.x,wd.y)));
+            col=mix(col,vec3(0.16,0.15,0.15),edgeP*0.8);
+            col+=vec3(1.0,0.75,0.45)*0.9*edgeP*pow(0.5+0.5*cos(pc.y*0.39+pc.x*0.39),30.0);   // kleine Lichter am Beckenrand
+          }
           // Laternen: Lichtkegel am Gehwegrand
           float lx=exp(-pow(f.x-0.6,2.0)*0.8)+exp(-pow(f.x-S+0.6,2.0)*0.8);
           float lz=exp(-pow(f.y-0.6,2.0)*0.8)+exp(-pow(f.y-S+0.6,2.0)*0.8);
           float spx=0.5+0.5*cos(p.y*6.2832/(B*0.5)), spz=0.5+0.5*cos(p.x*6.2832/(B*0.5));
-          col+=vec3(1.0,0.6,0.25)*0.2*(lx*sx*(1.0-sz)*(0.35+0.9*pow(spx,6.0))+lz*sz*(1.0-sx)*(0.35+0.9*pow(spz,6.0)));
+          col+=(1.0-inPl)*vec3(1.0,0.6,0.25)*0.2*(lx*sx*(1.0-sz)*(0.35+0.9*pow(spx,6.0))+lz*sz*(1.0-sx)*(0.35+0.9*pow(spz,6.0)));
           // Nässe: Spiegelung der Laternen auf dem Asphalt
           vec3 vv=normalize(vW-uCam); float fres=pow(1.0-abs(vv.y),4.0)*street;
           col+=vec3(1.0,0.65,0.3)*0.08*fres*(0.5+grain);
@@ -434,11 +450,11 @@ function cityRender(dt,bloom){
   // Blick steil von oben in die Häuserschlucht: Kamera schwebt über der Mittelstraße zwischen den Türmen,
   // gleitet langsam die Straße entlang, schwenkt leicht und wippt im Takt
   const a=CITY.ang, sz=CITY.shoreZ, cam=CITY.cam, port=W<H;
-  const px=4.5+Math.sin(a*0.9)*4, pz=-400+Math.sin(a*0.35)*130, py=(port?230:205)+Math.sin(a*1.3)*8+BEAT.p*0.8;
-  const tx=px+Math.sin(a*0.7+0.6)*22, tz=pz+(port?120:150), ty=0;
-  const push=CAM.punch*5;
-  cam.position.set(px+CAM.sx*0.3, py-push+ie*260+CAM.sy*0.3, pz-ie*120);
-  const roll=Math.max(-0.08,Math.min(0.08,Math.cos(a*0.9)*0.025));
+  const px=4.5+Math.sin(a*0.9)*4, pz=-400+Math.sin(a*0.35)*130, py=(port?290:265);
+  const tx=px+Math.sin(a*0.7+0.6)*22, tz=pz+(port?130:170), ty=0;
+  const push=0;
+  cam.position.set(px, py+ie*260, pz-ie*120);
+  const roll=0;
   cam.up.set(Math.sin(roll),Math.cos(roll),0);
   cam.lookAt(tx, ty, tz);
   const sw=Math.sin(a);
