@@ -494,6 +494,8 @@ h2,.rescol h3,.help h3{font-style:italic;font-weight:500;letter-spacing:0.03em;}
         <li>Handy: auf die Spur tippen</li></ul></div>
       <div><h3>Bloom</h3><p>Jeder Treffer füllt die Bloom-Leiste. Ist sie voll, glitzert die Zündlinie: <kbd>Leertaste</kbd>, Trigger oder der Bloom-Knopf verdoppelt deinen Multiplikator, bis die Leiste leer ist.</p></div>
       <div><h3>Punkte</h3><p>Perfekt 100, Super 70, Gut 40, mal Multiplikator. Alle 10 Treffer in Folge steigt er bis ×4, im Bloom bis ×8.</p></div>
+      <div><h3>Goldraketen</h3><p>Raketen mit goldenem, gestricheltem Ring bringen dreifache Punkte und füllen Lunte und Bloom stärker. Die Wunderkerzen-Rakete mit Schlangenschweif schaltet ein Spezial-Feuerwerk für die Galerie frei.</p></div>
+      <div><h3>Modifikatoren</h3><p>Spiegel, Turbo, Versteckt und Plötzlich machen ein Lied schwerer und geben dafür Bonus-XP.</p></div>
       <div><h3>Lunte</h3><p>Treffer füllen die Lunte, verpasste Raketen und Fehlzündungen brennen sie ab. Ist sie leer, ist die Show vorbei. Im Training kannst du nicht verlieren.</p></div>
       <div><h3>Modi</h3><p>Endlos: Das Lied läuft in Runden weiter, jede Runde 6 % schneller. 2 Spieler: <kbd>WASD</kbd> + <kbd>Leertaste</kbd> gegen Pfeile + <kbd>Enter</kbd>, oder zwei Controller.</p></div>
       <div><h3>Eigene Lieder</h3><p>In der Liedauswahl auf „+ Eigenes Lied hinzufügen“ tippen und eine Audiodatei wählen. Das Spiel erkennt Tempo und Schläge und baut Raketen daraus. Die Lieder bleiben in diesem Browser gespeichert.</p></div>
@@ -2359,7 +2361,7 @@ function cityRender(dt,bloom){
   u.uFlash.value.setRGB(F.r,F.g,F.b);
   u.uFlashPos.value.set(sw*60, 320, sz+260);
   u.uBloom.value=bloom?1:0; u.uBeat.value=BEAT.p; if(CITY.beam) CITY.beam.rotation.y=u.uTime.value*0.6;
-  if(CITY.lant){ const want=(typeof G!=='undefined'&&G&&!G.ended&&G.song&&G.song.id==='sternenmeer')?1:0;
+  if(CITY.lant){ const want=(typeof G!=='undefined'&&G&&!G.ended&&G.song&&(G.song.id==='sternenmeer'||G.song.id==='elise'))?1:0;
     const lu=CITY.lant.uniforms.uLant; lu.value+=(want-lu.value)*(1-Math.exp(-dt*0.5)); CITY.lant.uniforms.uPix.value=CITY.R.getPixelRatio(); }
   CITY.R.render(CITY.scene,cam);
 }
@@ -4219,7 +4221,7 @@ function onPeersChanged(){
     shareFetch(pr.own).then(s=>start(SONGS.indexOf(s)), e=>toast(e&&e.msg||'Das Lied konnte nicht geladen werden.'));
     return;
   }
-  const idx=SONGS.findIndex(s=>s.id===pr.song); if(idx<0) return;
+  const idx=SONGS.findIndex(s=>s.id===pr.song); if(idx<0){ toast('Dieses Lied fehlt bei dir noch – bitte die Seite neu laden.'); return; }
   start(idx);
 }
 async function onHostStart(){

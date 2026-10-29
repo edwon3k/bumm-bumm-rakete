@@ -526,7 +526,7 @@ function cityRender(dt,bloom){
   u.uFlash.value.setRGB(F.r,F.g,F.b);
   u.uFlashPos.value.set(sw*60, 320, sz+260);
   u.uBloom.value=bloom?1:0; u.uBeat.value=BEAT.p; if(CITY.beam) CITY.beam.rotation.y=u.uTime.value*0.6;
-  if(CITY.lant){ const want=(typeof G!=='undefined'&&G&&!G.ended&&G.song&&G.song.id==='sternenmeer')?1:0;
+  if(CITY.lant){ const want=(typeof G!=='undefined'&&G&&!G.ended&&G.song&&(G.song.id==='sternenmeer'||G.song.id==='elise'))?1:0;
     const lu=CITY.lant.uniforms.uLant; lu.value+=(want-lu.value)*(1-Math.exp(-dt*0.5)); CITY.lant.uniforms.uPix.value=CITY.R.getPixelRatio(); }
   CITY.R.render(CITY.scene,cam);
 }

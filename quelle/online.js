@@ -159,7 +159,7 @@ function onPeersChanged(){
     shareFetch(pr.own).then(s=>start(SONGS.indexOf(s)), e=>toast(e&&e.msg||'Das Lied konnte nicht geladen werden.'));
     return;
   }
-  const idx=SONGS.findIndex(s=>s.id===pr.song); if(idx<0) return;
+  const idx=SONGS.findIndex(s=>s.id===pr.song); if(idx<0){ toast('Dieses Lied fehlt bei dir noch – bitte die Seite neu laden.'); return; }
   start(idx);
 }
 async function onHostStart(){
