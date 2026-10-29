@@ -18,6 +18,7 @@ const ACH=[
   ['bloom10','Blütezeit','Bloom 10-mal zünden'],
   ['all10','Ganzer Hafen','Alle 10 Hauptlieder schaffen'],
   ['bonus','Zugabe','Alle 5 Bonuslieder schaffen'],
+  ['pack3','Neue Klänge','Alle neuen Lieder schaffen (Ballade, Cancan, Für Elise)'],
   ['unl5','Sammler','5 Spezial-Feuerwerke freischalten'],
   ['unl20','Feuerwerkskiste','20 Spezial-Feuerwerke freischalten'],
   ['unl45','Komplette Sammlung','Alle Spezial-Feuerwerke freischalten'],
@@ -86,6 +87,7 @@ function progAfterGame(){
   const done=id=>[0,1,2].some(d=>SAVE.best[id+'_'+d]);
   if(SONGS.filter(s=>s.pack===1).every(s=>done(s.id))) award('all10');
   if(SONGS.filter(s=>s.pack===2).every(s=>done(s.id))) award('bonus');
+  if(SONGS.filter(s=>s.pack===3).every(s=>done(s.id))) award('pack3');
   progUnlockAch();
   storeSave();
   return {gain, before, after, xp:SAVE.xp, daily};
