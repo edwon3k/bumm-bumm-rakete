@@ -182,7 +182,7 @@ function startGame(opts){
   // opts: {mode, songIdx, diff, tempo}
   audioInit(); newMusicBus(); setLeadOk(true);
   const song=SONGS[opts.songIdx]; const tempo=opts.tempo||1;
-  A.music.gain.value=({toccata:1.55,nachtmusik:1.3,freude:1.1,blumen:1.1,carmen:1.25,tell:1.2,sternenmeer:1.12,cancan:1.55})[song.id]||1;
+  A.music.gain.value=({toccata:1.55,nachtmusik:1.3,freude:1.1,blumen:1.1,carmen:1.25,tell:1.2,sternenmeer:1.12,cancan:1.55,elise:0.92})[song.id]||1;
   const mode=opts.mode;
   let ev, cands, dur, marks=[];
   G={mode, song, songIdx:opts.songIdx, diff:opts.diff, tempo, approach:approachTime(opts.diff)*((opts.mods&&opts.mods.turbo)?0.72:1), mods:Object.assign({},opts.mods||{}), daily:!!opts.daily, evIdx:0, ended:false, lap:0, players:[], demo:mode==='demo', online:!!opts.online};
