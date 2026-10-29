@@ -83,7 +83,10 @@ void main(){ vec3 c=vec3(0.0);
 // Zusammensetzen: Szene + Bloom, Tonwert-Abbildung, durchsichtiger Hintergrund, Spiegelung im Wasser
 const GFX_COMP_FS=`#version 300 es
 precision highp float; in vec2 vUv; uniform sampler2D uHdr; uniform sampler2D uBloom; uniform float uBloomK; uniform vec3 uWater; uniform float uTime; out vec4 o;
-vec3 tm(vec3 c){ c*=1.05; return c/(1.0+c*0.6)*1.25; }
+vec3 tm(vec3 c){ c*=1.05; vec3 pc=c/(1.0+c*0.6)*1.25;
+  // farbtreu: nach dem hellsten Kanal komprimieren, damit dichte Feuerwerke nicht zu weißen Flecken ausbrennen
+  float L=max(c.r,max(c.g,c.b)); float Lt=L/(1.0+L*0.6)*1.25; vec3 hp=c*(Lt/max(L,1e-4)); hp=mix(hp,vec3(Lt),smoothstep(1.5,4.0,L)*0.4);
+  return mix(pc,hp,0.6); }
 vec4 look(vec2 uv){ vec4 h=texture(uHdr,uv); vec3 b=texture(uBloom,uv).rgb; vec3 c=tm(min(h.rgb,vec3(2.2))+b*uBloomK); return vec4(c,h.a); }
 void main(){
   vec2 uv=vUv; vec4 s=look(uv); vec3 c=s.rgb; float al=s.a;

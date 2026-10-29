@@ -2,14 +2,20 @@
 <title>Bumm Bumm Rakete</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <style>
-@font-face{font-family:"Bungee";font-weight:400;font-display:swap;src:url(fonts/bungee-latin-400-normal.woff2) format("woff2");}
-@font-face{font-family:"Cinzel";font-weight:500;font-display:swap;src:url(fonts/cinzel-latin-500-normal.woff2) format("woff2");}
-@font-face{font-family:"Cinzel";font-weight:600;font-display:swap;src:url(fonts/cinzel-latin-600-normal.woff2) format("woff2");}
-@font-face{font-family:"Cinzel";font-weight:700;font-display:swap;src:url(fonts/cinzel-latin-700-normal.woff2) format("woff2");}
-@font-face{font-family:"Rubik";font-weight:400;font-display:swap;src:url(fonts/rubik-latin-400-normal.woff2) format("woff2");}
-@font-face{font-family:"Rubik";font-weight:500;font-display:swap;src:url(fonts/rubik-latin-500-normal.woff2) format("woff2");}
-@font-face{font-family:"Rubik";font-weight:600;font-display:swap;src:url(fonts/rubik-latin-600-normal.woff2) format("woff2");}
-@font-face{font-family:"Rubik";font-weight:700;font-display:swap;src:url(fonts/rubik-latin-700-normal.woff2) format("woff2");}
+@font-face{font-family:"Playfair Display";font-style:normal;font-weight:500;font-display:swap;src:url(fonts/playfair-display-latin-500-normal.woff2) format("woff2");}
+@font-face{font-family:"Playfair Display";font-style:italic;font-weight:500;font-display:swap;src:url(fonts/playfair-display-latin-500-italic.woff2) format("woff2");}
+@font-face{font-family:"Playfair Display";font-style:normal;font-weight:600;font-display:swap;src:url(fonts/playfair-display-latin-600-normal.woff2) format("woff2");}
+@font-face{font-family:"Playfair Display";font-style:italic;font-weight:600;font-display:swap;src:url(fonts/playfair-display-latin-600-italic.woff2) format("woff2");}
+@font-face{font-family:"Playfair Display";font-style:normal;font-weight:700;font-display:swap;src:url(fonts/playfair-display-latin-700-normal.woff2) format("woff2");}
+@font-face{font-family:"Playfair Display";font-style:italic;font-weight:700;font-display:swap;src:url(fonts/playfair-display-latin-700-italic.woff2) format("woff2");}
+@font-face{font-family:"Cormorant Garamond";font-style:normal;font-weight:500;font-display:swap;src:url(fonts/cormorant-garamond-latin-500-normal.woff2) format("woff2");}
+@font-face{font-family:"Cormorant Garamond";font-style:normal;font-weight:600;font-display:swap;src:url(fonts/cormorant-garamond-latin-600-normal.woff2) format("woff2");}
+@font-face{font-family:"Cormorant Garamond";font-style:normal;font-weight:700;font-display:swap;src:url(fonts/cormorant-garamond-latin-700-normal.woff2) format("woff2");}
+@font-face{font-family:"Cormorant Garamond";font-style:italic;font-weight:600;font-display:swap;src:url(fonts/cormorant-garamond-latin-600-italic.woff2) format("woff2");}
+@font-face{font-family:"Josefin Sans";font-style:normal;font-weight:400;font-display:swap;src:url(fonts/josefin-sans-latin-400-normal.woff2) format("woff2");}
+@font-face{font-family:"Josefin Sans";font-style:normal;font-weight:500;font-display:swap;src:url(fonts/josefin-sans-latin-500-normal.woff2) format("woff2");}
+@font-face{font-family:"Josefin Sans";font-style:normal;font-weight:600;font-display:swap;src:url(fonts/josefin-sans-latin-600-normal.woff2) format("woff2");}
+@font-face{font-family:"Josefin Sans";font-style:normal;font-weight:700;font-display:swap;src:url(fonts/josefin-sans-latin-700-normal.woff2) format("woff2");}
 /* Layout: Vollbild-Canvas (Nachthimmel über dem Hafen), Menüs als Glas-Tafeln darüber */
 :root{
   --night:#05071a; --panel:rgba(12,14,40,0.82); --line:rgba(170,185,255,0.22);
@@ -1653,7 +1659,10 @@ void main(){ vec3 c=vec3(0.0);
 // Zusammensetzen: Szene + Bloom, Tonwert-Abbildung, durchsichtiger Hintergrund, Spiegelung im Wasser
 const GFX_COMP_FS=`#version 300 es
 precision highp float; in vec2 vUv; uniform sampler2D uHdr; uniform sampler2D uBloom; uniform float uBloomK; uniform vec3 uWater; uniform float uTime; out vec4 o;
-vec3 tm(vec3 c){ c*=1.05; return c/(1.0+c*0.6)*1.25; }
+vec3 tm(vec3 c){ c*=1.05; vec3 pc=c/(1.0+c*0.6)*1.25;
+  // farbtreu: nach dem hellsten Kanal komprimieren, damit dichte Feuerwerke nicht zu weißen Flecken ausbrennen
+  float L=max(c.r,max(c.g,c.b)); float Lt=L/(1.0+L*0.6)*1.25; vec3 hp=c*(Lt/max(L,1e-4)); hp=mix(hp,vec3(Lt),smoothstep(1.5,4.0,L)*0.4);
+  return mix(pc,hp,0.6); }
 vec4 look(vec2 uv){ vec4 h=texture(uHdr,uv); vec3 b=texture(uBloom,uv).rgb; vec3 c=tm(min(h.rgb,vec3(2.2))+b*uBloomK); return vec4(c,h.a); }
 void main(){
   vec2 uv=vUv; vec4 s=look(uv); vec3 c=s.rgb; float al=s.a;
@@ -3284,6 +3293,8 @@ function neonTextCached(txt,x,y,font,col,glow,sc,dark){
 }
 // Schriften fertig geladen: Vorzeichnungen neu machen
 try{ document.fonts.addEventListener('loadingdone',()=>GLOW.cache.clear()); }catch(e){}
+// Schriften, die nur im Canvas vorkommen, gleich mitladen (sonst lädt der Browser sie erst beim ersten Zeichnen)
+try{ for(const f of ['italic 600 20px "Playfair Display"','italic 500 20px "Playfair Display"','600 20px "Playfair Display"','600 20px "Cormorant Garamond"','italic 600 20px "Cormorant Garamond"','700 20px "Cormorant Garamond"','500 12px "Josefin Sans"','700 12px "Josefin Sans"']) document.fonts.load(f).catch(()=>{}); }catch(e){}
 // Firefox: übrige Weichzeichner im Hauptbild abschalten
 const IS_FF=/firefox/i.test(navigator.userAgent);
 if(IS_FF){ try{ Object.defineProperty(g,'shadowBlur',{get(){ return 0; }, set(v){}, configurable:true}); }catch(e){} }
@@ -3459,6 +3470,9 @@ function drawField(p,t){
     const hh=mh*Math.max(0,Math.min(1,val)); const gr=g.createLinearGradient(0,my+mh,0,my); gr.addColorStop(0,c0); gr.addColorStop(1,c1);
     g.shadowColor=c1; g.shadowBlur=12; g.fillStyle=gr; g.fillRect(x,my+mh-hh,mw,hh); g.shadowBlur=0;
     if(glow){ g.globalCompositeOperation='lighter'; g.drawImage(SPRITES[C.gold],x-14,my+mh-hh-20,mw+28,40); g.globalCompositeOperation='source-over'; }
+    // brennende Lunte: kleiner flackernder Funke an der Spitze
+    if(label==='LUNTE' && hh>2){ const fk=0.75+0.25*Math.sin(t*37)*Math.sin(t*23+1), fs=(20+8*fk); g.globalCompositeOperation='lighter'; g.globalAlpha=fade*fk; g.drawImage(SPRITES[C.gold],x+mw/2-fs/2,my+mh-hh-fs/2,fs,fs); g.globalAlpha=fade*0.8; g.fillStyle='#fff6d0'; g.fillRect(x+mw/2-1.5,my+mh-hh-1.5,3,3); g.globalAlpha=fade; g.globalCompositeOperation='source-over';
+      if(!PERF.low && !paused && Math.random()<0.25) addP(x+mw/2,my+mh-hh,(Math.random()-0.5)*40,-10-Math.random()*30,{c:Math.random()<0.6?C.gold:C.ember,life:0.35,size:1.1,drag:2,grav:90*FX.scale}); }
     g.fillStyle='rgba(200,245,255,0.85)'; g.font='600 10px "Josefin Sans", system-ui, sans-serif'; g.fillText(label,x+mw/2,my+mh+14);
   };
   g.globalAlpha=fade;

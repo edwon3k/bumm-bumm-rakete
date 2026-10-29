@@ -10,9 +10,9 @@ Siehe samples/CREDITS.txt: Instrumente aus dem Fluid R3 GM SoundFont von Frank W
 - PeerJS 1.5.4, MIT-Lizenz (MIT-peerjs.txt), Copyright (c) 2015 Michelle Bu and Eric Zhang, http://peerjs.com
 
 ## Schriften (SIL Open Font License 1.1, Lizenztexte in OFL-*.txt)
-- Bungee von David Jonathan Ross
-- Cinzel von Natanael Gama
-- Rubik von Hubert & Fischer, Meir Sadan, Cyreal
+- Playfair Display von Claus Eggers Sørensen
+- Cormorant Garamond von Christian Thalmann (Catharsis Fonts)
+- Josefin Sans von Santiago Orozco (Typemade)
 
 ## Online-Räume
 Online-Verbindungen laufen direkt zwischen den Browsern der Mitspieler (WebRTC). Für den Verbindungsaufbau wird der öffentliche PeerJS-Server (peerjs.com) genutzt, der dabei die IP-Adresse sieht. Eigene Lieder werden nur an die Mitspieler im Raum geschickt und nirgends gespeichert.

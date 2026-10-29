@@ -27,6 +27,8 @@ function neonTextCached(txt,x,y,font,col,glow,sc,dark){
 }
 // Schriften fertig geladen: Vorzeichnungen neu machen
 try{ document.fonts.addEventListener('loadingdone',()=>GLOW.cache.clear()); }catch(e){}
+// Schriften, die nur im Canvas vorkommen, gleich mitladen (sonst lädt der Browser sie erst beim ersten Zeichnen)
+try{ for(const f of ['italic 600 20px "Playfair Display"','italic 500 20px "Playfair Display"','600 20px "Playfair Display"','600 20px "Cormorant Garamond"','italic 600 20px "Cormorant Garamond"','700 20px "Cormorant Garamond"','500 12px "Josefin Sans"','700 12px "Josefin Sans"']) document.fonts.load(f).catch(()=>{}); }catch(e){}
 // Firefox: übrige Weichzeichner im Hauptbild abschalten
 const IS_FF=/firefox/i.test(navigator.userAgent);
 if(IS_FF){ try{ Object.defineProperty(g,'shadowBlur',{get(){ return 0; }, set(v){}, configurable:true}); }catch(e){} }
@@ -202,6 +204,9 @@ function drawField(p,t){
     const hh=mh*Math.max(0,Math.min(1,val)); const gr=g.createLinearGradient(0,my+mh,0,my); gr.addColorStop(0,c0); gr.addColorStop(1,c1);
     g.shadowColor=c1; g.shadowBlur=12; g.fillStyle=gr; g.fillRect(x,my+mh-hh,mw,hh); g.shadowBlur=0;
     if(glow){ g.globalCompositeOperation='lighter'; g.drawImage(SPRITES[C.gold],x-14,my+mh-hh-20,mw+28,40); g.globalCompositeOperation='source-over'; }
+    // brennende Lunte: kleiner flackernder Funke an der Spitze
+    if(label==='LUNTE' && hh>2){ const fk=0.75+0.25*Math.sin(t*37)*Math.sin(t*23+1), fs=(20+8*fk); g.globalCompositeOperation='lighter'; g.globalAlpha=fade*fk; g.drawImage(SPRITES[C.gold],x+mw/2-fs/2,my+mh-hh-fs/2,fs,fs); g.globalAlpha=fade*0.8; g.fillStyle='#fff6d0'; g.fillRect(x+mw/2-1.5,my+mh-hh-1.5,3,3); g.globalAlpha=fade; g.globalCompositeOperation='source-over';
+      if(!PERF.low && !paused && Math.random()<0.25) addP(x+mw/2,my+mh-hh,(Math.random()-0.5)*40,-10-Math.random()*30,{c:Math.random()<0.6?C.gold:C.ember,life:0.35,size:1.1,drag:2,grav:90*FX.scale}); }
     g.fillStyle='rgba(200,245,255,0.85)'; g.font='600 10px "Josefin Sans", system-ui, sans-serif'; g.fillText(label,x+mw/2,my+mh+14);
   };
   g.globalAlpha=fade;
